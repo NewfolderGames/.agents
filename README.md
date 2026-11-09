@@ -1,0 +1,2 @@
+# .agents
+my dot agents
