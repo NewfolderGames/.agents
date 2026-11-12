@@ -105,17 +105,12 @@ Confirm explicitly with the user before running any destructive or irreversible 
 
 | Scenario | Primary Tool | Fallback / Next Step |
 |---|---|---|
-| Exploratory discovery (unknown file, class, or subsystem) | `jbcontext search "<natural language query>"` | Narrow with `-p <path>` once the subsystem is identified |
 | JetBrains IDE connected (definitions, references, call/type hierarchy, safe refactor, test runner) | `intellij` or `jetbrains_air_ide` | Interact with IDE directly |
 | Known symbol, exact string, or regex pattern | `rg` (ripgrep) | Prefer `rg` over `grep` for fast, syntax-aware search |
 | File already identified or open | Direct file read / IDE inspection | Skip semantic search completely |
 | Non-discovery tasks (git, builds, test execution) | Direct CLI / IDE runner | Skip semantic search completely |
 
-### 3.2 Semantic Search (`jbcontext`) Discipline
-- Write descriptive natural-language queries (use `"Where is the function that validates user email addresses"`, not `"email"`).
-- Once you locate the relevant directory, pass `-p <path>` to constrain scope or switch directly to `rg` and file reads.
-
-### 3.3 Standard CLI & Runtime Preferences
+### 3.2 Standard CLI & Runtime Preferences
 - **Search**: `rg` (ripgrep) over `grep`.
 - **Node Package Manager**: Prefer `pnpm` when available. Fall back to `npm` (or the lockfile-mandated manager) if the repository is configured for it.
 - **Go SDK**: Inspect `~/sdk/go1.xxx` when the default `PATH` does not provide the required Go version.
