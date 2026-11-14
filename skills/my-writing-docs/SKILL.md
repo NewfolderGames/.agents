@@ -75,8 +75,8 @@ The migration locks the orders table for 10 minutes.
 1. **No semicolons (`;`) (Rule 8.1)**: Forbidden in prose and comments. Split into two sentences.
 2. **No em-dashes**: Forbidden in prose and comments. Use `because`, `but`, parentheses, or two sentences.
 3. **Vertical lists (Rules 4.3, 8.4)**: Use vertical lists for 3 or more items or steps. End the lead-in with a colon (`:`), start items with a capital letter, and put a period only on full sentences. Each item has its own 20/25-word budget.
-4. **Single-word counting exemptions (Rules 8.5–8.7)**: Count as **1 word** each: numbers with units (`500ms`, `10GB`), hyphenated compounds (`read-only`), backtick code tokens, CLI flags, file paths, URLs, and parenthetical text `(...)`.
-5. **Untouchable technical strings**: Never alter code blocks, inline backtick identifiers, CLI flags, file paths, URLs, quoted log/error strings, SQL keywords (`INSERT`, `SELECT`), HTTP codes, product names, API routes, or configuration keys.
+4. **Single-word exemptions (Rules 8.5–8.7)**: Count as **1 word**: numbers with units (`500ms`), hyphenated words (`read-only`), backtick tokens, flags, paths, URLs, and `(...)`.
+5. **Untouchable strings**: Never alter code blocks, backtick identifiers, CLI flags, paths, URLs, quoted logs/errors, SQL (`INSERT`), HTTP codes, product names, routes, or keys.
 
 ## 5. Terminology Consistency, Anti-Patterns, and Slop Substitutions
 

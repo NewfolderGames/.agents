@@ -60,7 +60,7 @@ Do not write full implementations in one pass. One-pass generation causes cascad
 
 ## 3. Active Work Tracking, Stubs, and `TODO` Lifecycle
 
-1. **Mark scaffolded stubs**: If a task is in Phase 1 or Phase 3, or hits a blocker, mark the site with unimplemented stubs and `TODO` comments.
+1. **Mark scaffolded stubs**: During Phase 1, Phase 3, or a blocker, mark the site with unimplemented stubs and `TODO` comments.
 2. **Write `TODO` text in Mode 2**: Activate `my-writing-docs` rules. Put the condition or blocker first, and state an unambiguous imperative action in 20 words or fewer.
 3. **Use language-standard markers**:
    - **TypeScript / JavaScript**: JSDoc `@todo`, `// TODO: <imperative instruction>`, or `throw new Error("TODO: <imperative instruction>")`
@@ -81,7 +81,7 @@ Scaffold Signatures -> Verify Types -> Fill Bodies Incrementally -> Run Formatte
 
 When you create commits, obey these rules:
 1. **Commit per sub-task**: Commit each verified sub-task before you switch context to the next step. Never bundle unrelated refactors, bug fixes, and features into one commit.
-2. **Synchronize documentation**: If behavior, configuration keys, CLI flags, or public interfaces change, update `README.md`, `AGENTS.md`, API specs, schemas, and inline docstrings in Mode 2 inside the same task.
+2. **Synchronize documentation**: When behavior, configuration, CLI flags, or interfaces change, update `README.md`, `AGENTS.md`, API specs, and docstrings in Mode 2.
 3. **Write imperative subject lines**: Describe what changed in the imperative mood (`Add authentication token validation`).
 4. **Write Mode 2 commit bodies**: State plain facts about what changed and why in Mode 2 (see `my-writing-docs`).
 5. **Match repository conventions**: Match the repository commit prefix style (such as `feat:`, `fix:`, or Conventional Commits) and language.

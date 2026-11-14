@@ -14,7 +14,7 @@ Write deterministic, unindented, single-responsibility code that survives one re
 ## 1. Core Engineering Philosophy
 
 1. **Act as a machine**: Write direct, deterministic code. Eliminate metaprogramming tricks and artificial complexity.
-2. **Survive one read**: Write code so a tired engineer, non-native reader, or language model understands control flow, edge cases, and side effects on the first read.
+2. **Survive one read**: Write code so a tired reader or model understands control flow, edge cases, and side effects on one read.
 3. **Keep It Simple (KISS)**: Write linear success paths. Repeat simple, explicit code instead of creating premature abstractions. Stop only when nothing remains to remove.
 4. **Redesign from first principles**: When requirements change or special cases accumulate, redesign the module for current requirements from scratch. Do not stack workarounds or parallel layers onto brittle code.
 5. **Colocate by domain**: Give each file one responsibility. Group files by domain feature instead of splitting one feature across distant layer directories.
@@ -130,7 +130,7 @@ Activate `my-writing-docs` whenever you write comments, docstrings, or repositor
    // State Verification
    // Persistence Operation
    ```
-3. **Multi-line semantic manual blocks**: When a phase has non-obvious logic, external constraints, or failure handling, expand the header into a multi-line Mode 2 block separated by empty comment lines. Include any of these four facts that the code alone cannot show:
+3. **Multi-line semantic manual blocks**: For non-obvious logic, external constraints, or failure handling, write a multi-line Mode 2 block with empty comment lines between paragraphs. Include any of these four facts that the code alone cannot show:
    - **Design rationale**: Why this structure is required and why simpler alternatives fail.
    - **Failure modes**: How this step can fail (race conditions, lock contention, clock skew, upstream timeouts).
    - **Handling rationale**: Why errors or edge cases must run in this exact sequence.
@@ -159,7 +159,7 @@ Every exported or public symbol must carry a Mode 2 documentation block with the
 ### 7.3 Codebase Language and Doc Synchronization
 
 1. **Match repository language**: Write comments and docs in the primary language of the repository. In Korean codebases, use a strict declarative written style (문어체 서술형 사용, 명령조 금지).
-2. **Update docs in the same task**: When behavior, configuration keys, CLI flags, or public interfaces change, update `README.md`, `AGENTS.md`, OpenAPI/API specs, schemas, and docstrings in Mode 2 before you close the task.
+2. **Update docs in the same task**: When behavior, configuration, CLI flags, or interfaces change, update `README.md`, `AGENTS.md`, API specs, schemas, and docstrings in Mode 2.
 
 ---
 
@@ -167,7 +167,7 @@ Every exported or public symbol must carry a Mode 2 documentation block with the
 
 Before you commit code changes, make sure that every item passes:
 - [ ] **Scaffold-first execution**: Interfaces, types, docstrings, and stubs were type-checked before filling bodies incrementally or via subagents.
-- [ ] **Co-change and special cases**: Pieces that change together live together, stable modules never import volatile modules, and hidden links, needless links, surplus wrappers, and special cases are removed.
+- [ ] **Co-change and special cases**: Co-changing code lives together, stable modules ignore volatile modules, and hidden links, needless links, surplus, and special cases are deleted.
 - [ ] **Guard clauses**: Edge cases and errors return early with an unindented happy path.
 - [ ] **Vertical rhythm**: Blank lines appear after declarations, around control flow blocks, and before `return` statements.
 - [ ] **Naming and types**: Booleans use positive prefixes (`is*`, `has*`, `can*`), conversions use `as_*`/`to_*`/`into_*`, and multi-state flags use enums or tagged unions.
