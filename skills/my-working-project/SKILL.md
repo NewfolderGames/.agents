@@ -1,175 +1,104 @@
 ---
 name: my-working-project
 description: >-
-  Design, write, refactor, untangle, and document source code across TypeScript, React,
-  Go, Rust, and Java. Activate this skill when writing or reviewing code, designing module
-  boundaries, eliminating special cases or coupling, curating regression tests, or writing
-  inline semantic comments and public documentation blocks.
+  Design, write, refactor, untangle, and document human-readable, easily removable code
+  while respecting project-local conventions. Activate this skill when writing or reviewing
+  code, structuring modules, chunking functional pipelines, documenting regexes, macros, or
+  reflection, curating tests, or untangling coupled codebases.
 ---
 
-# Code Architecture, Untangling, Style, and Symbol Documentation
+# Code Architecture, Readable Clarity, and Deletable Design
 
-Write deterministic, unindented, single-responsibility code that survives one read without ambiguity.
+Write direct, maintainable code with low cognitive overhead so the human developer can read it on one pass, continue working on it without friction, and replace or delete any part cleanly.
 
-## 1. Core Engineering Philosophy
+## 1. Project Conventions Always Come First
 
-1. **Act as a machine**: Write direct, deterministic code. Eliminate metaprogramming tricks and artificial complexity.
-2. **Survive one read**: Write code so a tired reader or model understands control flow, edge cases, and side effects on one read.
-3. **Keep It Simple (KISS)**: Write linear success paths. Repeat simple, explicit code instead of creating premature abstractions. Stop only when nothing remains to remove.
-4. **Redesign from first principles**: When requirements change or special cases accumulate, redesign the module for current requirements from scratch. Do not stack workarounds or parallel layers onto brittle code.
-5. **Colocate by domain**: Give each file one responsibility. Group files by domain feature instead of splitting one feature across distant layer directories.
-
----
-
-## 2. Vertical Rhythm, Formatting, and Guard Clauses
-
-### 2.1 Blank Line Placement and Formatters
-
-Use vertical whitespace to separate logical steps:
-1. Put a blank line after variable declarations and initializations.
-2. Put a blank line before and after control flow blocks (`if`, `for`, `switch`, `match`, `return`).
-3. Put a blank line between discrete procedural steps inside a function.
-4. Put a blank line before every `return` statement, unless `return` is the sole statement in a short block.
-5. After every edit, run the connected IDE formatter first, or run the canonical CLI tools:
-   - **Rust**: `cargo fmt` (`rustfmt`) and `cargo clippy`
-   - **TypeScript / JavaScript**: Project Prettier, ESLint, or Biome
-   - **Go**: `gofmt` and `goimports`
-   - **Java**: Google Java Format or Checkstyle
-
-### 2.2 Control Flow and Guard Clauses
-
-1. **Validate early**: Validate inputs, preconditions, and error states at the top of the function with early returns.
-2. **Keep an unindented happy path**: Keep the primary success path at base indentation. Never put an `else` block after a terminating `return`, `break`, `continue`, or `throw`.
+Before you choose patterns, folder layouts, naming styles, or comment formats, check the target project:
+1. **Project guides and configs win**: `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `README.md`, `CONTRIBUTING.md`, `.editorconfig`, and linter/formatter configs (`eslint`, `biome`, `rustfmt`, `checkstyle`, `golangci-lint`) override every default in this skill.
+2. **Blend into neighboring code**: Read 2 to 3 adjacent files in the same package before writing new code. Match existing directory conventions, error types, state management, and testing patterns so your changes look written by the project maintainer unless you were asked to refactor them.
 
 ---
 
-## 3. Naming and Type Discipline
+## 2. Core Engineering Philosophy
 
-1. **State intent explicitly**: Use full, descriptive identifiers (`recordId`, `isWebSocketConnected`, `userRole`). Do not use cryptic abbreviations or single-letter names, except `i` and `j` in short loops or trivial single-line lambdas.
-2. **Name booleans positively**: Frame booleans affirmatively (`isEnabled`, `hasPermission`) instead of negatively (`isDisabled`, `isNotValid`) to prevent double negatives (`!isDisabled`).
-3. **Prefix boolean identifiers**: Prepend `is`, `has`, `can`, `should`, `will`, `did`, or `was` to boolean variables, fields, and predicate functions (code identifiers are exempt from the Mode 2 modal ban).
-4. **Use standard conversion prefixes**:
-   - `as_*`: Zero-cost borrowed-to-borrowed view conversion (no allocation).
-   - `to_*`: Borrowed-to-owned conversion (allocates or computes a copy).
-   - `into_*`: Consumes an owned value and transforms it into a new type.
-5. **Replace flag combinations with tagged unions**: Replace multiple booleans or string status fields with explicit `enum` or discriminated union types.
-6. **Match exhaustively**: Use exhaustive `switch` or `match` statements so new variants cause compile-time errors at unhandled sites.
+### 2.1 Nothing Left to Remove (Deletable Architecture)
 
----
+1. **Optimize for easy replacement and removal**: Structure features so replacing or deleting a feature means deleting one file or directory, not doing surgery across eight shared layers.
+2. **Avoid "lasagna" indirection**: Do not stack pass-through controllers, services, managers, adapters, and factories that just forward arguments unchanged. Trace inputs -> domain logic -> side effects cleanly without jumping across five files.
+3. **Earn every abstraction**: Duplicate a short, clear 5-to-10 line snippet across two callers rather than coupling unrelated workflows through a premature shared helper with boolean mode flags. Extract an interface or shared module only when multiple real callers or implementations share a true domain contract today.
+4. **Redesign cleanly when requirements shift**: When early assumptions no longer hold, reshape the module directly for today's requirements rather than taping special-case flags onto brittle code.
 
-## 4. Co-Change Architecture, Deep Modules, and Special-Case Elimination
+### 2.2 Twenty Explained Lines Beat 200 Verbose Lines
 
-Evaluate every module boundary with one question: **must these pieces change together?** Pieces that change together must live together. Pieces that change for different reasons must stay separate. Stable modules must never import volatile modules.
+Simplicity means low reading and maintenance cost, **not** fear of expressive language features:
+1. **Do not bloat code into 200 lines of "self-documenting" ceremony**: Complex regexes, declarative/procedural macros, reflection dispatchers, bitwise packing, and compact domain algorithms are welcome whenever they replace hundreds of lines of repetitive boilerplate or hand-rolled state machines.
+2. **Isolate and explain *why* + *how***: Encapsulate the dense mechanism behind one clear function, type, or macro boundary, and pair it with a thorough comment block explaining:
+   - **Why** this mechanism is used (for example, eliminating 200 lines of duplicate packet decoders or avoiding hot-path allocations).
+   - **How** it works step by step (capture-group breakdown for a regex, expansion sketch for a macro, lookup contract for reflection) plus concrete input/output examples.
+3. **Spend tokens for clarity, never false brevity**: Conversely, never cram ordinary business logic into nested ternaries or cryptic variable names just to save tokens. See [references/examples.md](references/examples.md) for side-by-side patterns.
 
-1. **Eliminate hidden links (pieces that must change together, where code hides the link)**:
-   - **Duplicate logic or constants**: Consolidate copies of rules, action lists, and constants into one source of truth.
-   - **Shared globals or implicit files**: Pass dependencies explicitly instead of sharing state through globals or side-effect files.
-   - **Layer-split features**: Colocate domain logic, handlers, and types that change together in one module directory.
-   - **Implicit call order**: Encode required call sequences in the type signature or state machine.
-2. **Eliminate needless links (pieces tied together that change for different reasons)**:
-   - **Leaked internals**: Hide internal data representations behind module boundaries so callers stay unbroken when internals change.
-   - **Inverted dependency direction**: Make volatile implementations depend on stable interfaces. Never import a volatile module into a stable core module.
-   - **Caller-specific parameters**: Remove parameters used by only one caller workflow from general-purpose functions.
-   - **Shallow modules**: Build deep modules where a small, stable interface hides complex internal logic.
-3. **Eliminate surplus (pieces with no independent reason to change)**:
-   - **Pass-through wrappers**: Delete wrapper functions and classes that forward calls without adding domain translation or invariants.
-   - **Speculative generality**: Delete extension points, interfaces, and configuration keys for nonexistent variations.
-   - **Dead code**: Delete unused functions, types, exports, and feature flags immediately.
-4. **Treat special cases as missing design requirements**:
-   - Flag every single-value `if` branch, caller-specific parameter, swallowed exception, arbitrary retry or `sleep`, and disabled test.
-   - Redesign the core abstraction (for example, a unified command interface) so one structural fix removes multiple special cases at once.
+### 2.3 Functional Pipelines in Readable Chunks
+
+Functional chaining (`.filter().map().flatMap()`, Rust iterators, Java streams) is idiomatic and clear when chunked for human eyes:
+1. Format multi-step pipelines with **one stage per line**.
+2. Extract non-trivial predicates and transforms into **named functions** (`isSettledInvoice`, `toLedgerRow`) instead of nesting multi-line anonymous lambdas inside `.map(...)`.
+3. When a pipeline grows long or changes domain meaning mid-flight, split it into **2 to 3 named milestone variables** (`activeSubscriptions` -> `chargesByAccount`) so types and intent stay obvious at each step.
 
 ---
 
-## 5. Whole-Codebase Untangling and Regression Test Discipline
+## 3. Vertical Rhythm, Guard Clauses, Naming, and Types
 
-When you untangle a codebase or subsystem, run these five steps in order:
+### 3.1 Spacing and Guard Clauses
 
-1. **Ask scope**: Ask the user which optional additions (`Comments`, `Tests`) to include with the structural refactor:
-   - **Comments**: Delete comments that restate the code.
-   - **Tests**: Delete tests that cannot catch a bug, and rewrite brittle tests that fail without a bug.
-2. **Log every problem before you edit**: Inspect the target scope (high-impact modules first) and record all hidden links, needless links, surplus, and special cases.
-3. **Redesign from first principles**: Group related problems in the decision log under the single structural fix that resolves them:
-   ```markdown
-   - Define a `PaymentProvider` interface that Stripe and PayPal both implement:
-     - `checkout/submit.ts:9` depends directly on `payments/stripe.ts`.
-     - `refunds/refund.ts:22` wraps every Stripe call in `if (order.provider === "paypal")`.
-   ```
-4. **Scaffold, then migrate**: Activate `my-working-task`. Scaffold the new interfaces and signatures first, validate the import graph, fill bodies incrementally, and delete obsolete special cases.
-5. **Audit with subagents until clean**: If the user selected `Tests`, modify tests last so the test suite acts as a regression safety net:
-   - Delete tests that repeat the implementation or cannot fail.
-   - Rewrite tests tied to internal details so they validate public behavior.
-   - Invoke subagents (see `my-using-tools`) to find remaining special cases, hidden links, needless links, and surplus until zero remain.
-   - Run the test suite at the end to make sure that public behavior matches the baseline.
+1. **Vertical breathing room**: Separate variable setup, control-flow blocks (`if`, `for`, `switch`, `match`), discrete procedural phases, and final `return` statements with blank lines so code never reads like a dense wall.
+2. **Early guard returns**: Validate inputs, permissions, and error cases at the top of the function and return early. Keep the main success path unindented at the base level, and never write `else` after a terminating `return`, `break`, `continue`, or `throw`.
+3. **Run project formatters**: Run the repository's configured formatter and linter after edits (see [references/language-conventions.md](references/language-conventions.md) for language defaults when unconfigured).
+
+### 3.2 Naming and Type Discipline
+
+1. **Intent-revealing names**: Use clear, full identifiers (`invoiceTotalCents`, `retryBudgetMs`, `userRole`). Keep single-letter names only for tiny loop counters (`i`, `j`) or trivial one-expression lambdas.
+2. **Positive booleans**: Name booleans affirmatively with auxiliary prefixes (`isEnabled`, `hasValidToken`, `canPublish`, `shouldRetry`) to avoid double negatives (`!isDisabled`).
+3. **Standard conversions**: Follow `as_*` (free view/borrow), `to_*` (computed/allocated conversion), and `into_*` (ownership-consuming transform) where idiomatic.
+4. **Illegal states unrepresentable**: Replace loose combinations of boolean flags and raw status strings with tagged unions / `enum` variants and exhaustive `switch` / `match` statements.
 
 ---
 
-## 6. Language-Specific Conventions
+## 4. Co-Change Boundaries and Codebase Untangling
 
-| Language / Framework | Mandatory Conventions |
-|---|---|
-| **TypeScript** | Prefer `interface` over `type` for object shapes and public contracts. Model state machines with discriminated unions. |
-| **React** | Put one component per file and split large components into subcomponents. Declare components with `function` declarations and an explicit `Props` interface. Wrap child/dependency callbacks in `useCallback` and expensive derived state in `useMemo`. Prefer data attributes (`data-active`, `data-role`) or CSS variables over conditional class-string concatenation. Extract shared UI primitives into the design system. |
-| **Go** | Handle errors immediately with guard clauses (`if err != nil { return ... }`). Never put `else` after a terminating `return`. Start package and exported symbol doc comments with the exact exported symbol name. Trim whitespace and validate non-empty string identifiers before persistence calls. |
-| **Rust** | Model domain states with tagged `enum` variants. Obey Rust API Guidelines for `as_*`, `to_*`, and `into_*`. Omit `get_` prefixes on getters unless disambiguating calculated properties. Document public items with `# Arguments`, `# Returns`, `# Errors`, `# Panics`, and `# Examples`. |
-| **Java** | Obey Bean and Record accessor conventions (`get*`, `is*`). Enforce non-null invariants at constructor and method entry points with `Objects.requireNonNull`. Keep method bodies flat with early guard clauses. Document classes and public methods with Javadoc (`@param`, `@return`, `@throws`). |
+Evaluate module boundaries with one question: **must these pieces change together?** Pieces that change together belong in the same feature folder. Pieces that change for unrelated reasons belong apart, and stable domain modules must not depend on volatile outer adapters.
 
----
+### 4.1 Four Coupling Smells to Remove
 
-## 7. Code Comments and Structured Public Documentation
+1. **Hidden links**: Duplicated business rules/constants that drift out of sync, implicit global state, or temporal call-order traps not enforced by types.
+2. **Needless links**: Leaked internal data layouts, core domain code importing transport/vendor specifics directly, or general functions taking caller-specific flags.
+3. **Surplus**: Pass-through wrappers that add zero invariants, speculative interfaces with only one implementation and no test seam need, unused exports, and dead feature flags.
+4. **Special-case patches**: Single-caller `if` branches, swallowed errors, arbitrary `sleep` retries, and disabled tests that signal a missing domain concept.
 
-Activate `my-writing-docs` whenever you write comments, docstrings, or repository docs so all text obeys Mode 2 (ASD-STE100).
+### 4.2 Five-Step Untangling Workflow
 
-### 7.1 Inline Comment Discipline and Semantic Section Blocks
-
-1. **Never restate syntax**: Omit comments that change only when code syntax changes (`// sort first so binary search works`). Keep comments that state external facts invisible in code (`// the proxy closes websockets, so poll`). When a refactor removes a workaround, delete the comment for that workaround.
-2. **Single-line semantic section headers**: Inside multi-step functions, mark self-explanatory phases with title-case headers:
-   ```text
-   // Input Validation
-   // Data Retrieval
-   // State Verification
-   // Persistence Operation
-   ```
-3. **Multi-line semantic manual blocks**: For non-obvious logic, external constraints, or failure handling, write a multi-line Mode 2 block with empty comment lines between paragraphs. Include any of these four facts that the code alone cannot show:
-   - **Design rationale**: Why this structure is required and why simpler alternatives fail.
-   - **Failure modes**: How this step can fail (race conditions, lock contention, clock skew, upstream timeouts).
-   - **Handling rationale**: Why errors or edge cases must run in this exact sequence.
-   - **Non-obvious prerequisites**: Hidden invariants, protocol quirks, or external constraints.
-
-   ```text
-   // Idempotent Lock Acquisition
-   //
-   // The payment gateway can deliver duplicate webhook events within a 500ms window.
-   // A standard database transaction does not prevent concurrent processing across worker nodes.
-   //
-   // This step acquires a distributed Redis lock before the worker reads the ledger state.
-   // If the lock acquisition fails, the worker returns HTTP 202 so the gateway does not retry.
-   ```
-
-### 7.2 Six-Part Public Documentation Blocks
-
-Every exported or public symbol must carry a Mode 2 documentation block with these six parts:
-1. **Summary Line**: One sentence of 25 words or fewer ending with a period, in third-person singular present indicative ("Updates the account status.", "Calculates the tax delta.").
-2. **Parameters / Arguments**: Valid input ranges, sanitization rules, and invariant requirements for each parameter.
-3. **Returns**: Exact return values for both success and error outcomes.
-4. **Errors / Exceptions / Panics**: Every error condition, thrown exception, or panic scenario and its exact trigger.
-5. **Behavior, Invariants, and Caveats**: Idempotency guarantees, thread-safety, side effects, and state mutations.
-6. **Usage Example**: Concrete call example whenever integration is non-trivial.
-
-### 7.3 Codebase Language and Doc Synchronization
-
-1. **Match repository language**: Write comments and docs in the primary language of the repository. In Korean codebases, use a strict declarative written style (문어체 서술형 사용, 명령조 금지).
-2. **Update docs in the same task**: When behavior, configuration, CLI flags, or interfaces change, update `README.md`, `AGENTS.md`, API specs, schemas, and docstrings in Mode 2.
+When asked to untangle or clean up a messy subsystem:
+1. **Confirm scope**: Ask whether to include `Comments` cleanup (deleting stale/restating comments) and `Tests` cleanup (replacing brittle implementation-coupled tests with behavioral tests) alongside the refactor.
+2. **Catalog coupling first**: List the hidden links, needless links, surplus wrappers, and special cases before editing files.
+3. **Group under structural fixes**: Map multiple symptoms to the single design change that eliminates them cleanly.
+4. **Scaffold and migrate incrementally**: Follow `my-working-task` to validate new types/signatures first, migrate callers step by step, and delete dead layers.
+5. **Verify behavior and audit**: Update tests last so existing tests catch regressions during migration, then audit with a subagent (`my-using-tools`) until zero dead code or special-case leftovers remain.
 
 ---
 
-## 8. Pre-Delivery Code and Git Audit Checklist
+## 5. Signal-Scaled Comments and Documentation
 
-Before you commit code changes, make sure that every item passes:
-- [ ] **Scaffold-first execution**: Interfaces, types, docstrings, and stubs were type-checked before filling bodies incrementally or via subagents.
-- [ ] **Co-change and special cases**: Co-changing code lives together, stable modules ignore volatile modules, and hidden links, needless links, surplus, and special cases are deleted.
-- [ ] **Guard clauses**: Edge cases and errors return early with an unindented happy path.
-- [ ] **Vertical rhythm**: Blank lines appear after declarations, around control flow blocks, and before `return` statements.
-- [ ] **Naming and types**: Booleans use positive prefixes (`is*`, `has*`, `can*`), conversions use `as_*`/`to_*`/`into_*`, and multi-state flags use enums or tagged unions.
-- [ ] **Comments and documentation**: Semantic comment blocks, `TODO`s, 6-part docstrings, `README.md`, `AGENTS.md`, and API specs obey Mode 2 (`my-writing-docs`), with syntax-restating and obsolete comments deleted.
-- [ ] **Clean tree and tests**: Formatters, linters, and behavioral tests pass, and all temporary `TODO` markers and stubs are deleted before committing.
+Activate `my-writing-docs` when drafting comments and documentation so prose stays crisp and unambiguous, while matching the project's primary language (in Korean codebases, use declarative written style: 문어체 서술형 사용, 명령조 금지).
+
+1. **Zero code-restating comments**: Never write comments that repeat what the identifier name or static type already says (`// increment counter`). When you delete a workaround, delete its comment too.
+2. **Phase headers in longer functions**: Use short title-case headers (`// Input Validation`, `// Ledger Settlement`) only when a function spans distinct procedural stages.
+3. **Deep *why* and *how* blocks where needed**: Invest rich multi-paragraph comments on external protocol quirks, concurrency/lock ordering, non-obvious failure modes, and compact mechanisms (regexes, macros, reflection, bitwise logic).
+4. **Scale public docblocks to complexity**:
+   - **Simple, obvious functions**: A crisp one-sentence summary is sufficient when parameter names and types already express the full contract (unless project linters require full tags).
+   - **Boundary APIs and complex contracts**: Document the summary, non-obvious parameter invariants/ranges, return semantics, error/panic triggers, side effects/idempotency, and a short usage example.
+
+---
+
+## 6. Reference Guides
+
+- [references/language-conventions.md](references/language-conventions.md): Default idioms for TypeScript, React, Go, Rust, and Java when the host project does not define its own rules.
+- [references/examples.md](references/examples.md): Worked examples of readable functional chunking, *20 explained lines vs. 200 verbose lines* (regex, macro, and lock rationale blocks), and deletable modules.

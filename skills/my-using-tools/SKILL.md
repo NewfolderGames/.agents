@@ -1,54 +1,61 @@
 ---
 name: my-using-tools
 description: >-
-  Select discovery, search, IDE, CLI, scripting, and subagent tools. Activate this skill
-  when searching a codebase, using JetBrains IDE tools, running CLI builds or tests,
-  writing python3 automation or skeleton-extraction scripts, mapping module imports,
-  analyzing Git co-change history, or delegating parallel work to subagents.
+  Select codebase discovery, IDE, CLI, scripting, and subagent tools while respecting
+  project-local toolchains. Activate this skill when searching a repository, using
+  JetBrains IDE tools, running builds or tests, writing python3 analysis or batch scripts,
+  mapping module imports, inspecting Git co-change history, or delegating to subagents.
 ---
 
 # Tool Selection, Automation, and Subagent Delegation
 
-Select direct, deterministic tools for codebase discovery, builds, batch edits, and parallel analysis.
+Choose direct, deterministic tools that match the target repository's existing toolchain and keep the working tree clean.
 
-## 1. Discovery Routing Matrix
+## 1. Respect Project Tooling First
 
-Route every codebase inspection and build action through the primary tool in this table:
-
-| Scenario | Primary Tool | Fallback / Next Step |
-|---|---|---|
-| JetBrains IDE connected (definitions, references, call/type hierarchy, safe refactor, test runner) | `intellij` or `jetbrains_air_ide` | Interact with the IDE directly |
-| Known symbol, exact string, or regex pattern | `rg` (ripgrep) | Prefer `rg` over `grep` for fast, syntax-aware search |
-| File already identified or open | Direct file read or IDE inspection | Skip broad search completely |
-| Non-discovery tasks (Git, builds, test runs) | Direct CLI or IDE runner | Skip search tools completely |
+Before you pick a package manager, build runner, linter, or test command, inspect the target repository's own conventions:
+1. Check `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `README.md`, and `CONTRIBUTING.md` for project-mandated commands.
+2. Check lockfiles and task manifests (`pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`, `bun.lock`, `Makefile`, `justfile`, `Cargo.toml`, `build.gradle`, `pom.xml`, and `.github/workflows/`).
+3. Use the project's configured scripts (`pnpm test`, `npm run check`, `make lint`) instead of inventing raw CLI invocations that skip project flags.
 
 ---
 
-## 2. Standard CLI and Runtime Preferences
+## 2. Discovery Routing Matrix
 
-When you run CLI commands or local runtimes, obey these preferences:
-1. **Text search**: Run `rg` (ripgrep) instead of `grep`.
-2. **Node package manager**: Use `pnpm` when `pnpm` is installed. If the repository lockfile requires `npm` or another manager, use the lockfile-mandated manager.
-3. **Go SDK**: If the default `PATH` lacks the required Go version, inspect `~/sdk/go1.xxx`.
-4. **Automation interpreter**: Run standalone helper scripts with `python3`.
+Route codebase navigation and command runs through the most direct tool available:
+
+| Scenario | Primary Tool | Fallback / Next Step |
+|---|---|---|
+| JetBrains IDE connected (definitions, references, call/type hierarchy, safe rename/refactor, test runner) | `intellij` or `jetbrains_air_ide` | Interact with the IDE directly |
+| Known symbol, exact string, or regex pattern | `rg` (ripgrep) | Prefer `rg` over `grep` for fast, gitignore-aware search |
+| File path already known or open | Direct file read or IDE inspection | Skip broad search |
+| Builds, linters, Git commands, and test suites | Project task script, IDE runner, or direct CLI | Skip search tools |
+
+### Local Environment Fallbacks
+
+When a repository does not mandate a specific tool, apply these defaults:
+- **Search**: `rg` (ripgrep) over `grep`.
+- **Node.js**: Use `pnpm` when starting a greenfield project or when `pnpm-lock.yaml` is present. Otherwise, match the existing lockfile.
+- **Go SDK**: If `PATH` lacks the required Go version, inspect `~/sdk/go1.xxx`.
+- **Scripting**: `python3`.
 
 ---
 
 ## 3. Automation Scripts and Structural Analysis
 
-Prefer repeatable `python3` scripts over manual multi-file edits and ad-hoc reading:
+Use `python3` scripts to replace error-prone manual repetition and to inspect large codebases:
 
-1. **Script repetitive work**: If `python3` is installed, write standalone Python scripts for batch refactoring, multi-file transformations, data generation, bulk renaming, and migration checks. Do not do repetitive manual edits across files.
-2. **Extract code skeletons**: When you inspect a large module or codebase, run a script that strips function bodies so all signatures fit in context.
-3. **Map module imports**: Write and run a script that maps module imports so that stable modules never import volatile modules.
-4. **Inspect Git coupling history**: When Git history exists, inspect commit frequency and co-change patterns to locate volatile modules and files that change together.
-5. **Retain reusable scripts**: Save project-wide automation scripts in `scripts/` (or the repository utility directory). Document the run command in Mode 2 (see `my-writing-docs`) so teammates and CI pipelines can run the script again.
+1. **Batch transformations**: Write a `python3` script for multi-file renames, mechanical refactors, fixture generation, and migration verification instead of editing dozens of files by hand.
+2. **Skeleton extraction**: When an unfamiliar module is large, run a script to list exported types and function signatures so you see the full contract map without reading every body at once.
+3. **Import-direction checks**: Script import graphs when untangling modules to verify that core domain packages do not import volatile adapters.
+4. **Git co-change evidence**: Inspect `git log` commit frequency and files that change together to spot hidden coupling before refactoring.
+5. **Keep the repository clean ("nothing left to remove")**: Store one-off analysis or migration scripts in a temporary or scratch directory and remove temporary artifacts when done. Commit a script into `scripts/` only when teammates or CI pipelines genuinely need to run it again, and document its usage clearly.
 
 ---
 
 ## 4. Parallel Subagent Delegation
 
-When a task contains independent analysis or isolated implementation slices, invoke subagents in parallel:
-1. **Subsystem summaries**: Invoke read-only subagents to summarize separate subsystems concurrently without filling the primary context window.
-2. **Isolated stub bodies**: After you validate scaffolded signatures and docstrings (see `my-working-task`), invoke subagents to fill independent function bodies against fixed contracts.
-3. **Coupling and special-case audits**: After a structural refactor (see `my-working-project`), invoke subagents to search for remaining special cases, hidden links, needless links, and dead code.
+Spend subagent turns freely when parallel context keeps the main session clean and focused:
+1. **Subsystem mapping**: Delegate read-only exploration of independent packages or services in parallel.
+2. **Isolated stub implementation**: Once interfaces, types, and contracts compile (see `my-working-task`), delegate independent function implementations to subagents against those fixed signatures.
+3. **Post-refactor audits**: After untangling a module (see `my-working-project`), use a fresh subagent to scan for leftover dead code, broken comments, or missed edge cases.

@@ -1,108 +1,103 @@
 ---
 name: my-working-task
 description: >-
-  Run engineering tasks with bounded steps, scaffold-first phased implementation,
-  active TODO tracking, anti-spiral debugging, and atomic Git commits. Activate this
-  skill before planning or implementing code changes, fixing build or test errors,
-  managing stubs and TODO markers, or creating Git commits.
+  Run engineering tasks with project-workflow awareness, calibrated scaffold-first phases,
+  clean human handoffs, TODO tracking, anti-spiral debugging, and atomic Git commits.
+  Activate this skill when planning or implementing multi-step changes, managing stubs
+  and TODOs, debugging failures, or committing work.
 ---
 
-# Task Execution, Phased Implementation, and Git Workflow
+# Task Execution, Phased Implementation, and Human Handoff
 
-Run engineering tasks in bounded, verifiable phases. Build skeletons before bodies, track active stubs explicitly, and commit each verified sub-task atomically.
+Execute tasks so the human developer can follow every step without cognitive overload and take over the keyboard at any point.
 
-## 1. Bounded Multistep Execution and Triage
+## 1. Project Workflow Precedence
 
-### 1.1 Multistep Turn Discipline
+Before you plan steps, run checks, or create commits, inspect the target repository's `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `README.md`, and `CONTRIBUTING.md`:
+1. Follow the repository's required verification commands, branch rules, code generation steps, and commit message conventions first.
+2. Apply the rules in this skill whenever the repository does not specify its own workflow.
 
-When a task takes more than one step, obey these execution rules:
-1. **Number multistep tasks**: Write a numbered list where each item is one bounded action.
-2. **Eliminate chained actions**: Do not join sequential operations with "and then" inside one step.
-3. **State preconditions first**: State required preconditions or dependencies immediately before the step that requires them.
-4. **Restate state at every turn**: Start each turn update with completed items and the active next step:
+---
+
+## 2. Bounded Steps, Triage, and Human Resumability
+
+### 2.1 Turn-by-Turn Clarity
+
+1. **One bounded action per numbered step**: Break multi-step work into numbered items without chaining sequential actions via "and then" inside one step.
+2. **Preconditions right where needed**: State required setup or dependencies immediately before the step that uses them.
+3. **Restate progress every turn**: Keep working-memory load near zero by stating what finished and what comes next:
    ```text
-   Step 3 of 5 done: schema updated. Next: backfill the new column.
+   Step 2 of 4 done: token parser and unit fixtures passing. Next: wire middleware into router.
    ```
-5. **Keep one active checklist item**: If a harness task tool or checklist exists, mark one item in progress (`[/]`) at a time.
-6. **End with one concrete action**: If work stays open, end the turn with one bounded action that takes less than 2 minutes:
-   ```text
-   Next: run `pnpm test -- auth.spec.ts` and inspect the first failing assertion.
-   ```
-7. **State concrete time and scale**: Replace vague estimates with concrete units ("About 15 minutes if unit tests cover the handler.").
+4. **One active checklist item**: Keep at most one task item marked in progress (`[/]`) at a time.
+5. **Concrete time estimates and next steps**: Give concrete durations ("About 10 minutes since unit fixtures already exist") and end open turns with one concrete action under 2 minutes.
 
-### 1.2 Tangent Suppression and Priority Triage
+### 2.2 Leave a Clean Workbench for the Human
 
-Resolve the primary task first. If you find secondary defects, stale dependencies, or refactoring work during execution, obey these rules:
-1. Do not interrupt the primary task flow.
-2. List secondary findings at the end of the turn under priority tags:
-   ```text
-   Fix generated. Additional problems found, select one to resolve next:
+Design every intermediate state so the maintainer can resume work immediately without reverse-engineering what happened:
+- Keep the tree compiling and tests runnable between phases.
+- When pausing multi-phase work or handing back control, state three facts clearly:
+  1. **What works right now** and the exact command to run or test it.
+  2. **Where to look** (the primary entry-point file and function).
+  3. **What remains** (the single next logical step).
 
-   - [MUST  ] Stale dependencies: 5 packages are outdated. Run `pnpm outdated`.
-   - [SHOULD] README.md out of date: Update authentication setup instructions.
-   - [COULD ] Extract shared token utility into a helper module.
-   ```
+### 2.3 Tangent Suppression
 
-Note: The literal triage tags `[MUST]`, `[SHOULD]`, and `[COULD]` are exempt from the Mode 2 modal ban.
-
----
-
-## 2. Scaffold-First Gradual Implementation
-
-Do not write full implementations in one pass. One-pass generation causes cascading edits and structural drift. Build every feature or refactor in four phases:
-
-1. **Phase 1 (Scaffold signatures and types)**: Create target files, data structures, interfaces, 6-part public docstrings (see `my-working-project`), and function signatures with unimplemented stub bodies first.
-2. **Phase 2 (Validate the skeleton)**: Run the compiler, type tool, or IDE diagnostics on the stubbed skeleton. Make sure that module boundaries, imports, dependency directions, and caller-callee contracts compile before you write body logic.
-3. **Phase 3 (Fill bodies incrementally or delegate)**: Implement one function body at a time in dependency order (least volatile modules first). If multiple stubbed functions are independent, invoke subagents (see `my-using-tools`) to fill the bodies against fixed signatures and docstrings.
-4. **Phase 4 (Validate each step)**: After you fill each body, run formatters, linters, and targeted unit tests before you move to the next stub.
-
----
-
-## 3. Active Work Tracking, Stubs, and `TODO` Lifecycle
-
-1. **Mark scaffolded stubs**: During Phase 1, Phase 3, or a blocker, mark the site with unimplemented stubs and `TODO` comments.
-2. **Write `TODO` text in Mode 2**: Activate `my-writing-docs` rules. Put the condition or blocker first, and state an unambiguous imperative action in 20 words or fewer.
-3. **Use language-standard markers**:
-   - **TypeScript / JavaScript**: JSDoc `@todo`, `// TODO: <imperative instruction>`, or `throw new Error("TODO: <imperative instruction>")`
-   - **Rust**: `// TODO: <imperative instruction>`, `todo!("reason")`, or `unimplemented!("reason")`
-   - **Go / Java**: `// TODO: <imperative instruction>`, `panic("TODO: ...")`, or `throw new UnsupportedOperationException("TODO: ...")`
-   - **Python / Shell / YAML**: `# TODO: <imperative instruction>` or `raise NotImplementedError("TODO: ...")`
-4. **Remove completed markers**: After you implement and validate a task, delete all temporary `TODO` comments and stubs before you commit. Never leave stale in-progress markers in committed code.
-
----
-
-## 4. Verification Gate and Atomic Git Commits
-
-When Git version control is present, run this verification pipeline before every commit:
+Finish the requested task first. When you notice unrelated bugs, stale dependencies, or cleanup opportunities along the way, do not derail the active change. List them separately at the end of the turn:
 
 ```text
-Scaffold Signatures -> Verify Types -> Fill Bodies Incrementally -> Run Formatter & Linter -> Run Targeted Tests -> Remove Completed TODOs -> Commit
-```
+Middleware wired and passing tests. Separate findings if you want to tackle one next:
 
-When you create commits, obey these rules:
-1. **Commit per sub-task**: Commit each verified sub-task before you switch context to the next step. Never bundle unrelated refactors, bug fixes, and features into one commit.
-2. **Synchronize documentation**: When behavior, configuration, CLI flags, or interfaces change, update `README.md`, `AGENTS.md`, API specs, and docstrings in Mode 2.
-3. **Write imperative subject lines**: Describe what changed in the imperative mood (`Add authentication token validation`).
-4. **Write Mode 2 commit bodies**: State plain facts about what changed and why in Mode 2 (see `my-writing-docs`).
-5. **Match repository conventions**: Match the repository commit prefix style (such as `feat:`, `fix:`, or Conventional Commits) and language.
-6. **Preserve user authorship**: Commit with the configured Git user name and email. Append `Co-authored-by:` for the agent when the environment supports it.
+- [MUST  ] `auth/refresh.ts:88` swallows expired-key errors without logging.
+- [SHOULD] `README.md` still lists the removed `AUTH_LEGACY_SECRET` variable.
+- [COULD ] Delete unused fixture helper in `auth/__fixtures__/old_tokens.ts`.
+```
 
 ---
 
-## 5. Troubleshooting and Operational Safety Gate
+## 3. Calibrated Scaffold-First Implementation
 
-### 5.1 Anti-Spiral Debugging Protocol
+Do not rush multi-file changes into a single giant pass just to save tokens or turns. Spend extra turns to validate structure before writing details, calibrated to task size:
 
-When a build, test, or runtime command fails, obey this sequence:
-1. **Fail fast**: Read full error logs, stack traces, and exact failure lines before you propose a code change.
-2. **Stop after 2 to 3 failed attempts**: If an error persists after 2 to 3 fix attempts, stop iterating on code.
-3. **List assumptions**: State the exact assumptions that failed or remain unverified.
-4. **Request direction**: Show the exact error output and ask the user one targeted diagnostic question.
+- **Small localized edits** (single-function bug fix, config tweak, small isolated helper): Implement directly, then run the formatter, linter, and targeted tests.
+- **Multi-function features, new modules, or structural refactors**: Build in four phases:
+  1. **Phase 1 (Scaffold contracts)**: Create target files, data types, interfaces, boundary docblocks, and function signatures with stub bodies (`todo!()`, `throw new Error("TODO: ...")`, `raise NotImplementedError("TODO: ...")`).
+  2. **Phase 2 (Validate the skeleton)**: Run the compiler, type checker, or IDE diagnostics on the skeleton. Confirm that module boundaries, imports, and caller-callee types fit cleanly before writing internal logic.
+  3. **Phase 3 (Fill bodies incrementally)**: Implement bodies in dependency order (foundational data/domain helpers first, outer handlers/UI second). Delegate independent stubs to subagents when helpful (`my-using-tools`).
+  4. **Phase 4 (Validate each slice)**: Run formatters, linters, and targeted tests after each logical slice before moving on.
+
+---
+
+## 4. `TODO` Lifecycle and Atomic Git Commits
+
+### 4.1 Active Stubs and `TODO` Cleanup
+
+1. Use `TODO` markers and language-standard unimplemented stubs (`@todo`, `// TODO:`, `todo!("...")`, `UnsupportedOperationException`, `NotImplementedError`) to track unfinished slices during Phase 1–3 or across paused sessions.
+2. Put any blocker or condition first (`// TODO: Once webhook v2 payload lands, remove legacy signature fallback.`).
+3. Delete all temporary `TODO` comments and stubs once the task is complete and verified. Leave a `TODO` in committed code only when work is intentionally deferred with the user's knowledge.
+
+### 4.2 Atomic Git Commits
+
+When committing work in Git:
+1. **Verify before committing**: Make sure formatters, linters, targeted tests, and any affected docs (`README.md`, `AGENTS.md`, API schemas, comments) are updated and clean.
+2. **One logical change per commit**: Commit each verified sub-task before starting the next. Never mix unrelated formatting sweeps, refactors, and feature work in one commit.
+3. **Match repo history**: Follow the repository's existing commit style (`feat:`, `fix:`, Conventional Commits, or plain imperative subject lines) and language. Write plain factual commit bodies explaining what changed and why.
+4. **Preserve authorship**: Commit under the user's configured Git author identity, adding `Co-authored-by:` when appropriate for the environment.
+
+---
+
+## 5. Anti-Spiral Debugging and Safety Gates
+
+### 5.1 Anti-Spiral Protocol
+
+1. Read complete error output, stack traces, and failing lines before editing code.
+2. If a failure is still unresolved after 2 to 3 fix attempts, **stop guessing and stop editing**.
+3. State the exact assumptions you made, which ones remain unverified, and ask the user one focused diagnostic question.
 
 ### 5.2 Destructive Action Gate
 
-Ask the user for explicit approval before you run a destructive or irreversible command:
-- Deleting files or directories (`rm`, `rm -rf`)
-- Destructive Git commands (`git reset --hard`, `git push --force`, `git clean -fd`, branch deletion)
-- Database mutations (`DROP`, `TRUNCATE`, irreversible schema migrations, or production data scripts)
-- Secret handling (never stage or commit `.env` files, private keys, or credentials)
+Ask explicit user confirmation before any irreversible or high-risk operation:
+- Deleting user files or directories (`rm`, `rm -rf`)
+- Destructive Git history or worktree commands (`git reset --hard`, `git push --force`, `git clean -fd`, deleting branches)
+- Database or state mutations (`DROP`, `TRUNCATE`, irreversible migrations, production scripts)
+- Touching credentials or secrets (never stage or commit `.env` files, tokens, or private keys)
