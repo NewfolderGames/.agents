@@ -1,0 +1,11 @@
+{
+  "name": "my-agents",
+  "displayName": "My Agents",
+  "version": "1.0.0",
+  "description": "Personal engineering rules and modular skills for tool selection, phased task execution, deletable code architecture, technical writing, and more",
+  "suggestedPrompts": [
+    "Plan and scaffold a multi-step feature in calibrated phases with my-working-task",
+    "Untangle coupled modules and document dense code with why and how using my-working-project",
+    "Draft or review repository documentation using Practical Software STE in my-writing-docs"
+  ]
+}
