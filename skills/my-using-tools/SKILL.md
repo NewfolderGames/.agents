@@ -22,14 +22,15 @@ Before you pick a package manager, build runner, linter, or test command, inspec
 
 ## 2. Discovery Routing Matrix
 
-Route codebase navigation and command runs through the most direct tool available:
+Use your default built-in tools (`read_file`, `edit_file`, `write_file`, and `run_command` with `rg`, `ls`, `git`, and project CLI runners) as your first priority. Escalate to `intellij` (or `jetbrains_air_ide`) MCP tools (see `my-using-intellij` and its `references/` guides) when IDE semantic indexes, refactoring, inspections, run configurations, databases, or live debuggers provide capabilities beyond default tools:
 
-| Scenario | Primary Tool | Fallback / Next Step |
+| Scenario | Primary Tool (Default First) | Escalate to IntelliJ MCP When |
 |---|---|---|
-| JetBrains IDE connected (definitions, references, call/type hierarchy, safe rename/refactor, test runner) | `intellij` or `jetbrains_air_ide` | Interact with the IDE directly |
-| Known symbol, exact string, or regex pattern | `rg` (ripgrep) | Prefer `rg` over `grep` for fast, gitignore-aware search |
-| File path already known or open | Direct file read or IDE inspection | Skip broad search |
-| Builds, linters, Git commands, and test suites | Project task script, IDE runner, or direct CLI | Skip search tools |
+| File path already known or open | Built-in `read_file`, `write_file`, and `edit_file` | Reading inside `.jar` or `.jrt` archives, decompiling `.class` files, listing open IDE tabs, or applying IDE code style (`my-using-intellij`) |
+| Literal string or regex search | Shell `rg` (ripgrep) via `run_command` | Semantic symbol lookup, Quick Documentation, Call Hierarchy, AST Structural Search, or IDE excluded-root matching (`my-using-intellij`) |
+| Cross-file symbol rename or inspection fixes | Built-in `edit_file` for local edits | PSI-safe `rename_refactoring`, `apply_quick_fix`, or `convert_java_to_kotlin` (`my-using-intellij` and `references/jvm.md`) |
+| Builds, linters, Git, and test suites | `run_command` with project CLI scripts and `git` | Incremental JPS `build_project`, IDE inspections (`get_inspections`, `lint_files`), saved Run Configurations, coverage, IntelliJ Changelists, Python interpreter lookup (`references/python.md`), or CMake profiles (`references/native.md`) |
+| Live debugging, profiling, or database queries | Project CLI test runners or local DB clients | Live `xdebug_*` or `jvm_debug_*` debugging, Go `pprof` profiling, remote PHP interpreter info, native registers/memory, or IDE database queries (`my-using-intellij` `references/`) |
 
 ### Local Environment Fallbacks
 
