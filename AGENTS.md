@@ -29,7 +29,8 @@ Activate the matching skill (or read its `SKILL.md` path directly) whenever a ta
 
 | Skill | Path | Activate When |
 |---|---|---|
-| `my-using-tools` | `skills/my-using-tools/SKILL.md` | Searching a repo, using JetBrains IDE tools, choosing project build/test runners, writing `python3` scripts, mapping imports/co-changes, or delegating to subagents. |
+| `my-using-tools` | `skills/my-using-tools/SKILL.md` | Choosing default repository search, CLI build/test runners, `python3` scripts, import/co-change inspection, or subagent delegation, and deciding when to escalate to `intellij` MCP. |
+| `my-using-intellij` | `skills/my-using-intellij/SKILL.md` | Escalating from default tools to active `intellij` (or `jetbrains_air_ide`) MCP tools for PSI navigation, Call Hierarchy, Structural Search, safe rename, inspections, builds, coverage, changelists, multi-language debugging, or on-demand language guides (`references/` for JVM, Go, Python, PHP, SQL, and CMake/native). |
 | `my-working-task` | `skills/my-working-task/SKILL.md` | Planning or running multi-step changes, scaffolding contracts in phases, leaving clean human handoffs, tracking `TODO`s, debugging failures, or making atomic Git commits. |
 | `my-working-project` | `skills/my-working-project/SKILL.md` | Structuring modules for easy replacement/deletion, chunking functional pipelines, documenting regexes/macros/reflection, curating tests, or untangling coupled code. |
 | `my-writing-docs` | `skills/my-writing-docs/SKILL.md` | Drafting or editing code comments, `TODO`s, docblocks, `README.md`, specs, runbooks, changelogs, commit bodies, error messages, or postmortems. |

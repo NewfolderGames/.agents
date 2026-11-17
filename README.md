@@ -14,7 +14,8 @@ Personal rules and modular skills repository for AI coding agents.
 | Path | Purpose |
 |---|---|
 | `AGENTS.md` | Always-on core rules: precedence order, Mode 1 chat flow, anti-slop discipline, safety gates, and skill router |
-| `skills/my-using-tools/` | Project-aware tool selection, JetBrains IDE routing, `rg`, `python3` automation, and subagent delegation |
+| `skills/my-using-tools/` | Project-aware tool selection, default-first escalation routing, `rg`, `python3` automation, and subagent delegation |
+| `skills/my-using-intellij/` | Core IntelliJ IDE MCP usage, default-tools-first policy, 59 core tools, on-demand `references/` guides (JVM, Go, Python, PHP, SQL, CMake/native), and `scripts/sync_intellij_tools.py` |
 | `skills/my-working-task/` | Bounded multistep execution, clean human handoffs, calibrated scaffold-first workflow, `TODO`s, and atomic commits |
 | `skills/my-working-project/` | Deletable module design, functional pipeline chunking, documented dense code, co-change untangling, plus `references/` for language defaults and worked examples |
 | `skills/my-writing-docs/` | Practical Software STE for documentation and comments, plus `references/` for the 50-row slop table and domain templates |

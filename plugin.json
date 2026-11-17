@@ -1,8 +1,8 @@
 {
   "name": "my-agents",
   "displayName": "My Agents",
-  "version": "1.0.0",
-  "description": "Personal engineering rules and modular skills for tool selection, phased task execution, deletable code architecture, technical writing, and more",
+  "version": "1.1.0",
+  "description": "Personal engineering rules and modular skills for default-first tool selection, IntelliJ IDE MCP workflows (core plus JVM, Go, Python, PHP, SQL, and CMake/native references), phased task execution, deletable code architecture, technical writing, and RSCSS",
   "suggestedPrompts": [
     "Plan and scaffold a multi-step feature in calibrated phases with my-working-task",
     "Untangle coupled modules and document dense code with why and how using my-working-project",
