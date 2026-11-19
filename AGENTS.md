@@ -18,8 +18,8 @@ Select the mode for the target output before generating text. Never mix modes in
 
 | Mode | Target Artifacts | Active Rules |
 |---|---|---|
-| **Mode 1: Interactive Chat** *(Default)* | User replies, trivial edit outcomes, debugging handoffs, clarifying questions, and 1-to-2 sentence pointers to session documents | Sections 2 through 5 of this file. Lead with the action or outcome, cap lists at 5 items, omit filler, and never duplicate `plan.md` or `report.md` contents in chat. |
-| **Mode 2: Practical Software STE** *(All docs & code text)* | Session documents (`plan.md`, `todo.md`, `report.md`), code comments, `TODO`s, docblocks, API specs, `README.md`, `AGENTS.md`, `SKILL.md`, runbooks, changelogs, commit bodies, error messages, postmortems | Respect project doc style first, then activate `my-writing-docs` (`skills/my-writing-docs/SKILL.md`). Write unambiguous active-voice prose, put conditions before commands, explain *why* and *how* on dense code, and cut AI slop. |
+| **Mode 1: Interactive Chat** *(Default)* | User replies, trivial edit outcomes, debugging handoffs, clarifying questions, and 1-to-2 sentence pointers to session documents | Sections 2 through 5 of this file. Lead with the action or outcome, cap lists at 5 items, omit filler, and never duplicate `*.plan.md` or `*.report.md` contents in chat. |
+| **Mode 2: Practical Software STE** *(All docs & code text)* | Session documents (`tasks.md`, `NN-<slug>.plan.md`, `NN-<slug>.report.md`), code comments, `TODO`s, docblocks, API specs, `README.md`, `AGENTS.md`, `SKILL.md`, runbooks, changelogs, commit bodies, error messages, postmortems | Respect project doc style first, then activate `my-writing-docs` (`skills/my-writing-docs/SKILL.md`). Write unambiguous active-voice prose, put conditions before commands, explain *why* and *how* on dense code, and cut AI slop. |
 
 Note: Never apply Mode 2 constraints to marketing copy, release blog posts, or brand writing.
 
@@ -31,7 +31,7 @@ Activate the matching skill (or read its `SKILL.md` path directly) whenever a ta
 |---|---|---|
 | `my-using-tools` | `skills/my-using-tools/SKILL.md` | Choosing default repository search, CLI build/test runners, `python3` scripts, import/co-change inspection, or subagent delegation, and deciding when to escalate to `intellij` MCP. |
 | `my-using-intellij` | `skills/my-using-intellij/SKILL.md` | Escalating from default tools to active `intellij` (or `jetbrains_air_ide`) MCP tools for PSI navigation, Call Hierarchy, Structural Search, safe rename, inspections, builds, coverage, changelists, multi-language debugging, or on-demand language guides (`references/` for JVM, Go, Python, PHP, SQL, and CMake/native). |
-| `my-working-task` | `skills/my-working-task/SKILL.md` | Planning tasks (`/plan` or multi-step preparation), tracking checkboxes in `todo.md`, scaffolding contracts in phases, guarding scope boundaries, debugging failures, making atomic Git commits, or writing completion reports (`report.md`). |
+| `my-working-task` | `skills/my-working-task/SKILL.md` | Planning tasks (`/plan` or multi-step preparation), tracking multi-task progress in `tasks.md`, scaffolding contracts in phases, guarding scope boundaries, debugging failures, making atomic Git commits, or writing implementation and audit reports (`NN-<slug>.report.md`). |
 | `my-working-project` | `skills/my-working-project/SKILL.md` | Structuring modules for easy replacement/deletion, chunking functional pipelines, documenting regexes/macros/reflection, curating tests, or untangling coupled code. |
 | `my-writing-docs` | `skills/my-writing-docs/SKILL.md` | Drafting or editing session documents, code comments, `TODO`s, docblocks, `README.md`, specs, runbooks, changelogs, commit bodies, error messages, or postmortems. |
 | `rscss` | `skills/rscss/SKILL.md` | Structuring CSS or SCSS stylesheets into RSCSS components, elements, variants, layouts, and helpers. |
@@ -43,7 +43,7 @@ Activate the matching skill (or read its `SKILL.md` path directly) whenever a ta
 1. **Lead with the next action or outcome**: Line 1 must state an actionable command, file path, or direct outcome. Place background context after the action.
    - *Bad*: "Let's examine the configuration. Your authentication setup has several moving pieces..."
    - *Good*: "Run `pnpm install jsonwebtoken`, then open `src/auth.ts:42`."
-2. **Route completed work by task tier**: On trivial 1-file tasks that skip `report.md`, state concrete, testable results in chat (`Login works with magic links. **Try: pnpm run dev, then open /login**`). Whenever `report.md` is generated (Section 2.3), do not summarize actions or follow-up items in chat. Reply in 1 to 2 sentences telling the user to read `report.md`.
+2. **Route completed work by task tier**: On trivial 1-file tasks that skip a report, state concrete, testable results in chat (`Login works with magic links. **Try: pnpm run dev, then open /login**`). Whenever `NN-<slug>.report.md` is generated (Section 2.3), do not summarize actions or follow-up items in chat. Reply in 1 to 2 sentences telling the user to read the report.
 3. **Report errors as plain facts**: Omit sympathetic filler ("Uh oh", "Oh no", "There seems to be an issue"). State failure location, cause, and fix command:
    ```text
    Test fails at `auth.spec.ts:42`: expected 200, got 401. Cause: missing auth header.
@@ -57,27 +57,29 @@ Activate the matching skill (or read its `SKILL.md` path directly) whenever a ta
 
 1. **Number multistep work**: Write one bounded action per numbered step without chaining sequential actions via "and then".
 2. **State preconditions upfront**: Put required setup right before the step that needs it.
-3. **Track progress in `todo.md`**: On multi-step tasks, check off completed items (`- [x]`) in `todo.md` as each step finishes, keeping at most one active item marked `- [ ] **(in progress)**`. When pausing mid-task in chat, state completed steps and the next step in one line (`Step 3 of 5 done: schema updated. Next: backfill the new column.`).
-4. **End open turns with one concrete action**: When work stays open or awaits approval, end with one bounded action under 2 minutes (`Next: review plan.md and click Proceed to start Step 1.`).
+3. **Track progress in `tasks.md`**: On multi-step tasks, check off completed items (`- [x]`) under the active task in `tasks.md` as each step finishes, keeping at most one active item marked `- [ ] **(in progress)**`. When pausing mid-task in chat, state completed steps and the next step in one line (`Step 3 of 5 done: schema updated. Next: backfill the new column.`).
+4. **End open turns with one concrete action**: When work stays open or awaits approval, end with one bounded action under 2 minutes (`Next: review 01-<slug>.plan.md and click Proceed to start Step 1.`).
 5. **Give concrete time units**: Replace vague estimates with concrete durations ("About 15 minutes because unit fixtures already cover the handler.").
-6. **Guard scope and suppress tangents**: Finish the in-scope task first and never expand scope mid-session. Record unrelated findings and out-of-scope follow-ups under `[MUST]`, `[SHOULD]`, and `[COULD]` inside `report.md` (or at the end of the turn on trivial edits that skip `report.md`).
+6. **Guard scope and suppress tangents**: Finish the in-scope task first and never expand scope mid-session. Record unrelated findings and out-of-scope follow-ups with IDs (`F1`, `F2`) and priority (`MUST`, `SHOULD`, `COULD`) inside `NN-<slug>.report.md` (or at the end of the turn on trivial edits that skip a report).
 
-### 2.3 Session Document Lifecycle (`plan.md`, `todo.md`, `report.md`)
+### 2.3 Session Document Lifecycle (`tasks.md`, `NN-<slug>.plan.md`, `NN-<slug>.report.md`)
 
-Activate `my-working-task` (`skills/my-working-task/SKILL.md` and `references/session-templates.md`) to manage structured session documents:
+Activate `my-working-task` (`skills/my-working-task/SKILL.md` and `references/session-templates.md`) to manage multi-task session documents without overwriting earlier tasks:
 
 1. **Trigger matrix**:
-   - **Read-only Q&A and quick lookups**: Reply directly in chat (Mode 1) and create zero session documents, unless the session was explicitly planned or required extended multi-step investigation (then write `report.md`).
-   - **Trivial tasks** (single-file, fast, obvious edit with zero architectural decisions): Skip `plan.md` and `todo.md`, and reply concisely in chat. If a task started as trivial ends up taking substantial debugging or investigation time, write `report.md` upon completion.
-   - **Planned, multi-step, architectural, or time-intensive tasks** (`/plan` invocations, changes touching 2 or more files, architectural decisions, or tasks taking substantial time): Create `plan.md` and `todo.md` during preparation, update `todo.md` checkboxes live during execution, and generate `report.md` upon completion.
-2. **Session directory resolution** (first accessible directory wins):
-   - **Antigravity**: Conversation `<Artifact Directory>` (`<appDataDir>/brain/<conversation-id>/plan.md`, `todo.md`, `report.md` with `UserFacing: true`).
-   - **Other agents with native directories**: The agent's own accessible plan or session directory (for example, `.junie/plans/` in JetBrains Junie).
+   - **Quick Q&A and lookups**: Reply directly in chat (Mode 1) and create zero session documents.
+   - **Extended audits, reviews, or investigations**: Allocate `NN`, record the task in `tasks.md`, and write an Audit/Investigation `NN-<slug>.report.md` (no plan required unless `/plan` was invoked).
+   - **Trivial edits** (single-file, fast, obvious edit with zero architectural decisions): Skip session documents and reply concisely in chat. If scope expands to 2 or more files or extended debugging, allocate `NN` in `tasks.md` and write `NN-<slug>.report.md` at completion.
+   - **Planned, multi-step, architectural, or time-intensive tasks** (`/plan`, 2 or more files, architectural decisions, or extended runtime): Allocate `NN`, write `NN-<slug>.plan.md`, update `tasks.md` live during execution, and write `NN-<slug>.report.md` at completion.
+2. **Session directory, numbering, and immutability** (first accessible directory wins):
+   - **Antigravity**: `<appDataDir>/brain/<conversation-id>/` (`tasks.md`, `NN-<slug>.plan.md`, `NN-<slug>.report.md` with `UserFacing: true`).
+   - **Other agents with native directories**: The agent's own plan or session directory (for example, `.junie/plans/` in JetBrains Junie or `~/.claude/plans/` in Claude Code).
    - **Fallback**: `.agents/sessions/<YYYYMMDD-HHMM>-<slug>/` inside the workspace. Keep fallback `.agents/sessions/` files unstaged unless the user asks to commit them.
+   - **Sequential IDs, immutability, and language parity**: Inspect `tasks.md` and existing `NN-*.md` files to allocate the next two-digit ID starting at `01`. Never overwrite an earlier task's files. Mutate only `tasks.md` during execution and across tasks while keeping `NN-<slug>.plan.md` immutable after approval and `NN-<slug>.report.md` immutable after delivery. Keep one consistent language across all documents for a task (matching the user's prompt language or explicit language request).
 3. **Document roles and chat handoffs**:
-   - **`plan.md`**: Junie-structured requirements (with explicit `In Scope` and `Out of Scope` boundaries), technical design (contracts, component table, ASCII file tree, risks), conditional reference sections, and testing. Omit delivery steps from `plan.md`. If `/plan` or plan approval was requested, reply with a 1-to-2 sentence link to `plan.md` and `todo.md` without re-summarizing and wait for approval.
-   - **`todo.md`**: Standalone delivery checklist organized into `### Step N` blocks with `- [ ]` and `- [x]` Markdown checkboxes updated live during execution.
-   - **`report.md`**: Summary and outcome, completed actions and file table, verification results and run commands, and `[MUST]` / `[SHOULD]` / `[COULD]` future work rendered as a table. Once written, reply in 1 to 2 sentences linking `report.md` and telling the user to read it.
+   - **`tasks.md`**: Single session hub holding a top overview table (`# | Status | Task | Docs`), collapsed `<details>` blocks for finished tasks, and an expanded active `## Task NN - <Title>` section with `### Step N` GFM checkboxes.
+   - **`NN-<slug>.plan.md`**: Junie-structured technical plan with metadata header, `In Scope` / `Out of Scope`, required core plus conditional sections, and testing (omit delivery steps). On `/plan` or plan-approval requests, reply in 1 to 2 sentences linking the plan and `tasks.md` without re-summarizing and wait for approval.
+   - **`NN-<slug>.report.md`**: Implementation or Audit/Investigation report with metadata header, `Files Changed` (grouped when over 15 files), tabular verification (`PASS`/`FAIL`/`SKIPPED`/`NOT RUN`), and `ID | Priority | Location | Follow-Up Action` table. Once written, reply in 1 to 2 sentences linking the report and telling the user to read it.
 
 ## 3. Clear Vocabulary and Anti-Slop Discipline
 
@@ -96,6 +98,6 @@ Normal software verbs (`test`, `check`, `run`, `render`, `display`, `insert`, `a
 ## 5. Pre-Send Check
 
 - [ ] **Project precedence**: Target project docs (`AGENTS.md`, `CLAUDE.md`, `README.md`) and neighboring code idioms were checked and respected first.
-- [ ] **Session documents**: `plan.md`, `todo.md`, and `report.md` were created and updated per Section 2.3, and chat replies link to `plan.md` or `report.md` without duplicating their contents.
+- [ ] **Session documents**: Task IDs were allocated sequentially without overwriting earlier files, `tasks.md` reflects live state, language matches across task docs, and chat replies link to `NN-<slug>.plan.md` or `NN-<slug>.report.md` without duplicating their contents.
 - [ ] **First and last line (Mode 1)**: Line 1 states the action or outcome, visible chat lists cap at 5 items per group, and the final line states one concrete next action when work remains open without AI filler.
 - [ ] **Skill routing**: Matching `my-*` skills were activated for tool usage, task flow, code architecture, and documentation.

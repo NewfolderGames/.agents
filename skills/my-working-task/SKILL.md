@@ -1,18 +1,19 @@
 ---
 name: my-working-task
 description: >-
-  Plan, track, execute, and report engineering tasks using Junie-style structured plans
-  (plan.md with In Scope and Out of Scope boundaries), standalone live checkbox checklists
-  (todo.md), calibrated scaffold-first phases, atomic Git commits, and session completion
-  reports (report.md). Activate this skill when /plan is invoked, preparing or executing
-  multi-step changes, tracking task progress, debugging failures, or wrapping up a session.
+  Plan, track, execute, and report single or multi-task engineering sessions using a
+  unified session hub (tasks.md), sequential immutable technical plans (NN-<slug>.plan.md),
+  calibrated scaffold-first phases, atomic Git commits, and dual-mode completion or audit
+  reports (NN-<slug>.report.md). Activate this skill when /plan is invoked, preparing or
+  executing multi-step changes, tracking task progress, auditing codebases, debugging
+  failures, or wrapping up a session.
 ---
 
-# Session Planning, Checkbox Tracking, Phased Execution, and Reporting
+# Session Planning, Multi-Task Tracking, Phased Execution, and Reporting
 
-Run engineering sessions with clear scope boundaries, scannable plans, live progress checkboxes, and structured completion reports so the developer can review decisions quickly or take over the keyboard at any step.
+Run engineering sessions with clear scope boundaries, scannable immutable plans, one persistent live task hub (`tasks.md`), and structured implementation or audit reports so the developer can review decisions quickly, chain follow-up tasks without losing history, or take over the keyboard at any step.
 
-## 1. Project Precedence and Session Directory Resolution
+## 1. Project Precedence, Directory Resolution, and Task Numbering
 
 ### 1.1 Project Workflow Precedence
 
@@ -20,12 +21,18 @@ Before you plan steps, run checks, or create commits, inspect the target reposit
 1. Follow the repository's required verification commands, branch rules, code generation steps, and commit message conventions first.
 2. Apply the rules in this skill whenever the repository does not specify its own workflow.
 
-### 1.2 Session Document Directory Resolution
+### 1.2 Session Directory Resolution
 
-When a task triggers `plan.md`, `todo.md`, or `report.md` (Section 2), write them to the first accessible location in this order:
-1. **Antigravity `<Artifact Directory>`**: Write `<appDataDir>/brain/<conversation-id>/plan.md`, `todo.md`, and `report.md` with `ArtifactMetadata` (`UserFacing: true`, `RequestFeedback: true` on `plan.md` when awaiting user approval, and `RequestFeedback: false` on `todo.md` and `report.md`).
-2. **Agent-native plan or session directory**: In other AI coding agents, write to the agent's own accessible session directory (for example, `.junie/plans/` in JetBrains Junie).
-3. **Workspace fallback**: When no agent-specific directory exists or is accessible, write to `.agents/sessions/<YYYYMMDD-HHMM>-<slug>/` (`plan.md`, `todo.md`, `report.md`) inside the workspace. Never stage or commit fallback `.agents/sessions/` files unless the user explicitly asks.
+When a task triggers session documents (Section 2), write them to the first accessible location in this order:
+1. **Antigravity `<Artifact Directory>`**: Write `<appDataDir>/brain/<conversation-id>/tasks.md`, `NN-<slug>.plan.md`, and `NN-<slug>.report.md` with `ArtifactMetadata` (`UserFacing: true`, `RequestFeedback: true` on `NN-<slug>.plan.md` when awaiting user approval, and `RequestFeedback: false` on `tasks.md` and `NN-<slug>.report.md`). Use absolute `file://` links for both sibling artifacts and workspace source files.
+2. **Agent-native plan or session directory**: In other AI coding agents, write to the agent's own accessible plan or session directory (for example, `.junie/plans/` in JetBrains Junie or `~/.claude/plans/` in Claude Code).
+3. **Workspace fallback**: When no agent-specific directory exists or is accessible, write to `.agents/sessions/<YYYYMMDD-HHMM>-<session-slug>/` inside the workspace. Use relative links between sibling session files so the folder stays portable, and never stage or commit fallback `.agents/sessions/` files unless the user explicitly asks.
+
+### 1.3 Sequential Task IDs, Immutability, and Language Parity
+
+1. **Allocate zero-padded IDs starting at `01`**: Before creating any task file, inspect `tasks.md` and existing `NN-*.md` files in the session directory and assign `max(NN) + 1` (`01`, `02`, `03`). Name files `NN-<kebab-slug>.plan.md` and `NN-<kebab-slug>.report.md`, keeping `<kebab-slug>` to 3 to 5 lowercase ASCII words. Never reuse an ID or overwrite an earlier task's plan or report.
+2. **One mutable hub, two immutable artifacts**: Mutate only `tasks.md` during execution and across tasks. Keep `NN-<slug>.plan.md` immutable after approval (record mid-execution adjustments in the report's `Plan Deviations` section) and keep `NN-<slug>.report.md` immutable after delivery.
+3. **Keep one language per task**: Write the `tasks.md` entry, `NN-<slug>.plan.md`, and `NN-<slug>.report.md` in the same language (matching the user's prompt language or explicit language request) instead of mixing languages across documents for the same task.
 
 ---
 
@@ -33,72 +40,68 @@ When a task triggers `plan.md`, `todo.md`, or `report.md` (Section 2), write the
 
 Select the document set based on task scope and runtime:
 
-| Task Tier | Criteria | `plan.md` | `todo.md` | `report.md` | Chat Reply |
+| Task Tier | Criteria | `tasks.md` | `NN-<slug>.plan.md` | `NN-<slug>.report.md` | Chat Reply |
 |---|---|---|---|---|---|
-| **Tier 0: Read-Only Q&A** | Fast explanations or code lookups with zero file edits | No | No | No* | Direct Mode 1 answer (*write `report.md` if explicitly planned or after extended multi-step research) |
-| **Tier 1: Trivial Edit** | Single-file, obvious, fast edit with zero architectural decisions | No | No | No* | Concise Mode 1 outcome + verification command (*promote to `report.md` if debugging takes substantial time) |
-| **Tier 2: Planned, Multi-Step, or Time-Intensive** | `/plan` invoked, 2 or more files, architectural decisions, or extended execution/debugging time | Yes | Yes | Yes | 1-to-2 sentence link to `plan.md` + `todo.md` (when awaiting approval) and 1-to-2 sentence link to `report.md` at completion |
+| **Tier 0: Quick Q&A** | Fast explanations or code lookups with zero file edits | No | No | No | Direct Mode 1 answer |
+| **Tier 0-Extended: Audit / Investigation** | Extended read-only code review, migration audit, or root-cause analysis | Yes | No* | Yes (Audit mode) | 1-to-2 sentence link to report (*write plan only if `/plan` was invoked) |
+| **Tier 1: Trivial Edit** | Single-file, obvious, fast edit with zero architectural decisions | No | No | No* | Concise Mode 1 outcome + verification command (*escalate below if runtime expands) |
+| **Tier 2: Planned, Multi-Step, or Time-Intensive** | `/plan` invoked, 2 or more files, architectural decisions, or extended execution/debugging | Yes | Yes | Yes (Impl mode) | 1-to-2 sentence link to plan + `tasks.md` (when awaiting approval) and 1-to-2 sentence link to report at completion |
 
-**Mid-Session Escalation**: If a task started as Tier 1 expands to 2 or more files, uncovers architectural trade-offs, or requires extended debugging across multiple attempts, escalate immediately: create `todo.md` if multiple steps remain, and always write `report.md` at completion.
-
----
-
-## 3. Preparation Phase: Junie-Style `plan.md` and Standalone `todo.md`
-
-Use the skeletons in [references/session-templates.md](references/session-templates.md) and write all prose in Practical Software STE (`my-writing-docs`).
-
-### 3.1 Authoring Clear, Scannable `plan.md` Documents
-
-Model `plan.md` on JetBrains Junie's structured technical design format so reviewers grasp boundaries and architecture in one pass:
-1. **`# Requirements` with Strict Scope Boundaries**:
-   - Open with `Overview & Goals` (2 to 3 sentences on the problem and current gap, plus bulleted `Expected outcomes`).
-   - Always include `Scope` split into `#### In Scope` and `#### Out of Scope`. Use `Out of Scope` to draw explicit boundaries around adjacent features, migrations, or refactors that belong in a separate session.
-   - List numbered `Functional Requirements` and measurable `Non-Functional Requirements` (latency, concurrency, compatibility, or size bounds). Include `User Stories` only when user or operator workflows change.
-2. **`# Technical Design` Focused on Contracts, Not Code Dumps**:
-   - Cite exact `file:line` facts under `Current Implementation` and state numbered `Key Decisions` with concise rationale.
-   - Show only concise interfaces, types, structs, or SQL schemas under `Data Models / Contracts`. Never paste long function bodies into `plan.md`.
-   - Include a `Components` table, an ASCII `File Structure` tree annotated with `(added: ...)`, `(modified: ...)`, or `(deleted: ...)`, and a `Risks` table (`Risk | Impact | Mitigation`). Add a Mermaid `Architecture Diagram` when 3 or more components interact.
-3. **Conditional Sections Only When Relevant**:
-   - Include `# API Reference`, `# Migration Plan` (additive DDL, rollout order, and `< 1 minute` rollback), and `# Alternatives Considered` (comparison table + why chosen option won) only when the task touches those areas. Omit unused sections to keep small plans compact.
-4. **`# Testing` Without Inline Delivery Steps**:
-   - Specify `Validation Approach` (exact CLI commands), `Key Scenarios`, `Edge Cases`, and `Test Changes`.
-   - Never place `Delivery Steps` inside `plan.md`. Put all step-by-step execution items in `todo.md`.
-
-### 3.2 Authoring Standalone `todo.md` Checklists
-
-1. Link `plan.md` at the top of `todo.md` and show a one-line `Status` field.
-2. Group work into `### Step N: <Imperative Title>` sections (3 to 7 steps for typical features).
-3. Start each step with one sentence stating what works once that step finishes, followed by 2 to 5 concrete `- [ ]` checkboxes naming target files, symbols, and test commands (one bounded action per checkbox, without chaining sequential actions via "and then").
-4. **Plan Approval Gate**: If the user invoked `/plan` or asked to review the plan before edits, stop after creating `plan.md` and `todo.md`. Output a 1-to-2 sentence chat reply linking both files without re-summarizing `plan.md`, and wait for explicit approval. On autonomous multi-step requests without `/plan`, proceed directly to Step 1.
+**Mid-Session Escalation**: If a task started as Tier 1 expands to 2 or more files, uncovers architectural trade-offs, or requires extended debugging across multiple attempts, allocate the next ID `NN` in `tasks.md` without fabricating a retroactive plan, track remaining steps there, and write `NN-<slug>.report.md` at completion.
 
 ---
 
-## 4. Execution Phase: Live Checkboxes, Scope Guard, and Phased Code
+## 3. Preparation Phase: `NN-<slug>.plan.md` and `tasks.md`
 
-### 4.1 Live `todo.md` Updates and Scope Guard
+Use the copy-ready skeletons in [references/session-templates.md](references/session-templates.md) and write all prose in Practical Software STE (`my-writing-docs`).
 
-1. **Check checkboxes as you progress**: Mark the single active item `- [ ] **(in progress)**` (preserving standard `- [ ]` syntax so Markdown viewers render real checkboxes). Update each item to `- [x]` immediately after its verification check passes.
-2. **Enforce `Out of Scope` boundaries**: When you spot unrelated bugs, stale docs, or refactor ideas during execution, do not expand the current session's edits. Leave out-of-scope files untouched and note the exact `file:line` and severity (`[MUST]`, `[SHOULD]`, `[COULD]`) for `report.md`.
+### 3.1 Authoring Clear, Scannable `NN-<slug>.plan.md` Documents
+
+Model `NN-<slug>.plan.md` on JetBrains Junie's technical design format so reviewers grasp boundaries and architecture in one pass:
+1. **Header metadata and strict heading hierarchy**: Open with `# Plan NN: <Short Task Title>`, followed by `Task` (link to `tasks.md`), `Target` (`<repo> @ <branch> (<short-sha>)`), and optional `Follows` (link to a prior task's report when chaining work). Use monotonic `H1 -> H2 -> H3 -> H4` nesting with one `H1` per document.
+2. **Required core in every plan**:
+   - `## Requirements`: `### Overview & Goals` (2 to 3 sentences plus bulleted `Expected outcomes`) and `### Scope` split into `#### In Scope` and `#### Out of Scope`.
+   - `## Technical Design`: `### Current Implementation` (citing exact `file:line` facts), `### Key Decisions`, `### Proposed Changes`, and `### File Structure` (ASCII tree annotated with `(added: ...)`, `(modified: ...)`, or `(deleted: ...)`).
+   - `## Testing`: `### Validation Approach` (exact CLI commands), `### Key Scenarios`, and `### Test Changes`.
+3. **Conditional sections by task complexity**: Include `### Open Questions & Assumptions` (when ambiguities or trade-offs require user confirmation before approval), `### User Stories`, `### Functional Requirements`, `### Non-Functional Requirements`, `### Data Models / Contracts` (concise interfaces, types, or DDL only), `### Components`, `### Architecture Diagram` (Mermaid when 3 or more components interact), `### Risks` (`Risk | Impact | Mitigation`), `## API Reference`, `## Migration Plan`, `## Alternatives Considered`, and `### Edge Cases` only when relevant. Keep compact plans between 40 and 90 lines and omit long function bodies or duplicated external specs.
+4. **Omit delivery steps**: Never place step-by-step execution checklists inside `NN-<slug>.plan.md`. Put all execution items in `tasks.md`.
+
+### 3.2 Updating the Session Hub (`tasks.md`)
+
+1. **Maintain the top Overview Table**: Keep `# Session Tasks` and the `# | Status | Task | Docs` table at the top of `tasks.md` so every task's status and `[plan]` / `[report]` links remain visible in the first 10 lines.
+2. **Collapse finished tasks safely**: Before adding Task `NN`, confirm any prior completed or cancelled task is collapsed in a `<details>` block (`<summary>[x] Task 01 - Title</summary>`) retaining its checked step items. Place Markdown links in the Overview Table and on the first Markdown line inside `<details>`, never inside `<summary>`.
+3. **Expand the active task**: Append `## Task NN - <Title>` with `Status`, `Docs`, a 1-sentence `Summary`, and 3 to 7 `### Step N: <Imperative Title>` blocks. Start each step with one sentence stating what works when that step finishes, followed by 2 to 5 bounded `- [ ]` checkboxes naming target files, symbols, and test commands (one action per checkbox, without chaining sequential actions via "and then").
+4. **Plan Approval Gate**: If the user invoked `/plan` or requested approval before edits, stop after creating `NN-<slug>.plan.md` and updating `tasks.md`. Reply in 1 to 2 sentences linking both files (flagging open decisions if present) without re-summarizing the plan, and wait for explicit approval. On autonomous multi-step requests without `/plan`, proceed directly to Step 1.
+
+---
+
+## 4. Execution Phase: Live `tasks.md`, Scope Guard, and Phased Code
+
+### 4.1 Live `tasks.md` Updates, Scope Guard, and Cancellation
+
+1. **Check checkboxes as you progress**: Mark the single active item `- [ ] **(in progress)**` under the active task in `tasks.md` (preserving standard GFM `- [ ]` syntax) and flip it to `- [x]` immediately after verification passes. Keep the Overview Table's `Status` column (`In Progress (Step X/Y)`) in sync.
+2. **Enforce `Out of Scope` boundaries**: When you spot unrelated bugs, stale docs, or refactor ideas during execution, leave out-of-scope files untouched and record exact `file:line` and priority (`MUST`, `SHOULD`, `COULD`) for `NN-<slug>.report.md`.
+3. **Handle abandoned or superseded tasks**: If the user cancels Task `NN` or pivots to Task `MM`, update Task `NN` in the Overview Table to `Cancelled` or `Superseded by Task MM`, collapse its section in `tasks.md`, and keep `NN-<slug>.plan.md` intact on disk.
 
 ### 4.2 Calibrated Scaffold-First Implementation
 
-Calibrate implementation passes to change complexity instead of rushing multi-file edits in one giant pass:
+Calibrate implementation passes to change complexity instead of rushing multi-file edits in one pass:
 - **Small localized edits** (single-function fix, config tweak, isolated helper): Edit directly, then run the formatter, linter, and targeted tests.
 - **Multi-function features, new modules, or structural refactors**: Build in four phases:
   1. **Phase 1 (Scaffold contracts)**: Create target files, data types, interfaces, boundary docblocks, and function signatures with stub bodies (`todo!()`, `throw new Error("TODO: ...")`, `raise NotImplementedError("TODO: ...")`).
   2. **Phase 2 (Validate the skeleton)**: Run the compiler, type checker, or IDE diagnostics (`my-using-intellij`) on the skeleton to verify module boundaries and caller-callee types before writing internal logic.
   3. **Phase 3 (Fill bodies incrementally)**: Implement bodies in dependency order (foundational domain/data helpers first, outer handlers/UI second). Delegate independent stubs to subagents when helpful (`my-using-tools`).
-  4. **Phase 4 (Validate each slice)**: Run formatters, linters, and targeted tests after each logical slice before checking off the step in `todo.md`.
+  4. **Phase 4 (Validate each slice)**: Run formatters, linters, and targeted tests after each logical slice before checking off the step in `tasks.md`.
 
 ### 4.3 Clean Human Handoff When Pausing Mid-Session
 
 Keep the working tree compiling between steps. When pausing multi-step work or asking for user input mid-session:
-1. Update `todo.md` so `- [x]` and `- [ ] **(in progress)**` reflect exact live state.
+1. Update `tasks.md` so `- [x]` and `- [ ] **(in progress)**` reflect exact live state.
 2. State three brief facts in chat: (a) what works right now and the command to test it, (b) the primary entry-point `file:function`, and (c) the single next step.
 
 ### 4.4 Code `TODO` Lifecycle and Atomic Git Commits
 
-1. **Active code stubs**: Put any blocker or condition first (`// TODO: Once webhook v2 payload lands, remove legacy signature fallback.`). Delete all temporary `TODO` comments and stubs before marking the session complete unless work was explicitly deferred with the user's approval.
+1. **Active code stubs**: Put any blocker or condition first (`// TODO: Once webhook v2 payload lands, remove legacy signature fallback.`). Delete all temporary `TODO` comments and stubs before marking the task complete unless work was explicitly deferred with user approval.
 2. **Atomic Git commits** (when committing is requested or part of the repo workflow):
    - Verify formatters, linters, targeted tests, and affected docs before committing.
    - Commit one verified logical change per commit without mixing unrelated formatting sweeps or temporary `.agents/sessions/` files.
@@ -106,15 +109,14 @@ Keep the working tree compiling between steps. When pausing multi-step work or a
 
 ---
 
-## 5. Completion Phase: `report.md` and Minimal Chat Handoff
+## 5. Completion Phase: Dual-Mode `NN-<slug>.report.md` and Minimal Handoff
 
-When a Tier 2 task (or an escalated time-intensive task) finishes and all `todo.md` checkboxes are marked `- [x]`:
-1. Write `report.md` in the resolved session directory using the template in [references/session-templates.md](references/session-templates.md):
-   - **`# Summary & Outcome`**: Goal, final outcome, scope adherence, and links to `plan.md` and `todo.md`.
-   - **`# Actions Completed`**: Concise summary by component, a `Files Changed` table with clickable `file://` links, and `Plan Deviations` (if any).
-   - **`# Verification & How to Run`**: Exact commands executed, pass/output counts, and a concrete `**Try**:` command or entry point.
-   - **`# Follow-Up & Future Work`**: Out-of-scope items and mid-session discoveries rendered as a Markdown table (`Priority | Location | Follow-Up Action` with `MUST`, `SHOULD`, and `COULD` rows) for future sessions.
-2. **Tell the user to read `report.md` without chat duplication**: Do not paste action lists, verification logs, or `[MUST]` / `[SHOULD]` / `[COULD]` bullets into your final chat message. Reply in 1 to 2 sentences stating completion and linking `[report.md](file:///...)`.
+When a Tier 2 task, Tier 0-Extended audit, or escalated task finishes:
+1. **Write `NN-<slug>.report.md`** using [references/session-templates.md](references/session-templates.md) with `# Report NN: <Title>`, metadata (`Task`, `Outcome`, `Target`, and `Plan` when present), and `H1 -> H2 -> H3` nesting:
+   - **Implementation mode** (code edits): Include `## Summary & Outcome`, `## Actions Completed` (plus conditional `### Plan Deviations`), `### Files Changed` (list every file individually when 15 or fewer files changed, or state the diff stat, group bulk repetitive directories with file counts, and list key architectural files individually when more than 15 files changed), `## Verification & How to Run` (`Check | Command | Result | Notes` table using `PASS`/`FAIL`/`SKIPPED`/`NOT RUN`, a concrete `**Try**:` command, and `**Unverified / Limitations**:` whenever checks were skipped or deferred), conditional `## Operational Notes & Rollback`, and `## Follow-Up & Future Work` (`ID | Priority | Location | Follow-Up Action` using `F1`, `F2`, ...).
+   - **Audit / Investigation mode** (read-only reviews or root-cause analyses): Include `## Summary & Verdict`, `## Scope & Verification Matrix`, `## Findings` grouped by severity (`Critical`, `High`, `Medium`, `Low` with `C1`/`H1`/`M1`/`L1` IDs and `file:line`), and `## Recommended Next Tasks` (`ID | Priority | Location | Follow-Up Action`).
+2. **Close out Task `NN` in `tasks.md`**: Mark all completed checkboxes `- [x]`, set the Overview Table row to `Done` with the `[report]` link, and collapse Task `NN` into a `<details>` block.
+3. **Minimal chat handoff**: Do not paste action lists, verification logs, or follow-up rows into chat. Reply in 1 to 2 sentences stating completion and linking `[NN-<slug>.report.md](file:///...)`.
 
 ---
 
@@ -122,4 +124,4 @@ When a Tier 2 task (or an escalated time-intensive task) finishes and all `todo.
 
 1. **Anti-spiral protocol**: Read complete error output and stack traces before editing code. If a failure remains unresolved after 2 to 3 fix attempts, stop editing, state confirmed facts versus unverified assumptions, and ask one focused diagnostic question.
 2. **Destructive action gate**: Ask explicit user confirmation before deleting user files (`rm`, `rm -rf`), running destructive Git commands (`git reset --hard`, `git push --force`, `git clean -fd`, deleting branches), mutating databases (`DROP`, `TRUNCATE`, irreversible migrations), or touching credentials/secrets.
-3. **Templates**: Read [references/session-templates.md](references/session-templates.md) for copy-ready `plan.md`, `todo.md`, `report.md`, and chat handoff structures.
+3. **Templates**: Read [references/session-templates.md](references/session-templates.md) for copy-ready `tasks.md`, `NN-<slug>.plan.md`, Implementation and Audit `NN-<slug>.report.md`, and chat handoff structures.
