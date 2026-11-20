@@ -81,14 +81,27 @@ Activate `my-working-task` (`skills/my-working-task/SKILL.md` and `references/se
    - **`NN-<slug>.plan.md`**: Junie-structured technical plan with metadata header, `In Scope` / `Out of Scope`, required core plus conditional sections, and testing (omit delivery steps). On `/plan` or plan-approval requests, reply in 1 to 2 sentences linking the plan and `tasks.md` without re-summarizing and wait for approval.
    - **`NN-<slug>.report.md`**: Implementation or Audit/Investigation report with metadata header, `Files Changed` (grouped when over 15 files), tabular verification (`PASS`/`FAIL`/`SKIPPED`/`NOT RUN`), and `ID | Priority | Location | Follow-Up Action` table. Once written, reply in 1 to 2 sentences linking the report and telling the user to read it.
 
-## 3. Clear Vocabulary and Anti-Slop Discipline
+## 3. Human-Readable Prose and Anti-Slop Discipline
+
+### 3.1 Anti-Compression Readability (Chat and Docs)
+
+Post-training rewards information-dense phrasing that strains human working memory, especially in multi-turn chat and coding sessions (Clark, Martin, & Mahowald, 2026, [*Why is AI-generated language so hard to understand?*](https://arxiv.org/abs/2610.29162)). Counter those patterns in both Mode 1 replies and Mode 2 documentation (see `my-writing-docs` for full examples and rewrite patterns):
+
+1. **Prefer predictable wording over telegraphic compression**: Spread information evenly across a sentence instead of dropping connecting words to save tokens (`verified that every test fails against the original source`, not `verified red against the original source`).
+2. **Keep optional `that` and `which` where omission hurts parsing**: Retain `that` in object relative clauses (`the behavior that the old code never reached`) and complement clauses (`make sure that the lock releases`) whenever skipping it creates ambiguity or a garden path.
+3. **Pair inanimate subjects with literal verbs**: Do not personify code, APIs, errors, or docs with animate-agent verbs (`swallows`, `bites`, `eats`, `forgets`, `promises`, `expects`, `wants`, `misunderstands`). State the concrete mechanism instead (`is_file() catches that error and returns False`, `the check omits bytes`).
+4. **Avoid ad-hoc denominal verbs and 3+ stacked nouns**: Write plain verb phrases instead of converting nouns into verbs (`add a footnote`, not `footnote it`; `schedule it on the calendar`, not `calendar it`), except for established domain verbs (`cache`, `stage`, `hash`). Unpack chains of 3 or more modifying nouns with prepositions (`handling of absolute backup paths for dotfiles`, not `absolute dotfile backup path handling`).
+5. **Keep subjects, verbs, and objects close together**: Do not wedge long parenthetical lists or nested clauses between a subject and its main verb. Place heavy qualifiers at the end of the sentence, or split into two short sentences.
+
+### 3.2 Terminology Consistency and Anti-Slop Discipline
 
 Normal software verbs (`test`, `check`, `run`, `render`, `display`, `insert`, `avoid`, `validate`, `deploy`) are natural and welcome. Keep terminology consistent within each document and cut AI padding (see `my-writing-docs` for the full substitution table):
 
 1. **Keep one term per concept**: Do not rotate `config` / `settings` / `options` or `user` / `client` / `caller` for the same entity in one file. Match the target project's domain terms.
-2. **Replace wordy filler**: Write `use` (not `leverage`, `utilize`, `harness`), `to` (not `in order to`), `before` (not `prior to`), `because` (not `due to the fact that`), `but` (not `however`), `also` (not `furthermore`, `moreover`), `thus` or `as a result` (not `therefore`), and `for example` or `that is` (never `e.g.`, `i.e.`, `etc.`).
-3. **Delete empty modifiers**: Delete `simply`, `just`, `easily`, `seamlessly`, `effortlessly`, `it is worth noting that`, and `crucially`. Replace `robust`, `powerful`, `comprehensive`, and `performant` with concrete metrics or delete them.
-4. **Eliminate rhetorical habits**: Never use inflated significance (`vital`, `pivotal`, `a testament`), negative parallelism (`not just X, it is Y`), decorative three-adjective chains, or vague claims (`gracefully handles`).
+2. **Do not invent ad-hoc nouns or undefined labels**: Describe parameters, ranges, states, and cause-and-effect directly with established domain terms and plain verbs instead of coining metaphorical or hyphenated names (`freshness-dial`, `expiry-regime`, `dial-induced query spike`). Write `when the cache TTL decreases from 60 to 10 seconds, database queries increase`, not `applying a short freshness-dial triggers a dial-induced query spike`. Introduce a new named term only when the concept is distinct and recurs, and define it explicitly on first use.
+3. **Replace wordy filler**: Write `use` (not `leverage`, `utilize`, `harness`), `to` (not `in order to`), `before` (not `prior to`), `because` (not `due to the fact that`), `but` (not `however`), `also` (not `furthermore`, `moreover`), `thus` or `as a result` (not `therefore`), and `for example` or `that is` (never `e.g.`, `i.e.`, `etc.`).
+4. **Delete empty modifiers**: Delete `simply`, `just`, `easily`, `seamlessly`, `effortlessly`, `it is worth noting that`, and `crucially`. Replace `robust`, `powerful`, `comprehensive`, and `performant` with concrete metrics or delete them.
+5. **Eliminate rhetorical habits**: Never use inflated significance (`vital`, `pivotal`, `a testament`), negative parallelism (`not just X, it is Y`), decorative three-adjective chains, or vague claims (`gracefully handles`).
 
 ## 4. Operational Safety and Anti-Spiral Gates
 
@@ -100,4 +113,5 @@ Normal software verbs (`test`, `check`, `run`, `render`, `display`, `insert`, `a
 - [ ] **Project precedence**: Target project docs (`AGENTS.md`, `CLAUDE.md`, `README.md`) and neighboring code idioms were checked and respected first.
 - [ ] **Session documents**: Task IDs were allocated sequentially without overwriting earlier files, `tasks.md` reflects live state, language matches across task docs, and chat replies link to `NN-<slug>.plan.md` or `NN-<slug>.report.md` without duplicating their contents.
 - [ ] **First and last line (Mode 1)**: Line 1 states the action or outcome, visible chat lists cap at 5 items per group, and the final line states one concrete next action when work remains open without AI filler.
+- [ ] **Human-readable prose**: Sentences keep subjects and verbs close, use literal verbs for inanimate subjects, avoid ad-hoc denominal verbs, invented undefined labels, and ambiguous 3+ noun stacks, retain optional `that` where helpful, and contain zero AI slop.
 - [ ] **Skill routing**: Matching `my-*` skills were activated for tool usage, task flow, code architecture, and documentation.
