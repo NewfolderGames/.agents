@@ -34,6 +34,7 @@ Activate the matching skill (or read its `SKILL.md` path directly) whenever a ta
 | `my-working-task` | `skills/my-working-task/SKILL.md` | Planning tasks (`/plan` or multi-step preparation), tracking multi-task progress in `tasks.md`, scaffolding contracts in phases, guarding scope boundaries, debugging failures, making atomic Git commits, or writing implementation and audit reports (`NN-<slug>.report.md`). |
 | `my-working-project` | `skills/my-working-project/SKILL.md` | Structuring modules for easy replacement/deletion, chunking functional pipelines, documenting regexes/macros/reflection, curating tests, or untangling coupled code. |
 | `my-writing-docs` | `skills/my-writing-docs/SKILL.md` | Drafting or editing session documents, code comments, `TODO`s, docblocks, `README.md`, specs, runbooks, changelogs, commit bodies, error messages, or postmortems. |
+| `my-learning-diy` | `skills/my-learning-diy/SKILL.md` | Guiding the user to implement a task themselves so they learn by doing, via `guide` mode (spoiler-free calibrated study and task blueprint) or `active` mode (chunked Socratic pair coding with tiered hints and explain-back reviews). |
 | `rscss` | `skills/rscss/SKILL.md` | Structuring CSS or SCSS stylesheets into RSCSS components, elements, variants, layouts, and helpers. |
 
 ## 2. Interactive Chat, Turn Execution, and Session Documents

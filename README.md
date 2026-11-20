@@ -19,4 +19,5 @@ Personal rules and modular skills repository for AI coding agents.
 | `skills/my-working-task/` | Multi-task session hub (`tasks.md`), Junie-style immutable plans (`NN-<slug>.plan.md` with `In Scope` / `Out of Scope`), calibrated scaffold-first workflow, atomic commits, dual-mode reports (`NN-<slug>.report.md`), plus `references/` templates |
 | `skills/my-working-project/` | Deletable module design, functional pipeline chunking, documented dense code, co-change untangling, plus `references/` for language defaults and worked examples |
 | `skills/my-writing-docs/` | Practical Software STE and anti-compression readability for documentation and comments, plus `references/` for the 50-row slop table, readability swaps, domain templates, and Korean style guide |
+| `skills/my-learning-diy/` | User-driven self-learning guidance in `guide` mode (calibrated study and task blueprints with minimal or zero solution code) and `active` mode (chunked Socratic pair coding with tiered hints and explain-back reviews), plus `references/` templates and playbooks |
 | `skills/rscss/` | RSCSS stylesheet conventions for components, elements, variants, layouts, and helpers |
