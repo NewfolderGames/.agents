@@ -26,10 +26,11 @@ Apply these conventions only when the target project's `AGENTS.md`, `CLAUDE.md`,
 
 ## 4. Rust
 
-1. **Domain modeling**: Model mutually exclusive states and typed errors with `enum` variants. Use newtypes (`struct AccountId(String)`) when mixing raw primitives risks argument-order bugs.
-2. **Iterator pipelines**: Format multi-step iterator chains (`.iter().filter(...).map(...).collect()`) one adapter per line. When closures grow past two lines or borrow lifetimes get noisy, split the chain into named bindings or use a plain `for` loop with `continue`.
-3. **Macros and `unsafe`**: Procedural or declarative macros (`macro_rules!`) are encouraged when they eliminate repetitive boilerplate across types. Pair every non-trivial macro with a doc comment showing a concrete expansion sketch, and precede every `unsafe` block with a `// SAFETY:` comment proving the invariant.
-4. **API naming and docs**: Follow Rust API Guidelines (`as_*` free borrow view, `to_*` allocating/computing conversion, `into_*` ownership transfer, no `get_` prefix on plain getters). Include `# Errors`, `# Panics`, `# Safety`, and `# Examples` sections on public items whenever those conditions apply.
+1. **Domain modeling**: Model mutually exclusive states and typed errors with `enum` variants. Use validated newtypes (`struct AccountId(String)`, `struct EmailAddress(String)` with `FromStr` / `TryFrom`) to prevent argument-order bugs and lift input validation to system boundaries.
+2. **Error design**: Keep library errors structured and narrow (`enum` per operation or cohesive boundary) in problem-domain terms instead of exposing `anyhow::Result`, giant project-wide enums, or third-party dependency errors. Implement `core::error::Error` (prefer `thiserror` 2.x for `std` and `no_std` support), reserve `panic!` and `debug_assert!` for bugs, embed backend failures instead of wrapping them (wrapping `std::io::Error` only with operation and path context), and reserve `anyhow` or `eyre` for application binaries. See [error-design.md](error-design.md) for full patterns, stack-size boxing, and semver trade-offs.
+3. **Iterator pipelines**: Format multi-step iterator chains (`.iter().filter(...).map(...).collect()`) one adapter per line. When closures grow past two lines or borrow lifetimes get noisy, split the chain into named bindings or use a plain `for` loop with `continue`.
+4. **Macros and `unsafe`**: Procedural or declarative macros (`macro_rules!`) are encouraged when they eliminate repetitive boilerplate across types. Pair every non-trivial macro with a doc comment showing a concrete expansion sketch, and precede every `unsafe` block with a `// SAFETY:` comment proving the invariant.
+5. **API naming and docs**: Follow Rust API Guidelines (`as_*` free borrow view, `to_*` allocating/computing conversion, `into_*` ownership transfer, no `get_` prefix on plain getters). Include `# Errors`, `# Panics`, `# Safety`, and `# Examples` sections on public items whenever those conditions apply.
 
 ## 5. Java
 

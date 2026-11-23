@@ -2,9 +2,10 @@
 name: my-working-project
 description: >-
   Design, write, refactor, untangle, and document human-readable, easily removable code
-  while respecting project-local conventions. Activate this skill when writing or reviewing
-  code, structuring modules, chunking functional pipelines, documenting regexes, macros, or
-  reflection, curating tests, or untangling coupled codebases.
+  and caller-focused error types while respecting project-local conventions. Activate this
+  skill when writing or reviewing code, designing error types, structuring modules, chunking
+  functional pipelines, documenting regexes, macros, or reflection, curating tests, or
+  untangling coupled codebases.
 ---
 
 # Code Architecture, Readable Clarity, and Deletable Design
@@ -46,7 +47,7 @@ Functional chaining (`.filter().map().flatMap()`, Rust iterators, Java streams) 
 
 ---
 
-## 3. Vertical Rhythm, Guard Clauses, Naming, and Types
+## 3. Vertical Rhythm, Guard Clauses, Types, and Error Design
 
 ### 3.1 Spacing and Guard Clauses
 
@@ -60,6 +61,17 @@ Functional chaining (`.filter().map().flatMap()`, Rust iterators, Java streams) 
 2. **Positive booleans**: Name booleans affirmatively with auxiliary prefixes (`isEnabled`, `hasValidToken`, `canPublish`, `shouldRetry`) to avoid double negatives (`!isDisabled`).
 3. **Standard conversions**: Follow `as_*` (free view/borrow), `to_*` (computed/allocated conversion), and `into_*` (ownership-consuming transform) where idiomatic.
 4. **Illegal states unrepresentable**: Replace loose combinations of boolean flags and raw status strings with tagged unions / `enum` variants and exhaustive `switch` / `match` statements.
+
+### 3.3 Error Design for Callers
+
+Design error types for the caller who must handle failures rather than for the author who propagates them (adapted from Roman Kashitsyn, [*Designing error types in Rust*](https://mmapped.blog/posts/12-rust-error-handling)). Read [references/error-design.md](references/error-design.md) for worked Rust and cross-language patterns:
+
+1. **Separate library errors from application errors**: Libraries interface other code and must expose structured, narrow failure types. Applications interface humans and may use dynamic context containers (`anyhow`, `eyre`) at top-level boundaries.
+2. **Prefer specific operation errors over global enums**: Give each fallible operation or cohesive boundary its own narrow error type listing only the failures that operation can produce, rather than a catch-all type or project-wide enum.
+3. **Reserve panics and assertions for bugs**: Use `panic!`, `assert!`, or `debug_assert!` for internal invariants and severe contract violations, never for invalid external or end-user inputs.
+4. **Lift input validation into boundary types**: Parse untrusted primitives once into validated domain types (such as `EmailAddress` via `FromStr` / `TryFrom`) at system boundaries so downstream functions drop repeated validation and validation error variants.
+5. **Model errors in problem-domain terms and embed over wrap**: Describe domain failures (`ConnectionFailed`, `TxNotFound`, `SignatureVerificationFailed`) instead of leaking transitive dependency error types (`http2::Error`, `serde_cbor::Error`). Flatten multi-backend errors into shared domain variants, wrap `std::io::Error` only with operation and path context, and exclude secrets or personal data from formatted error strings.
+6. **Implement standard error traits**: Implement `core::error::Error` (via `thiserror` 2.x in Rust `std` and `no_std` libraries) or the host language's standard error interface so callers can compose, log, and report failures uniformly.
 
 ---
 
@@ -98,7 +110,10 @@ Activate `my-writing-docs` when drafting comments and documentation so prose sta
 
 ---
 
-## 6. Reference Guides
+## 6. Reference Guides and Sources
 
+- [references/error-design.md](references/error-design.md): Caller-empathy error design goals, before/after Rust examples updated for `core::error::Error` and `thiserror` 2.x, semver and stack-size trade-offs, and cross-language mappings.
 - [references/language-conventions.md](references/language-conventions.md): Default idioms for TypeScript, React, Go, Rust, and Java when the host project does not define its own rules.
 - [references/examples.md](references/examples.md): Worked examples of readable functional chunking, *20 explained lines vs. 200 verbose lines* (regex, macro, and lock rationale blocks), and deletable modules.
+- **Sources**:
+  - Roman Kashitsyn (2022). *Designing error types in Rust*. https://mmapped.blog/posts/12-rust-error-handling

@@ -301,3 +301,7 @@ RSCSS shares structural concepts with BEM and SMACSS, but uses concise class nam
   <button class="button"></button>
 </form>
 ```
+
+## 11. Sources
+
+- Rico Sta. Cruz. *RSCSS (Reasonable System for CSS Stylesheet Structure)*. https://ricostacruz.com/rscss/

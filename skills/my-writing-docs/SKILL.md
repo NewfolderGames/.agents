@@ -94,5 +94,6 @@ Before finishing documentation or comments, scan for:
 - [references/domain-templates.md](references/domain-templates.md): Copy-ready patterns for dense-code *why/how* blocks, error messages, `TODO`s, runbooks, postmortems, and commit bodies.
 - [references/korean-style-guide.md](references/korean-style-guide.md): Detailed Korean technical and code documentation style guide (written in Korean), including `문체`, `어조`, terminology notation, document templates, code/table patterns, and integrity checks.
 - **Sources**:
+  - ASD-STE100 Simplified Technical English: https://www.asd-ste100.org/
   - Thomas Hikaru Clark, Matias B. Martin, and Kyle Mahowald (2026). *Why is AI-generated language so hard to understand?* arXiv:2610.29162. https://arxiv.org/abs/2610.29162
   - eGovFramework Documentation (`egovframe-docs`): https://github.com/eGovFramework/egovframe-docs
