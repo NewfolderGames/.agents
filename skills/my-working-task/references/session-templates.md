@@ -2,7 +2,7 @@
 
 Use these templates when `my-working-task` triggers session documents. Apply Practical Software STE (`my-writing-docs`): active voice, conditions before commands, concrete bounds, consistent language across all documents for a task, and zero AI filler.
 
-In Antigravity `<Artifact Directory>`, use absolute `file:///...` links for both sibling artifacts and workspace source files. In workspace fallback folders (`.agents/sessions/<YYYYMMDD-HHMM>-<session-slug>/`), use relative `./NN-<slug>.<role>.md` links between sibling session files so the folder stays portable.
+In Antigravity `<Artifact Directory Path>`, use absolute `file:///...` links for both sibling artifacts and workspace source files. In JetBrains Junie (`.junie/plans/<YYYYMMDD-HHMM>-<session-slug>/`) or workspace fallback directories (`.agents/sessions/<YYYYMMDD-HHMM>-<session-slug>/`), use relative `./NN-<slug>.<role>.md` links between sibling session files so the directory stays portable. In Korean session documents, use formal declarative titles and steps (`~한다`) instead of imperative wording (see `references/korean-style-guide.md` in `my-writing-docs`).
 
 ---
 
@@ -15,17 +15,17 @@ Keep `tasks.md` as the single mutable state file across all tasks in a conversat
 
 | # | Status | Task | Docs |
 |---|---|---|---|
-| 01 | Done | <Audit or Review Task Title> | - / [report](file:///absolute/path/to/01-audit-slug.report.md) |
-| 02 | Done | <Completed Implementation Title> | [plan](file:///absolute/path/to/02-impl-slug.plan.md) / [report](file:///absolute/path/to/02-impl-slug.report.md) |
-| 03 | In Progress (Step 1/3) | <Active Task Title> | [plan](file:///absolute/path/to/03-active-slug.plan.md) / - |
+| 01 | Done | <Audit or Review Task Title> | - \| [report](file:///absolute/path/to/01-audit-slug.report.md) |
+| 02 | Done | <Completed Implementation Title> | [plan](file:///absolute/path/to/02-impl-slug.plan.md) \| [report](file:///absolute/path/to/02-impl-slug.report.md) |
+| 03 | In Progress (Step 1/3) | <Active Task Title> | [plan](file:///absolute/path/to/03-active-slug.plan.md) \| - |
 
 ---
 
 <details>
 <summary>[x] Task 01 - Audit or Review Task Title</summary>
 
-**Docs**: [report](file:///absolute/path/to/01-audit-slug.report.md)
-**Summary**: <One-sentence outcome of the completed audit or review.>
+- **Docs**: [report](file:///absolute/path/to/01-audit-slug.report.md)
+- **Summary**: <One-sentence outcome of the completed audit or review.>
 
 - [x] <Top-level completed step 1>
 - [x] <Top-level completed step 2>
@@ -35,8 +35,8 @@ Keep `tasks.md` as the single mutable state file across all tasks in a conversat
 <details>
 <summary>[x] Task 02 - Completed Implementation Title</summary>
 
-**Docs**: [plan](file:///absolute/path/to/02-impl-slug.plan.md) | [report](file:///absolute/path/to/02-impl-slug.report.md)
-**Summary**: <One-sentence outcome of the completed implementation.>
+- **Docs**: [plan](file:///absolute/path/to/02-impl-slug.plan.md) | [report](file:///absolute/path/to/02-impl-slug.report.md)
+- **Summary**: <One-sentence outcome of the completed implementation.>
 
 - [x] Step 1: <Completed step title>
 - [x] Step 2: <Completed step title>
@@ -47,9 +47,9 @@ Keep `tasks.md` as the single mutable state file across all tasks in a conversat
 
 ## Task 03 - <Active Task Title>
 
-**Status**: In progress (Step 1 of 3)
-**Docs**: [plan](file:///absolute/path/to/03-active-slug.plan.md) | report (pending)
-**Summary**: <One-sentence description of what this task delivers.>
+- **Status**: In Progress (Step 1/3)
+- **Docs**: [plan](file:///absolute/path/to/03-active-slug.plan.md) | report (pending)
+- **Summary**: <One-sentence description of what this task delivers.>
 
 ### Step 1: <Imperative Step Title>
 <One sentence stating what works or exists when Step 1 finishes.>
@@ -75,7 +75,7 @@ Keep `tasks.md` as the single mutable state file across all tasks in a conversat
 
 ## 2. `NN-<slug>.plan.md` Template (Junie-Style Immutable Technical Plan)
 
-Use monotonic `H1 -> H2 -> H3 -> H4` headings with one `H1` per plan. Include every `[Required]` section in every plan. Include `[Conditional]` sections only when the task touches those concerns so compact plans stay between 40 and 90 lines. Never modify `NN-<slug>.plan.md` to track execution progress, and never place delivery checklists inside the plan.
+Use monotonic `H1 -> H2 -> H3 -> H4` headings with one `H1` per plan. Include every section marked `<!-- Required -->` in every plan. Include sections marked `<!-- Conditional: ... -->` only when the task touches those concerns so compact plans stay between 40 and 90 lines. Never modify `NN-<slug>.plan.md` to track execution progress, and never place delivery checklists inside the plan.
 
 ````markdown
 # Plan NN: <Short Task Title>
@@ -116,7 +116,7 @@ Expected outcomes:
 - **As a <role>**, I want <capability>, so that <concrete benefit>.
 
 ### Functional Requirements
-<!-- Conditional for compact localized fixes; required for multi-component features -->
+<!-- Conditional for compact localized fixes. Required for multi-component features. -->
 1. **<Requirement Name>**: <Deterministic rule, state transition, or invariant.>
 2. **<Requirement Name>**: <Deterministic rule, state transition, or invariant.>
 
@@ -187,9 +187,9 @@ flowchart TD
 <Request/response payloads, status codes, or state transition matrix table.>
 
 ## Migration Plan
-<!-- Conditional: include only when database schemas, config flags, or multi-node rollouts change -->
+<!-- Conditional: include only when database schemas, configuration flags, or multi-node rollouts change -->
 
-### Additive Schema or Config Changes
+### Additive Schema or Configuration Changes
 <SQL DDL or configuration keys.>
 
 ### Rollout & Rollback
@@ -272,17 +272,18 @@ Diff stat: `<N files changed, +X / -Y>` *(include when > 15 files changed)*
 | Unit Tests | `<test command>` | `PASS` | `42 passed`, `3 SKIPPED` (`<env guard>`) |
 | Static Analysis | `<lint command>` | `PASS` | Zero errors |
 
-**Try**: `<exact command, URL, or entry point for manual inspection>`
-**Unverified / Limitations**: <State skipped tests, unexercised live integrations, or deferred checks. Omit if everything ran end to end.>
+- **Try**: `<exact command, URL, or entry point for manual inspection>`
+- **Unverified / Limitations**: <State skipped tests, unexercised live integrations, or deferred checks. Omit if everything ran end to end.>
 
 ## Operational Notes & Rollback
 <!-- Conditional: include only when DDL prerequisites, env flags, rollout ordering, or rollback steps apply -->
-- **Prerequisite**: <Required migration or config flag before enabling.>
+- **Prerequisite**: <Required migration or configuration flag before enabling.>
 - **Rollback**: <Exact revert command or kill switch.>
 
 ## Follow-Up & Future Work
 
 <!-- Record items deferred via Out of Scope or noticed mid-session. If none exist, write: "No follow-up items identified." -->
+
 | ID | Priority | Location | Follow-Up Action |
 |---|---|---|---|
 | `F1` | `MUST` | [file.ext](file:///absolute/path/to/file.ext#L10-L25) | <Critical bug, security gap, or required migration for a dedicated task> |
@@ -302,6 +303,7 @@ Use Mode B for extended read-only code reviews, migration audits, security revie
 - **Task**: `NN` ([tasks.md](file:///absolute/path/to/tasks.md))
 - **Outcome**: `Audit Complete` <!-- Or: Root Cause Confirmed | Investigation Blocked -->
 - **Target**: `<repo>` @ `<branch>` (`<short-sha>`)
+- **Plan**: [NN-<slug>.plan.md](file:///absolute/path/to/NN-slug.plan.md) <!-- Conditional: omit when no plan existed -->
 
 ## Summary & Verdict
 
@@ -346,7 +348,7 @@ Never paste `NN-<slug>.plan.md` or `NN-<slug>.report.md` sections into the chat 
 - **Plan approval handoff (`/plan`)**:
   ```markdown
   Review [01-feature-slug.plan.md](file:///absolute/path/to/01-feature-slug.plan.md) and [tasks.md](file:///absolute/path/to/tasks.md).
-  Next: click Proceed (or reply with adjustments) to start Step 1.
+  Next: reply with approval (or click Proceed) to start Step 1, or share adjustments.
   ```
 - **Session completion handoff (`NN-<slug>.report.md`)**:
   ```markdown

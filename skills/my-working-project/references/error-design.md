@@ -1,8 +1,8 @@
-# Caller-Empathy Error Design
+# Caller-Focused Error Design
 
 Apply these guidelines whenever the target repository does not establish another error-handling convention.
 
-Most weaknesses in error types share one root cause: optimizing for the author who propagates errors at the expense of the caller who must handle them. Treat every error type as a public interface designed with empathy for the caller. Before finalizing an error type, ask two questions:
+Most weaknesses in error types share one root cause: optimizing for the author who propagates errors at the expense of the caller who must handle them. Treat every error type as a public interface designed for the caller who must handle failures. Before finalizing an error type, ask two questions:
 
 1. Given this error type and its documentation, can a caller write reliable recovery logic?
 2. Can a caller translate each failure variant into a clear message that an end user can understand?
@@ -15,7 +15,7 @@ This guide adapts the error-design philosophy of Roman Kashitsyn's [*Designing e
 
 Choose the error strategy that matches who consumes the interface:
 
-| Boundary | Primary Consumer | Responsibility | Typical Rust Representation |
+| Boundary | Primary Caller | Responsibility | Typical Rust Representation |
 |---|---|---|---|
 | **Libraries and reusable domain modules** | Other code | Recover transparently when safe, and expose a complete, structured set of unrecoverable failure cases. | Narrow domain `enum` (or opaque error struct with a `.kind()` enum) implementing `core::error::Error`. |
 | **Applications (CLIs, daemons, services)** | Humans or external operators | Resolve issues automatically when safe, or report the failure and recovery steps clearly to the user. | Dynamic error containers such as `anyhow::Result` or `eyre::Result` with operation context attached at call sites. |
@@ -25,8 +25,6 @@ Do not leak application-style dynamic error containers (`anyhow::Error`) into pu
 ---
 
 ## 2. Six Core Design Goals
-
-Treat these items as engineering goals to approach as closely as the codebase constraints permit.
 
 ### 2.1 Prefer Specific Error Types Over Catch-All or Global Enums
 
@@ -70,7 +68,7 @@ Use `panic!`, `assert!`, and `debug_assert!` for:
 
 ### 2.3 Lift Input Validation into Boundary Types ("Parse, Don't Validate")
 
-Good functions do not panic on invalid inputs. Better functions accept already-validated types so they do not have to validate raw primitives or carry input-validation variants in their error enums.
+Functions that return `Result` prevent panics on invalid inputs. Functions that accept already-validated types remove repeated runtime validation and drop validation error variants from their error enums.
 
 Parse raw strings or numbers once at the system boundary into validated domain newtypes (implementing `FromStr` or `TryFrom`). Downstream functions accept the validated type, remove duplicated validation code, and let callers surface format errors early where input enters the program.
 
@@ -108,13 +106,13 @@ pub fn send_mail(
 
 ### 2.4 Implement the Standard Error Trait (`core::error::Error`)
 
-Always implement `core::error::Error` (or `std::error::Error` on toolchains older than Rust 1.81) on public error types, even when your own callers match on concrete variants. Downstream users building small CLIs or integration glue frequently convert library errors into `Box<dyn core::error::Error>`, `anyhow::Result`, or `eyre::Result`. Implementing the standard trait keeps your library polite and interoperable.
+Always implement `core::error::Error` (or `std::error::Error` on toolchains older than Rust 1.81) on public error types, even when your own callers match on concrete variants. Downstream callers building small CLIs or integration glue frequently convert library errors into `Box<dyn core::error::Error>`, `anyhow::Result`, or `eyre::Result`. Implementing the standard trait keeps your library compatible with standard error ecosystems.
 
 Use `thiserror` 2.x to derive `core::error::Error` and `Display` without boilerplate in both `std` and `no_std` crates.
 
 ### 2.5 Define Errors in Terms of the Problem Domain, Not the Solution
 
-Wrapping every transitive dependency error directly (`IoError(std::io::Error)`, `HttpError(http2::Error)`, `SerdeError(serde_cbor::Error)`, `OpensslError(openssl::ssl::Error)`) leaks internal implementation details into the public API:
+Wrapping every transitive dependency error directly leaks internal implementation details into the public API (for example, `IoError(std::io::Error)`, `HttpError(http2::Error)`, `SerdeError(serde_cbor::Error)`, or `OpensslError(openssl::ssl::Error)`):
 
 1. Low-level errors propagate up the stack with almost zero operational context (for example, `No such file or directory` without naming the missing path or action).
 2. Callers must read third-party dependency documentation to design recovery logic.
@@ -155,11 +153,11 @@ pub enum FetchTxError {
 }
 ```
 
-With domain variants, a caller can distinguish a user mistake (`MalformedPublicKey` prompts the user for a valid key) from a faulty peer (`SignatureVerificationFailed` retries another peer).
+With domain variants, a caller can distinguish a user mistake (on `MalformedPublicKey`, prompt the user for a valid key) from a faulty peer (on `SignatureVerificationFailed`, retry another peer).
 
 ### 2.6 Embed Error Cases Instead of Wrapping Third-Party Errors
 
-When one interface delegates to multiple backends (for example, ECDSA and BLS signature verifiers), wrapping each backend error separately (`EcdsaError(ecdsa::Error)`, `BlsError(bls12_381_sign::Error)`) introduces three defects:
+When one interface delegates to multiple backends such as ECDSA and BLS signature verifiers, wrapping each backend error separately introduces three defects (for example, `EcdsaError(ecdsa::Error)` and `BlsError(bls12_381_sign::Error)`):
 
 1. The type system does not prevent returning `BlsError` when the caller requested `Algorithm::Ecdsa`.
 2. Backend crate types leak into the public API.
@@ -186,18 +184,18 @@ Kashitsyn's 2022 design goals still hold, and recent Rust releases add four prac
 1. **Target `core::error::Error` and `thiserror` 2.x**: Rust 1.81 stabilized `core::error::Error`, so `#![no_std]` libraries can implement the standard error trait without `#[cfg(feature = "std")]` gates. Prefer `thiserror` 2.x over manual `Display` and `Error` implementations.
 2. **Preserve `Error::source()` on deliberate causes**: Mark owned or standard wrapped causes (such as `std::io::Error`) with `#[source]` so structured loggers and diagnostic libraries (`anyhow`, `eyre`, `miette`) can traverse the cause chain without exposing third-party types in public match arms.
 3. **Keep `Result<T, E>` stack size small**: Embedding rich structs directly in enum variants can bloat `size_of::<Result<T, E>>()` on the success path. When `clippy::result_large_err` warns on hot paths, box the large variant payload (`Box<InvalidEncodingDetail>`) instead of erasing the error type into `Box<dyn Error>`.
-4. **Choose semver evolution semantics intentionally**: For libraries published to external consumers, decide whether callers should match exhaustively (plain public `enum`) or stay source-compatible when new failure modes appear (`#[non_exhaustive]` on the enum, or an opaque error struct exposing a `.kind()` enum similar to `std::io::Error`).
+4. **Choose semver evolution semantics intentionally**: For libraries published to external callers, decide whether callers must match exhaustively (plain public `enum`) or stay source-compatible when new failure modes appear (`#[non_exhaustive]` on the enum, or an opaque error struct exposing a `.kind()` enum similar to `std::io::Error`).
 
 ---
 
 ## 4. Cross-Language Application
 
-The same caller-empathy philosophy applies outside Rust when a project defines no stricter local pattern:
+The same caller-focused philosophy applies outside Rust when a project defines no stricter local pattern:
 
 | Language | Library Error Shape | Boundary Validation | Panic / Crash Boundary |
 |---|---|---|---|
 | **Rust** | Narrow domain `enum` + `core::error::Error` (`thiserror` 2.x) | Validated newtypes (`FromStr`, `TryFrom`) | `panic!` / `debug_assert!` for bugs and violated invariants only |
-| **TypeScript** | Discriminated union result types (`{ ok: false, kind: "..." }`) or domain `Error` subclasses | Parse untrusted payloads at IO boundaries into narrow branded or validated types | Throw uncaught assertions only on unreachable programmer bugs (`satisfies never`) |
+| **TypeScript** | Discriminated union result types (`{ ok: false, kind: "..." }`) or domain `Error` subclasses | Parse untrusted payloads at I/O boundaries into narrow branded or validated types | Throw uncaught assertions only on unreachable programmer bugs (`satisfies never`) |
 | **Go** | Typed domain errors or sentinel errors checked with `errors.Is` / `errors.As`, wrapping causes with `fmt.Errorf("action %s: %w", id, err)` | Validate and normalize inputs at package or transport entry points | Reserve `panic` for unrecoverable startup or invariant bugs, never user input |
 | **Java** | Sealed error interfaces (`sealed interface ... permits ...`) or narrow domain exception hierarchies | Value `record` constructors enforcing non-null and format invariants | Reserve unchecked `AssertionError` / `IllegalStateException` for broken internal invariants |
 
@@ -205,6 +203,6 @@ The same caller-empathy philosophy applies outside Rust when a project defines n
 
 ## 5. Sources
 
-- Roman Kashitsyn (2022). *Designing error types in Rust*. https://mmapped.blog/posts/12-rust-error-handling
-- The Rust Standard Library. *When to use `panic!` vs `Result`*. https://doc.rust-lang.org/std/macro.panic.html#when-to-use-panic-vs-result
-- Alexis King (2019). *Parse, don't validate*. https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/
+- Roman Kashitsyn (2022). [*Designing error types in Rust*](https://mmapped.blog/posts/12-rust-error-handling).
+- The Rust Standard Library. [*When to use `panic!` vs `Result`*](https://doc.rust-lang.org/std/macro.panic.html#when-to-use-panic-vs-result).
+- Alexis King (2019). [*Parse, don't validate*](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/).

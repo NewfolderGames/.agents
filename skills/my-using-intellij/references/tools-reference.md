@@ -1,6 +1,8 @@
-# IntelliJ Core MCP Nested Schemas and Edge Cases
+# Nested Schemas and Edge Cases for Core IntelliJ MCP Tools
 
 Use this reference alongside [SKILL.md](../SKILL.md) when constructing nested JSON arguments or handling non-obvious tool responses.
+
+---
 
 ## 1. `search_structural` Constraints Schema
 
@@ -24,8 +26,11 @@ Pass `constraints` as a map keyed by the SSR variable name without `$` delimiter
 Supported constraint fields:
 - `regex`: Match variable text against a regular expression.
 - `invertRegex`: Negate the `regex` check when `true`.
+- `wholeWordsOnly`: Match whole words only when `true`.
 - `minCount` and `maxCount`: Occurrence bounds for multi-match variables.
 - `exprType`: Match the resolved expression type (such as `"string"` or `"int"`).
+- `invertExprType`: Negate the `exprType` check when `true`.
+- `withinHierarchy`: Include the type hierarchy when matching `exprType` if `true`.
 
 ---
 
@@ -48,7 +53,7 @@ Handle responses strictly:
 
 ### 3.1 `xdebug_set_breakpoints` Item Schema
 
-Every object inside `breakpoints` (1 to 50 items) requires these 6 fields:
+Every object inside `breakpoints` (1 to 50 items) requires these **6 schema-required keys**: `enabled`, `suspendPolicy`, `temporary`, `isLogMessage`, `isLogStack`, and `isCaptureThreadDump`. Add optional targeting keys (`filePath` + `line` for location mode, or `breakpointId` for ID mode) and optional filter or log keys (`condition`, `logExpression`) when filtering hits or logging messages. Full location-mode example:
 
 ```json
 {
@@ -103,19 +108,19 @@ Targeting rules:
 2. Pass `programArguments`, `workingDirectory`, or `envs` only when the selected configuration reports `supportsDynamicLaunchOverrides: true`.
 3. Omit or pass `null` (or `""` for string fields) to preserve the saved configuration value.
 4. Pass a single whitespace string (`" "`) to clear `programArguments` or `workingDirectory` for that single launch.
-5. Note that `envs` merges provided keys on top of existing configuration variables for that launch only.
+5. `envs` merges provided keys on top of existing configuration variables for that launch only.
 
 ### 4.2 `xdebug_control_session` Result Fields
 
-- `state`: `"running"`, `"paused"` (includes a depth-0 `frameValues` snapshot when available), or `"stopped"`.
+- Status values: `"running"`, `"paused"` (includes a depth-0 `frameValues` snapshot when available), or `"stopped"`.
 - `breakpointErrorsTail`: Returned on every `action`.
-- `tracepointOutputsTail`: Returned only when `action` is `"DRAIN_EVENTS"`. Currently populated only by JVM debuggers, including asynchronous thread dump paths (`TRACEPOINT_OUTPUT` with `dumpPath` and `byteCount`, or `THREAD_DUMP_FAILURE`). If a dump file is still pending, call `DRAIN_EVENTS` again.
+- `tracepointOutputsTail`: Returned only when `action` is `"DRAIN_EVENTS"`. Only JVM debuggers currently populate this field, including paths to asynchronous thread dumps (`TRACEPOINT_OUTPUT` with `dumpPath` and `byteCount`, or `THREAD_DUMP_FAILURE`). If a dump file is still pending, call `DRAIN_EVENTS` again.
 
 ---
 
 ## 5. `spec_report_status` Check Entries
 
-Each item in `checks` requires `description`, `status` (`"passed"` or `"failed"`), `files`, and `fileProblems` (leave `fileProblems` empty or omit this computed field, and obey target anchor rules):
+JSON Schema requires every item in `checks` to include `description`, `status` (`"passed"` or `"failed"`), `files`, and `fileProblems`. Because the tool computes `fileProblems` on output, always pass `"fileProblems": []` in the request:
 
 ```json
 {

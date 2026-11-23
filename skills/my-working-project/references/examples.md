@@ -18,31 +18,46 @@ const report = orders
 ### Easy to Resume (Named Predicates and Milestone Chunks)
 
 ```ts
+const isNetPositiveItem = (item: OrderItem): boolean =>
+  !item.refunded && item.netCents > 0;
+
+const resolveOrderRegion = (order: Order): string =>
+  order.shipping?.country ?? "UNKNOWN";
+
 const isSettledOrder = (order: Order): boolean =>
   order.status === "paid" &&
   order.paidAt >= cutoff &&
   order.items.some(isNetPositiveItem);
 
-const settledOrders = orders.filter(isSettledOrder);
+const sumOrderNetCents = (order: Order): number =>
+  order.items.reduce((sum, item) => sum + (item.refunded ? 0 : item.netCents), 0);
 
-const revenueByRegion = Map.groupBy(settledOrders, resolveOrderRegion);
+const settledOrders = orders.filter(isSettledOrder);
+const ordersByRegion = Map.groupBy(settledOrders, resolveOrderRegion);
+
+const revenueByRegion: Record<string, number> = Object.fromEntries(
+  Array.from(ordersByRegion, ([region, regionOrders]) => [
+    region,
+    regionOrders.reduce((sum, order) => sum + sumOrderNetCents(order), 0),
+  ]),
+);
 ```
 
-Why this works:
+Why this chunked pipeline works:
 1. One pipeline step per line lets the reader scan top-to-bottom without horizontal scrolling.
-2. Named helpers (`isSettledOrder`, `isNetPositiveItem`, `resolveOrderRegion`) turn the chain into domain prose.
-3. Splitting at `settledOrders` gives debuggers and readers a clear intermediate milestone when types shift from `Order[]` to grouped totals.
+2. Named helpers (`isSettledOrder`, `isNetPositiveItem`, `resolveOrderRegion`, `sumOrderNetCents`) turn the chain into domain prose.
+3. Splitting at `settledOrders` and `ordersByRegion` gives debuggers and readers clear intermediate milestones when types shift from `Order[]` to grouped orders and finally to revenue totals.
 
 ---
 
 ## 2. Twenty Explained Lines Beat 200 Verbose Lines
 
-Do not expand a compact regex, macro, reflection dispatcher, or bitwise algorithm into 200 lines of sprawling state-machine boilerplate just to claim the code is "self-documenting". Keep the 20 concise lines, isolate them inside one dedicated function or macro, and document **why** this mechanism is used and **how** each part works.
+Do not expand a compact regex, macro, reflection dispatcher, or bitwise algorithm into 200 lines of sprawling state-machine boilerplate only to claim that the code is "self-documenting". Keep the 20 concise lines, isolate them inside one dedicated function or macro, and document **why** this mechanism is used and **how** each part works.
 
 ### Example A: Documented Regex Instead of a 180-Line Character Scanner
 
 ```ts
-// Log Line Frame Parser
+// Frame Parser for Log Lines
 //
 // Why regex over manual scanner:
 // Upstream proxies emit RFC-5424-like lines with optional bracketed trace tags.
@@ -66,7 +81,7 @@ const LOG_FRAME_PATTERN =
 ### Example B: Documented Macro / Reflection Boundary
 
 ```rust
-// Wire Codec Dispatch Macro
+// Dispatch Macro for Wire Codecs
 //
 // Why a declarative macro here:
 // Every frame variant shares identical 4-byte length-prefix framing and CRC checks.
@@ -86,7 +101,7 @@ macro_rules! impl_framed_codec {
 }
 ```
 
-### Example C: External Constraint & Failure-Ordering Comment Block
+### Example C: Comment Block for External Constraints and Failure Ordering
 
 ```go
 // Idempotent Lock Acquisition

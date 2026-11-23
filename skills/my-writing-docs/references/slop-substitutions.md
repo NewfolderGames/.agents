@@ -34,44 +34,36 @@ If a prohibited word adds no factual meaning, delete the word instead of replaci
 | `plethora`, `myriad` | `many` |
 | `addresses the issue`, `tackles` | `fixes the bug`, `removes the error` |
 | `pivotal`, `crucial`, `paramount` | `important`, `required` |
-| `tapestry`, `testament`, `synergy` | *(delete)* |
-| `interplay` | `interaction` *(or delete)* |
-| `intricate` | `complex` |
-| `vibrant`, `nuanced`, `multifaceted` | *(delete or name the exact parts)* |
+| `testament`, `synergy`, `interplay` | `interaction` *(or delete)* |
+| `intricate`, `nuanced`, `multifaceted` | `complex` *(or name the exact parts)* |
 | `realm`, `landscape` *(metaphorical)* | `area`, `domain` |
-| `transformative`, `game-changer` | *(delete and state what changes)* |
-| `revolutionize` | `change`, `replace` |
+| `transformative`, `game-changer`, `revolutionize` | `change`, `replace` *(and state what changes)* |
 | `showcase`, `underscore`, `emphasize` | `show` |
 | `foster`, `empower`, `bolster` | `help`, `support`, `let` |
-| `enhance` | `improve` |
-| `elevate` | `increase` |
+| `enhance`, `elevate` | `improve`, `increase` |
 | `furthermore`, `moreover` | `also` |
 | `however`, `that being said`, `notwithstanding` | `but` |
 | `therefore` | `thus`, `as a result` |
 | `in conclusion`, `in summary`, `at the end of the day` | *(delete)* |
 | `embark`, `endeavor` | `start`, `try` |
-| `meticulous`, `meticulously` | `careful`, `carefully` |
-| `holistic` | `full`, `end-to-end` |
+| `meticulous`, `meticulously`, `holistic` | `careful`, `carefully`, `full` |
 | `paradigm` | `model`, `pattern` |
 | `navigate` *(metaphorical)* | `open`, `go to`, `inspect` |
-| `boasts` | `has`, `includes` |
-| `nestled`, `in the heart of` | *(delete and state exact path or location)* |
-| `bustling` | `busy`, `active` |
 | `I hope this helps`, `let's dive in` | *(delete)* |
 
 ---
 
 ## 2. Practical Software Precision Swaps
 
-Normal software verbs (`test`, `check`, `run`, `render`, `display`, `insert`, `avoid`, `repeat`, `validate`, `deploy`) are natural and permitted in software prose. Replace only phrases that create genuine ambiguity for engineers or agents:
+Normal software verbs are natural and permitted in software prose: `test`, `check`, `run`, `render`, `display`, `insert`, `avoid`, `repeat`, `validate`, and `deploy`. Replace only phrases that create genuine ambiguity for engineers or agents:
 
 | Ambiguous Phrase | Clear Software Phrasing | Why |
 |---|---|---|
 | Rotating `config` / `settings` / `options` / `preferences` in one doc | Pick one term (`configuration` unless the project names the type `Options` or `Settings`) | Synonym rotation makes readers wonder whether two distinct concepts exist |
 | Rotating `user` / `client` / `caller` / `customer` in one doc | Pick the exact actor (`caller` for functions, `client` for HTTP, `user` for humans) | Distinguishes human operators from upstream services |
-| Invented ad-hoc nouns and metaphorical labels (`set a tight concurrency-valve in the 2 to 16 worker throughput-band for a valve-induced backlog surge`) | Plain domain terms and direct verbs (`set the worker count between 2 and 16. When the worker count decreases, queue depth increases`) | Undefined coinages manufacture fake concepts and hide simple cause-and-effect. Name a new term only when it recurs, and define it on first use |
+| Invented ad-hoc nouns and metaphorical labels (`set a tight concurrency-valve in the 2 to 16 worker throughput-band for a valve-induced backlog surge`) | Plain domain terms and direct verbs (`set the worker count between 2 and 16. When the worker count decreases, queue depth increases`) | Undefined coinages introduce unnecessary terms and obscure direct cause-and-effect. Name a new term only when it recurs, and define it on first use |
 | `above` / `below` for numbers (`values above 500ms`) | `more than` / `less than` (`latency of more than 500ms`) | Prevents confusion between numeric direction and page layout position |
-| `the example below` / `see above` | `the following example` or link the exact section heading | Survives layout reflows and chunked agent file reads |
+| `the example below` / `see above` | `the following example` or link the exact section heading | Survives layout reflows and chunked file reads by agents |
 | Bare `this` or `it` across clauses (`This breaks retries.`) | `this` + explicit noun (`This timeout breaks retries.`) | Removes antecedent ambiguity |
 | Soft phrasal verbs (`spin up`, `kick off`, `reach out`, `tear down`) | Direct verbs (`start`, `begin`, `contact`, `stop` or `delete`) | Clearer to non-native readers and downstream parsers |
 | Nominalizations (`perform a validation of`, `make a connection to`) | Direct verbs (`validate`, `connect to`) | Shorter and keeps the actor explicit |
@@ -92,4 +84,4 @@ Post-training under length penalties and verifiable rewards pushes LLMs toward c
 | **Long syntactic dependency** | `All five expression shapes (attribute access, subscript, calls, nested calls, string literals) leave current on NAME('b').` | `All five expression shapes leave current on NAME('b'): attribute access, subscript, calls, nested calls, and string literals.` | Large gaps between subject and main verb strain human working memory |
 | **Telegraphic / unattested word pairs** | `Every behavioral test was verified red against the original source.` | `Verified that every behavioral test fails against the original source.` | High n-gram surprisal from dropping predictable connecting words slows reading |
 
-**Citation**: Thomas Hikaru Clark, Matias B. Martin, and Kyle Mahowald (2026). *Why is AI-generated language so hard to understand?* arXiv:2610.29162. https://arxiv.org/abs/2610.29162
+**Citation**: Thomas Hikaru Clark, Matias B. Martin, and Kyle Mahowald (2026). [*Why is AI-generated language so hard to understand?*](https://arxiv.org/abs/2610.29162) (`arXiv:2610.29162`).

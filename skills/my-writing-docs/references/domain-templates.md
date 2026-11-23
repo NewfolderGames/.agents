@@ -24,7 +24,7 @@ When 20 lines of regex, macro rules, reflection, bitwise packing, or subtle conc
 State what failed (simple past), state the specific cause, and give the recovery action (imperative):
 
 ```text
-Connection to PostgreSQL at `db.internal:5432` failed. The password for role `app_reader` was rejected. Update `DATABASE_URL` and restart the worker.
+Connection to PostgreSQL at `db.internal:5432` failed. PostgreSQL rejected the password for role `app_reader`. Update `DATABASE_URL` and restart the worker.
 ```
 
 ## 3. `TODO` Markers

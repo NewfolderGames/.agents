@@ -1,6 +1,6 @@
 # Using IntelliJ PhpStorm MCP Tools
 
-Use your default agent tools (`read_file`, `edit_file`, `rg`) and local `composer` commands via `run_command` first when working locally. Escalate to these PhpStorm tools (and core `search_structural` or `xdebug_*` in [SKILL.md](../SKILL.md)) when inspecting remote Docker or SSH PHP interpreters, querying indexed monorepo `composer.lock` files without disk I/O, or running AST-based PHP Structural Search.
+Use your default agent tools (`read_file`, `edit_file`, `rg`) and local `composer` commands via `run_command` first when working locally. Escalate to these PhpStorm tools (and core `search_structural` or `xdebug_*` in [SKILL.md](../SKILL.md)) when inspecting remote PHP interpreters over Docker or SSH, querying indexed monorepo `composer.lock` files without disk I/O, or running AST-based PHP Structural Search.
 
 Parameters marked with `*` are required. Always pass `projectPath` on every tool call.
 
@@ -20,7 +20,7 @@ Combine `get_structural_patterns` with `search_structural` from [SKILL.md](../SK
 
 1. Call `get_structural_patterns` first to discover reliable templates and pattern syntax (`$a$->$b$()`, `new $Class$()`, `class $a$ extends $b$ {}`).
 2. Call `search_structural` with `fileType: "PHP"`, `pattern`, optional `directoryToSearch`, and optional `constraints` (keyed by variable name without `$` signs).
-3. Keep PHP SSR limits in mind: some class modifiers such as `readonly` may not match, and complex nested patterns with constraints can behave inconsistently compared to Java SSR.
+3. Account for PHP SSR limits: some class modifiers such as `readonly` can fail to match, and complex nested patterns with constraints can behave inconsistently compared to Java SSR.
 
 ---
 
