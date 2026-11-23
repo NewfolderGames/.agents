@@ -1,8 +1,8 @@
 {
   "name": "my-agents",
   "displayName": "My Agents",
-  "version": "1.6.0",
-  "description": "Personal engineering rules and modular skills for multi-task session planning (tasks.md hub, immutable NN-<slug>.plan.md, and dual-mode NN-<slug>.report.md), default-first tool selection, IntelliJ IDE MCP workflows, deletable code architecture, caller-focused error design, Practical Software STE writing, user-driven self-learning DIY guidance (my-learning-diy), and RSCSS.",
+  "version": "1.7.0",
+  "description": "Personal engineering rules, modular skills, and subagents for project scouting (project-scout), multi-task session planning (tasks.md hub, immutable NN-<slug>.plan.md, and dual-mode NN-<slug>.report.md), default-first tool selection, IntelliJ IDE MCP workflows, deletable code architecture, caller-focused error design, Practical Software STE writing, user-driven self-learning DIY guidance (my-learning-diy), and RSCSS.",
   "suggestedPrompts": [
     "Plan a multi-step feature with In/Out Scope boundaries in NN-<slug>.plan.md, live tasks.md tracking, and a dual-mode NN-<slug>.report.md",
     "Untangle coupled modules and document dense code with why and how using my-working-project",

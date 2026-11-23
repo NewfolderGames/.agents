@@ -57,6 +57,7 @@ Use `python3` scripts to replace error-prone manual repetition and to inspect la
 ## 4. Parallel Subagent Delegation
 
 Spend subagent turns freely when parallel context keeps the main session clean and focused:
-1. **Subsystem mapping**: Delegate read-only exploration of independent packages or services in parallel.
-2. **Isolated stub implementation**: Once interfaces, types, and contracts compile (see `my-working-task`), delegate independent function implementations to subagents against those fixed signatures.
-3. **Post-refactor audits**: After untangling a module (see `my-working-project`), use a fresh subagent to scan for leftover dead code, broken comments, or missed edge cases.
+1. **Project scouting (`project-scout`)**: Delegate initial repository or subsystem scouting to `project-scout` when onboarding to an unfamiliar codebase or before starting a task that requires local code style, placement rules, formatter configs, and Git or documentation conventions. Pass `OutputPath: <Artifact Directory Path>/scratch/scout-<repo>.md` (or let it default to its own `scratch/` path) so the scout writes the full guideline to disk and returns a short handoff summary for you to read on demand.
+2. **Subsystem mapping**: Delegate read-only exploration of independent packages or services in parallel.
+3. **Isolated stub implementation**: Once interfaces, types, and contracts compile (see `my-working-task`), delegate independent function implementations to subagents against those fixed signatures.
+4. **Post-refactor audits**: After untangling a module (see `my-working-project`), use a fresh subagent to scan for leftover dead code, broken comments, or missed edge cases.

@@ -37,6 +37,14 @@ Activate the matching skill (or read its `SKILL.md` path directly) whenever a ta
 | `my-learning-diy` | `skills/my-learning-diy/SKILL.md` | Guiding the user to implement a task themselves so they learn by doing, via `guide` mode (spoiler-free calibrated study and task blueprint) or `active` mode (chunked Socratic pair coding with tiered hints and explain-back reviews). |
 | `rscss` | `skills/rscss/SKILL.md` | Structuring CSS or SCSS stylesheets into RSCSS components, elements, variants, layouts, and helpers. |
 
+### 1.4 Subagent Router
+
+Invoke a bundled subagent when its specialized workflow keeps context focused:
+
+| Subagent | Path | Invoke When |
+|---|---|---|
+| `project-scout` | `agents/project-scout.md` | Onboarding to an unfamiliar repository or starting a task that needs a project guideline covering recent code style, formatter/linter rules, directory layout, placement rules, and Git, documentation, versioning, and language patterns. Pass `OutputPath: <Artifact Directory Path>/scratch/scout-<repo>.md` when invoking it so the scout drops the full report to disk and returns a short handoff summary. |
+
 ## 2. Interactive Chat, Turn Execution, and Session Documents
 
 ### 2.1 Response Architecture (Mode 1)

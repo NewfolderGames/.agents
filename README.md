@@ -1,6 +1,6 @@
 # .agents
 
-Personal rules and modular skills repository for AI coding agents.
+Personal rules, modular skills, and subagents repository for AI coding agents.
 
 ## Prerequisites
 
@@ -13,7 +13,8 @@ Personal rules and modular skills repository for AI coding agents.
 
 | Path | Purpose |
 |---|---|
-| `AGENTS.md` | Always-on core rules: precedence order, multi-task session document lifecycle (`tasks.md`, `NN-<slug>.plan.md`, `NN-<slug>.report.md`), Mode 1 chat flow, anti-compression readability and anti-slop discipline, safety gates, and skill router |
+| `AGENTS.md` | Always-on core rules: precedence order, multi-task session document lifecycle (`tasks.md`, `NN-<slug>.plan.md`, `NN-<slug>.report.md`), Mode 1 chat flow, anti-compression readability and anti-slop discipline, safety gates, and skill/subagent router |
+| `agents/project-scout.md` | Repository scout subagent (read-only against repo files; writes the guideline to a file and returns a short handoff summary) that extracts recent code style, formatter/linter configs, directory layout, module placement rules, and Git, doc, versioning, and language patterns |
 | `skills/my-using-tools/` | Project-aware tool selection, default-first escalation routing, `rg`, `python3` automation, and subagent delegation |
 | `skills/my-using-intellij/` | Core IntelliJ IDE MCP usage, default-tools-first policy, 59 core tools, on-demand `references/` guides (JVM, Go, Python, PHP, SQL, CMake/native), and `scripts/sync_intellij_tools.py` |
 | `skills/my-working-task/` | Multi-task session hub (`tasks.md`), Junie-style immutable plans (`NN-<slug>.plan.md` with `In Scope` / `Out of Scope`), calibrated scaffold-first workflow, atomic commits, dual-mode reports (`NN-<slug>.report.md`), plus `references/` templates |
