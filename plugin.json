@@ -1,8 +1,8 @@
 {
   "name": "my-agents",
   "displayName": "My Agents",
-  "version": "1.8.0",
-  "description": "Personal engineering rules, modular skills, and a repository scout subagent for AI coding agents. Covers multi-task session planning, default-first tool selection, MCP workflows for IntelliJ IDEs, deletable code architecture, caller-focused error design, Practical Software STE documentation, self-learning DIY guidance, and RSCSS.",
+  "version": "1.9.0",
+  "description": "Personal engineering rules, modular skills, and repository scout subagents for AI coding agents. Covers multi-task session planning, default-first tool selection, MCP workflows for IntelliJ IDEs, deletable code architecture, caller-focused error design, Practical Software STE documentation, self-learning DIY guidance, and RSCSS.",
   "suggestedPrompts": [
     "Plan a multi-step feature with clear scope boundaries, live task tracking, and a verification report",
     "Untangle coupled modules and document dense code with why and how using my-working-project",
