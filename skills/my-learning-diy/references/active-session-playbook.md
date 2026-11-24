@@ -1,6 +1,12 @@
 # Active Mode Pair-Coding Playbook
 
-Use this playbook when running `my-learning-diy` in `active` mode. Treat `active` mode as a full `guide` document sliced into small, digestible tasks. Stage 1 of every chunk delivers complete calibrated guidance, learning materials, alternatives, pitfalls, and related topics for that chunk alone, followed by hands-on implementation, tiered hints, and multi-round Socratic code review. Use absolute `file:///...` links in Antigravity `<Artifact Directory Path>`, and use relative `./NN-...` sibling links in JetBrains Junie (`.junie/plans/<YYYYMMDD-HHMM>-<session-slug>/`) and workspace fallback directories (`.agents/sessions/<YYYYMMDD-HHMM>-<session-slug>/`).
+Use this playbook when running `my-learning-diy` in `active` mode. Treat `active` mode as a full `guide` document sliced
+into small, digestible tasks. Stage 1 of every chunk delivers complete calibrated guidance, learning materials,
+alternatives, pitfalls, and related topics for that chunk alone, followed by hands-on implementation, tiered hints, and
+multi-round Socratic code review.
+Follow [../../../references/session-contract.md](../../../references/session-contract.md) and the active host adapter
+in [../../../harnesses/README.md](../../../harnesses/README.md) for `<session-dir>` paths and host-specific link formats
+(`<session-link>` and `<file-link>` below).
 
 ---
 
@@ -46,7 +52,7 @@ At the start of every chunk, deliver the full guide slice scoped strictly to tha
 - **Goal**: <1 to 2 sentences defining what this chunk achieves.>
 - **Observable check**: <Exact visual, test, or runtime signal that confirms this chunk works before requesting review.>
 
-#### How to Proceed (No Spoilers)
+#### Guiding Questions and Mechanism (No Spoilers)
 
 - **What to figure out**:
   <!-- Ask genuine questions. Never answer a question in parentheses or leak exact formulas. -->
@@ -105,7 +111,9 @@ When the user says they are stuck, never jump straight to a finished patch. Asce
 ## 4. Stage 4: Taxonomy for Multi-Round Socratic Code Reviews
 
 When the user requests a review for the active chunk:
-1. **Read the actual code first** (`read_file` or `git diff`). Never speculate about code that you did not inspect.
+
+1. **Read the actual code first** (using the built-in file reader or `git diff`). Never speculate about code that you
+   did not inspect.
 2. **Confirm what works**: State in 1 to 2 factual sentences what satisfies the chunk's observable check. Omit empty praise ("Great job!", "Awesome code!").
 3. **Ask purposeful, line-grounded questions**: Select from the following five categories based on the defects and trade-offs present in the user's code. Do not enforce an artificial cap on question count. Prioritize **Bug Discovery** first if a defect exists, followed by **Design Rationale**, **Edge-Case Trace**, **Trade-Off Comparison**, and **Mental-Model Transfer**. When asking several questions in one turn, number and group them cleanly so the user can answer comfortably.
 4. **Continue across multiple rounds whenever useful**: Wait for the user's explanation before offering deeper commentary. Do not rush to Stage 5 after a single exchange if the user's answer leaves an edge case unexamined, uncovers a second misconception, or opens an insightful follow-up. Ask follow-up questions building directly on the user's previous answer until the user traces every invariant accurately and resolves all defects.
@@ -139,7 +147,7 @@ When all chunks finish (or when the user ends an `active` session), offer to wri
 ````markdown
 # Learning Log NN: <Short Project or Feature Title>
 
-- **Task**: `NN` ([tasks.md](file:///absolute/path/to/tasks.md))
+- **Task**: `NN` ([tasks.md](<session-link>/tasks.md))
 - **Mode**: `active`
 - **Completed Chunks**: `<completed> / <total>`
 
@@ -152,8 +160,8 @@ When all chunks finish (or when the user ends an `active` session), offer to wri
 
 ## Design Decisions You Made
 
-- **<Decision 1>** ([file.ext](file:///absolute/path/to/file.ext#L10-L25)): <What you chose, why you chose it, and the trade-off that you accepted.>
-- **<Decision 2>** ([file.ext](file:///absolute/path/to/file.ext#L40-L52)): <What you chose, why you chose it, and the trade-off that you accepted.>
+- **<Decision 1>** ([file.ext](<file-link>/file.ext#L10-L25)): <What you chose, why you chose it, and the trade-off that you accepted.>
+- **<Decision 2>** ([file.ext](<file-link>/file.ext#L40-L52)): <What you chose, why you chose it, and the trade-off that you accepted.>
 
 ## Bugs You Diagnosed
 

@@ -1,8 +1,11 @@
 # Session Document Templates (`tasks.md`, `NN-<slug>.plan.md`, `NN-<slug>.report.md`)
 
-Use these templates when `my-working-task` triggers session documents. Apply Practical Software STE (`my-writing-docs`): active voice, conditions before commands, concrete bounds, consistent language across all documents for a task, and zero AI filler.
-
-In Antigravity `<Artifact Directory Path>`, use absolute `file:///...` links for both sibling artifacts and workspace source files. In JetBrains Junie (`.junie/plans/<YYYYMMDD-HHMM>-<session-slug>/`) or workspace fallback directories (`.agents/sessions/<YYYYMMDD-HHMM>-<session-slug>/`), use relative `./NN-<slug>.<role>.md` links between sibling session files so the directory stays portable. In Korean session documents, use formal declarative titles and steps (`~한다`) instead of imperative wording (see `references/korean-style-guide.md` in `my-writing-docs`).
+Use these templates when `my-working-task` triggers session documents. Apply Practical Software STE (`my-writing-docs`):
+active voice, conditions before commands, concrete bounds, consistent language across all documents for a task, and zero
+AI filler. Follow [../../../references/session-contract.md](../../../references/session-contract.md) and the active host
+adapter in [../../../harnesses/README.md](../../../harnesses/README.md) for `<session-dir>` paths and host-specific link
+formats (`<session-link>` and `<file-link>` below). In Korean session documents, use formal declarative titles and steps
+(`~한다`) instead of imperative wording (see `references/korean-style-guide.md` in `my-writing-docs`).
 
 ---
 
@@ -15,16 +18,16 @@ Keep `tasks.md` as the single mutable state file across all tasks in a conversat
 
 | # | Status | Task | Docs |
 |---|---|---|---|
-| 01 | Done | <Audit or Review Task Title> | - \| [report](file:///absolute/path/to/01-audit-slug.report.md) |
-| 02 | Done | <Completed Implementation Title> | [plan](file:///absolute/path/to/02-impl-slug.plan.md) \| [report](file:///absolute/path/to/02-impl-slug.report.md) |
-| 03 | In Progress (Step 1/3) | <Active Task Title> | [plan](file:///absolute/path/to/03-active-slug.plan.md) \| - |
+| 01 | Done | <Audit or Review Task Title> | - \| [report](<session-link>/01-audit-slug.report.md) |
+| 02 | Done | <Completed Implementation Title> | [plan](<session-link>/02-impl-slug.plan.md) \| [report](<session-link>/02-impl-slug.report.md) |
+| 03 | In Progress (Step 1/3) | <Active Task Title> | [plan](<session-link>/03-active-slug.plan.md) \| - |
 
 ---
 
 <details>
 <summary>[x] Task 01 - Audit or Review Task Title</summary>
 
-- **Docs**: [report](file:///absolute/path/to/01-audit-slug.report.md)
+- **Docs**: [report](<session-link>/01-audit-slug.report.md)
 - **Summary**: <One-sentence outcome of the completed audit or review.>
 
 - [x] <Top-level completed step 1>
@@ -35,7 +38,7 @@ Keep `tasks.md` as the single mutable state file across all tasks in a conversat
 <details>
 <summary>[x] Task 02 - Completed Implementation Title</summary>
 
-- **Docs**: [plan](file:///absolute/path/to/02-impl-slug.plan.md) | [report](file:///absolute/path/to/02-impl-slug.report.md)
+- **Docs**: [plan](<session-link>/02-impl-slug.plan.md) | [report](<session-link>/02-impl-slug.report.md)
 - **Summary**: <One-sentence outcome of the completed implementation.>
 
 - [x] Step 1: <Completed step title>
@@ -48,7 +51,7 @@ Keep `tasks.md` as the single mutable state file across all tasks in a conversat
 ## Task 03 - <Active Task Title>
 
 - **Status**: In Progress (Step 1/3)
-- **Docs**: [plan](file:///absolute/path/to/03-active-slug.plan.md) | report (pending)
+- **Docs**: [plan](<session-link>/03-active-slug.plan.md) | report (pending)
 - **Summary**: <One-sentence description of what this task delivers.>
 
 ### Step 1: <Imperative Step Title>
@@ -73,16 +76,17 @@ Keep `tasks.md` as the single mutable state file across all tasks in a conversat
 
 ---
 
-## 2. `NN-<slug>.plan.md` Template (Junie-Style Immutable Technical Plan)
+## 2. `NN-<slug>.plan.md` Template (Structured Immutable Technical Plan)
 
 Use monotonic `H1 -> H2 -> H3 -> H4` headings with one `H1` per plan. Include every section marked `<!-- Required -->` in every plan. Include sections marked `<!-- Conditional: ... -->` only when the task touches those concerns so compact plans stay between 40 and 90 lines. Never modify `NN-<slug>.plan.md` to track execution progress, and never place delivery checklists inside the plan.
 
 ````markdown
 # Plan NN: <Short Task Title>
 
-- **Task**: `NN` ([tasks.md](file:///absolute/path/to/tasks.md))
+- **Task**: `NN` ([tasks.md](<session-link>/tasks.md))
 - **Target**: `<repo>` @ `<branch>` (`<short-sha>`)
-- **Follows**: [01-<prev-slug>.report.md](file:///absolute/path/to/01-prev-slug.report.md) <!-- Conditional: omit when standalone -->
+- **Follows**: [01-<prev-slug>.report.md](<session-link>
+  /01-prev-slug.report.md) <!-- Conditional: omit when standalone -->
 
 ## Requirements
 
@@ -235,10 +239,10 @@ Use Mode A at the end of every planned, multi-step, architectural, or escalated 
 ````markdown
 # Report NN: <Short Task Title>
 
-- **Task**: `NN` ([tasks.md](file:///absolute/path/to/tasks.md))
+- **Task**: `NN` ([tasks.md](<session-link>/tasks.md))
 - **Outcome**: `Completed` <!-- Or: Partial | Blocked -->
 - **Target**: `<repo>` @ `<branch>` (`<base-sha> -> <head-sha or uncommitted>`)
-- **Plan**: [NN-<slug>.plan.md](file:///absolute/path/to/NN-slug.plan.md) <!-- Omit when no plan existed -->
+- **Plan**: [NN-<slug>.plan.md](<session-link>/NN-slug.plan.md) <!-- Omit when no plan existed -->
 
 ## Summary & Outcome
 
@@ -256,8 +260,8 @@ Diff stat: `<N files changed, +X / -Y>` *(include when > 15 files changed)*
 
 | File / Directory | Action | Summary |
 |---|---|---|
-| [file_a.ext](file:///absolute/path/to/file_a.ext) | Modified | <Concise change description> |
-| [file_b.ext](file:///absolute/path/to/file_b.ext) | Added | <Concise change description> |
+| [file_a.ext](<file-link>/file_a.ext) | Modified | <Concise change description> |
+| [file_b.ext](<file-link>/file_b.ext) | Added | <Concise change description> |
 | `path/to/bulk_dir/` (24 files) | Modified | <Grouped repetitive change summary> |
 
 ### Plan Deviations
@@ -286,9 +290,9 @@ Diff stat: `<N files changed, +X / -Y>` *(include when > 15 files changed)*
 
 | ID | Priority | Location | Follow-Up Action |
 |---|---|---|---|
-| `F1` | `MUST` | [file.ext](file:///absolute/path/to/file.ext#L10-L25) | <Critical bug, security gap, or required migration for a dedicated task> |
-| `F2` | `SHOULD` | [other.ext](file:///absolute/path/to/other.ext#L40) | <Recommended test, doc update, or cleanup outside this task's scope> |
-| `F3` | `COULD` | [opt.ext](file:///absolute/path/to/opt.ext) | <Optional ergonomic or performance improvement> |
+| `F1` | `MUST` | [file.ext](<file-link>/file.ext#L10-L25) | <Critical bug, security gap, or required migration for a dedicated task> |
+| `F2` | `SHOULD` | [other.ext](<file-link>/other.ext#L40) | <Recommended test, doc update, or cleanup outside this task's scope> |
+| `F3` | `COULD` | [opt.ext](<file-link>/opt.ext) | <Optional ergonomic or performance improvement> |
 ````
 
 ---
@@ -300,10 +304,10 @@ Use Mode B for extended read-only code reviews, migration audits, security revie
 ````markdown
 # Report NN: <Short Audit or Investigation Title>
 
-- **Task**: `NN` ([tasks.md](file:///absolute/path/to/tasks.md))
+- **Task**: `NN` ([tasks.md](<session-link>/tasks.md))
 - **Outcome**: `Audit Complete` <!-- Or: Root Cause Confirmed | Investigation Blocked -->
 - **Target**: `<repo>` @ `<branch>` (`<short-sha>`)
-- **Plan**: [NN-<slug>.plan.md](file:///absolute/path/to/NN-slug.plan.md) <!-- Conditional: omit when no plan existed -->
+- **Plan**: [NN-<slug>.plan.md](<session-link>/NN-slug.plan.md) <!-- Conditional: omit when no plan existed -->
 
 ## Summary & Verdict
 
@@ -314,29 +318,29 @@ Use Mode B for extended read-only code reviews, migration audits, security revie
 | Check / Spec | Status | Observed Result |
 |---|---|---|
 | `<build or test command>` | `PASS` / `FAIL` | <Concrete output or failing package count> |
-| [spec.md](file:///absolute/path/to/spec.md) | `PASS` / `PARTIAL` / `FAIL` | <Concise compliance summary> |
+| [spec.md](<file-link>/spec.md) | `PASS` / `PARTIAL` / `FAIL` | <Concise compliance summary> |
 
 ## Findings
 
 ### Critical
-- **`C1` - <Short Issue Title>** ([file.ext](file:///absolute/path/to/file.ext#L10-L25)): <Confirmed defect, concrete failure impact, and recommended fix.>
+- **`C1` - <Short Issue Title>** ([file.ext](<file-link>/file.ext#L10-L25)): <Confirmed defect, concrete failure impact, and recommended fix.>
 
 ### High
-- **`H1` - <Short Issue Title>** ([other.ext](file:///absolute/path/to/other.ext#L40)): <Confirmed defect, concrete impact, and recommended fix.>
+- **`H1` - <Short Issue Title>** ([other.ext](<file-link>/other.ext#L40)): <Confirmed defect, concrete impact, and recommended fix.>
 
 ### Medium
-- **`M1` - <Short Issue Title>** ([third.ext](file:///absolute/path/to/third.ext#L80)): <Confirmed gap and recommended fix.>
+- **`M1` - <Short Issue Title>** ([third.ext](<file-link>/third.ext#L80)): <Confirmed gap and recommended fix.>
 
 ### Low
-- **`L1` - <Short Issue Title>** ([fourth.ext](file:///absolute/path/to/fourth.ext#L12)): <Minor cleanup or doc gap.>
+- **`L1` - <Short Issue Title>** ([fourth.ext](<file-link>/fourth.ext#L12)): <Minor cleanup or doc gap.>
 
 ## Recommended Next Tasks
 
 | ID | Priority | Location | Follow-Up Action |
 |---|---|---|---|
-| `C1` | `MUST` | [file.ext](file:///absolute/path/to/file.ext#L10-L25) | <Concrete remediation action for the next task> |
-| `H1` | `SHOULD` | [other.ext](file:///absolute/path/to/other.ext#L40) | <Concrete remediation action> |
-| `L1` | `COULD` | [fourth.ext](file:///absolute/path/to/fourth.ext#L12) | <Optional follow-up cleanup> |
+| `C1` | `MUST` | [file.ext](<file-link>/file.ext#L10-L25) | <Concrete remediation action for the next task> |
+| `H1` | `SHOULD` | [other.ext](<file-link>/other.ext#L40) | <Concrete remediation action> |
+| `L1` | `COULD` | [fourth.ext](<file-link>/fourth.ext#L12) | <Optional follow-up cleanup> |
 ````
 
 ---
@@ -347,10 +351,10 @@ Never paste `NN-<slug>.plan.md` or `NN-<slug>.report.md` sections into the chat 
 
 - **Plan approval handoff (`/plan`)**:
   ```markdown
-  Review [01-feature-slug.plan.md](file:///absolute/path/to/01-feature-slug.plan.md) and [tasks.md](file:///absolute/path/to/tasks.md).
-  Next: reply with approval (or click Proceed) to start Step 1, or share adjustments.
+  Review [01-feature-slug.plan.md](<session-link>/01-feature-slug.plan.md) and [tasks.md](<session-link>/tasks.md).
+  Next: reply with approval (per the active host adapter) to start Step 1, or share adjustments.
   ```
 - **Session completion handoff (`NN-<slug>.report.md`)**:
   ```markdown
-  Completed <short outcome>. Read [01-feature-slug.report.md](file:///absolute/path/to/01-feature-slug.report.md) for actions taken, verification results, and follow-up work.
+  Completed <short outcome>. Read [01-feature-slug.report.md](<session-link>/01-feature-slug.report.md) for actions taken, verification results, and follow-up work.
   ```

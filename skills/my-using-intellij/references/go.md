@@ -1,6 +1,9 @@
 # Using IntelliJ GoLand Profiler and `pprof` MCP Tools
 
-Use your default agent tools (`read_file`, `edit_file`, `write_file`) and shell `go build`, `go test`, or `go test -bench` commands via `run_command` first. Escalate to these GoLand profiler tools (alongside core [SKILL.md](../SKILL.md) tools) when running a Go profiler configuration in the IDE, controlling live IDE profiling sessions, or querying `.pprof` bottlenecks without writing custom `go tool pprof` pipelines.
+Use your built-in file tools and shell `go build`, `go test`, or `go test -bench` commands first. Escalate to these
+GoLand profiler tools (alongside core [SKILL.md](../SKILL.md) tools) when running a Go profiler configuration in the
+IDE, controlling live IDE profiling sessions, or querying `.pprof` bottlenecks without writing custom `go tool pprof`
+pipelines.
 
 Parameters marked with `*` are required. Always pass `projectPath` on every tool call.
 

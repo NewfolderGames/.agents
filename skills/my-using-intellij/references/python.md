@@ -1,6 +1,8 @@
 # Using IntelliJ PyCharm Python MCP Tools
 
-Use your default agent tools (`read_file`, `edit_file`, `write_file`) and `run_command` first once you know the target Python executable and package manager. Escalate to these PyCharm MCP tools (alongside core [SKILL.md](../SKILL.md) tools) when working in an unfamiliar Python module so commands target the IDE-configured virtual environment instead of the wrong system Python binary.
+Use your built-in file and shell tools first once you know the target Python executable and package manager. Escalate to
+these PyCharm MCP tools (alongside core [SKILL.md](../SKILL.md) tools) when working in an unfamiliar Python module so
+commands target the IDE-configured virtual environment instead of the wrong system Python binary.
 
 Parameters marked with `*` are required. Always pass `projectPath` on every tool call.
 
@@ -16,4 +18,4 @@ Parameters marked with `*` are required. Always pass `projectPath` on every tool
 1. Call `get_python_environment` with a project Python `filePath` to obtain the exact interpreter path and package manager (`uv`, `poetry`, `pip`, `conda`).
 2. If `noInterpreterConfigured` is non-null and indicates that an interpreter must be configured, call `configure_python_interpreter` for that `filePath`.
 3. If `configure_python_interpreter` fails because a required tool (`uv` or `poetry`) is missing, report the missing tool rather than silently switching to an unconfigured system Python.
-4. Once you know the interpreter path, run tests, linters, and scripts directly through `run_command`.
+4. Once you know the interpreter path, run tests, linters, and scripts directly through your built-in shell runner.

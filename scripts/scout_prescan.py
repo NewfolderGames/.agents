@@ -21,8 +21,7 @@ import subprocess
 import sys
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
-
-# Hard secret exclusion lists matching AGENTS.md Section 1.2 item 1.
+# Hard secret exclusion lists matching rules/AGENTS.md Section 1.2 item 1.
 ALLOWED_ENV_TEMPLATES = frozenset({".env.example", ".env.sample", ".env.template"})
 SECRET_EXTENSIONS = frozenset({".key", ".pem", ".p12", ".pfx", ".jks", ".tfvars"})
 SECRET_KEY_PREFIXES = ("id_rsa", "id_ed25519", "id_ecdsa")
@@ -254,7 +253,6 @@ DOC_EXTENSIONS = frozenset({".md", ".mdx", ".rst", ".txt", ".adoc"})
 
 BULK_COMMIT_FILE_THRESHOLD = 40
 
-
 # Why + How: Static symbol skeleton extraction using a compiled regex table
 #
 # Why:
@@ -475,17 +473,17 @@ def is_noise_path(rel_path: str) -> bool:
     if norm == ".idea/editor.xml" or norm.endswith("/.idea/editor.xml"):
         return True
     if (
-        norm == ".idea/shelf"
-        or norm.startswith(".idea/shelf/")
-        or norm.endswith("/.idea/shelf")
-        or "/.idea/shelf/" in norm
+            norm == ".idea/shelf"
+            or norm.startswith(".idea/shelf/")
+            or norm.endswith("/.idea/shelf")
+            or "/.idea/shelf/" in norm
     ):
         return True
     if (
-        norm == ".agents/sessions"
-        or norm.startswith(".agents/sessions/")
-        or norm.endswith("/.agents/sessions")
-        or "/.agents/sessions/" in norm
+            norm == ".agents/sessions"
+            or norm.startswith(".agents/sessions/")
+            or norm.endswith("/.agents/sessions")
+            or "/.agents/sessions/" in norm
     ):
         return True
 
@@ -863,7 +861,8 @@ def _extract_ci_excerpt(text: str) -> str:
         stripped = raw_line.strip()
         if not stripped or stripped.startswith("#"):
             continue
-        if re.match(r"^(name|on|jobs|[A-Za-z0-9_-]+):\s*$", stripped) or "run:" in stripped or stripped.startswith("script:"):
+        if re.match(r"^(name|on|jobs|[A-Za-z0-9_-]+):\s*$", stripped) or "run:" in stripped or stripped.startswith(
+                "script:"):
             lines.append(raw_line.rstrip())
         if sum(len(x) + 1 for x in lines) >= 400:
             break
@@ -944,7 +943,7 @@ def extract_references(repo_root: Path, inventory: Sequence[str]) -> ReferencesB
         rel
         for rel in inventory
         if rel == ".gitlab-ci.yml"
-        or (rel.startswith(".github/workflows/") and rel.endswith((".yml", ".yaml")))
+           or (rel.startswith(".github/workflows/") and rel.endswith((".yml", ".yaml")))
     ]
     ci_chars = 0
     for rel in ci_paths:
@@ -1011,10 +1010,10 @@ def normalize_numstat_path(raw_path: str) -> str:
 #   emits deduplicated files from normal_queue first, then fills remaining
 #   slots from bulk_queue.
 def collect_recent_files(
-    repo_root: Path,
-    inventory: Sequence[str],
-    is_git: bool,
-    max_recent: int = 60,
+        repo_root: Path,
+        inventory: Sequence[str],
+        is_git: bool,
+        max_recent: int = 60,
 ) -> RecentDiscovery:
     discovery = RecentDiscovery()
     inv_set = set(inventory)
@@ -1156,9 +1155,9 @@ def collect_git_patterns(repo_root: Path, is_git: bool) -> GitPatterns:
         for block in commit_blocks:
             files = [normalize_rel_path(line.strip()) for line in block.splitlines()[1:] if line.strip()]
             if any(
-                f.startswith("docs/")
-                or f.rsplit("/", 1)[-1].upper().startswith(("README", "CHANGELOG", "AGENTS.MD"))
-                for f in files
+                    f.startswith("docs/")
+                    or f.rsplit("/", 1)[-1].upper().startswith(("README", "CHANGELOG", "AGENTS.MD"))
+                    for f in files
             ):
                 doc_hits += 1
         patterns.doc_cochange_summary = (
@@ -1236,8 +1235,8 @@ def extract_shared_skeletons(repo_root: Path, inventory: Sequence[str]) -> List[
 
 
 def _expand_workspace_prefixes(
-    workspace_globs: Sequence[str],
-    code_files: Sequence[str],
+        workspace_globs: Sequence[str],
+        code_files: Sequence[str],
 ) -> List[str]:
     prefixes: List[str] = []
     for raw_glob in workspace_globs:
@@ -1284,13 +1283,13 @@ def _derive_subsystem_for_file(rel_path: str, declared_prefixes: Sequence[str]) 
 
 
 def _pick_disjoint_files(
-    candidates: Sequence[str],
-    recent_rank: Dict[str, int],
-    already_used: Set[str],
-    limit: int,
+        candidates: Sequence[str],
+        recent_rank: Dict[str, int],
+        already_used: Set[str],
+        limit: int,
 ) -> List[str]:
     available = [p for p in candidates if p not in already_used]
-    available.sort(key=lambda p: (recent_rank.get(p, 10**9), p))
+    available.sort(key=lambda p: (recent_rank.get(p, 10 ** 9), p))
 
     prod = [p for p in available if not is_test_file(p)]
     tests = [p for p in available if is_test_file(p)]
@@ -1317,20 +1316,20 @@ def _matches_scope(rel_path: str, scope_norm: str) -> bool:
     lower_path = rel_path.lower()
     lower_scope = scope_norm.lower()
     return (
-        rel_path == scope_norm
-        or rel_path.startswith(scope_norm + "/")
-        or lower_scope in lower_path
+            rel_path == scope_norm
+            or rel_path.startswith(scope_norm + "/")
+            or lower_scope in lower_path
     )
 
 
 def build_partition_plan(
-    inventory: Sequence[str],
-    recent_files: Sequence[str],
-    workspace_globs: Sequence[str],
-    scope: Optional[str],
-    fanout_threshold: int,
-    max_workers: int,
-    gaps: List[str],
+        inventory: Sequence[str],
+        recent_files: Sequence[str],
+        workspace_globs: Sequence[str],
+        scope: Optional[str],
+        fanout_threshold: int,
+        max_workers: int,
+        gaps: List[str],
 ) -> PartitionPlan:
     source_files: List[str] = []
     test_files: List[str] = []
@@ -1410,13 +1409,13 @@ def build_partition_plan(
     total_code_count = len(active_code)
 
     should_fanout = (
-        max_workers >= 2
-        and (
-            (len(large_subsystems) >= 2 and total_code_count >= 60)
-            or len(large_subsystems) >= 3
-            or len(declared_with_source) >= 3
-            or total_code_count >= fanout_threshold
-        )
+            max_workers >= 2
+            and (
+                    (len(large_subsystems) >= 2 and total_code_count >= 60)
+                    or len(large_subsystems) >= 3
+                    or len(declared_with_source) >= 3
+                    or total_code_count >= fanout_threshold
+            )
     )
 
     used_files: Set[str] = set()
@@ -1429,6 +1428,7 @@ def build_partition_plan(
                 + [sub for sub in declared_with_source if sub not in large_subsystems]
             )
         )
+
         # Rank subsystems by recent activity then source count.
         def sub_score(sub_name: str) -> Tuple[int, int, str]:
             recent_hits = sum(1 for f in subsystem_files[sub_name] if f in recent_rank)
@@ -1443,7 +1443,7 @@ def build_partition_plan(
         else:
             for sub in candidate_subs[: worker_cap - 1]:
                 groups.append((sub.replace("/", "-"), [sub]))
-            overflow_subs = candidate_subs[worker_cap - 1 :]
+            overflow_subs = candidate_subs[worker_cap - 1:]
             groups.append(("other-subsystems", overflow_subs))
 
         partitions: List[Partition] = []
@@ -1726,12 +1726,12 @@ def render_markdown(result: PrescanResult, max_digest_bytes: int) -> str:
 
 
 def run_prescan(
-    repo_root: Path,
-    is_git: bool,
-    scope: Optional[str] = None,
-    fanout_threshold: int = 120,
-    max_workers: int = 4,
-    max_recent: int = 60,
+        repo_root: Path,
+        is_git: bool,
+        scope: Optional[str] = None,
+        fanout_threshold: int = 120,
+        max_workers: int = 4,
+        max_recent: int = 60,
 ) -> PrescanResult:
     git_state = collect_git_state(repo_root, is_git)
     inventory, inv_gaps = collect_inventory(repo_root, is_git)

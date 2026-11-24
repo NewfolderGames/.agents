@@ -1,6 +1,9 @@
 # Using IntelliJ PhpStorm MCP Tools
 
-Use your default agent tools (`read_file`, `edit_file`, `rg`) and local `composer` commands via `run_command` first when working locally. Escalate to these PhpStorm tools (and core `search_structural` or `xdebug_*` in [SKILL.md](../SKILL.md)) when inspecting remote PHP interpreters over Docker or SSH, querying indexed monorepo `composer.lock` files without disk I/O, or running AST-based PHP Structural Search.
+Use your built-in file tools, `rg`, and local `composer` commands via your shell runner first when working locally.
+Escalate to these PhpStorm tools (and core `search_structural` or `xdebug_*` in [SKILL.md](../SKILL.md)) when inspecting
+remote PHP interpreters over Docker or SSH, querying indexed monorepo `composer.lock` files without disk I/O, or running
+AST-based PHP Structural Search.
 
 Parameters marked with `*` are required. Always pass `projectPath` on every tool call.
 

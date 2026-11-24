@@ -93,7 +93,8 @@ When asked to untangle or clean up a messy subsystem:
 2. **Catalog coupling first**: List the hidden links, needless links, surplus wrappers, and special cases before editing files.
 3. **Group under structural fixes**: Map multiple symptoms to the single design change that eliminates them cleanly.
 4. **Scaffold and migrate incrementally**: Follow `my-working-task` to validate new types/signatures first, migrate callers step by step, and delete dead layers.
-5. **Verify behavior and audit**: Update tests last so existing tests catch regressions during migration, then audit with a subagent (`my-using-tools`) until zero dead code or special-case leftovers remain.
+5. **Verify behavior and audit**: Update tests last so existing tests catch regressions during migration, then audit
+   with a fresh read-only subagent (Section 4.4) until zero dead code or special-case leftovers remain.
 
 ### 4.3 Test Curation
 
@@ -103,11 +104,29 @@ Keep test suites fast, readable, and coupled to public behavior rather than priv
 3. **Pair bug fixes with regression tests**: Add a failing test reproducing the defect before or alongside every bug fix so the regression cannot silently return.
 4. **Remove dead and permanently disabled tests**: Fix or delete stale, flaky, or permanently skipped tests during refactors instead of leaving commented-out assertions in the suite.
 
+### 4.4 Automation Scripts, Structural Analysis, and Audits
+
+Replace error-prone manual repetition with deterministic `python3` scripts and fresh-context verification:
+
+1. **Batch transforms**: Write a `python3` script for mechanical multi-file transforms, fixture generation, and
+   migration checks instead of editing dozens of files by hand. When `my-using-intellij` is active, prefer IDE PSI-safe
+   `rename_refactoring` for cross-file language symbol renames.
+2. **Skeleton extraction**: When an unfamiliar module is large, run a script to list exported types and function
+   signatures so you see the contract map without reading every body at once.
+3. **Import-direction and co-change checks**: Script import graphs when untangling modules to verify that core domain
+   packages do not import volatile adapters, and inspect `git log` co-change frequency to locate hidden coupling.
+4. **Keep the repository clean ("nothing left to remove")**: Store temporary analysis or migration scripts in a scratch
+   directory (`../../references/session-contract.md`) and remove them when done. Commit scripts into `scripts/` with
+   clear usage documentation only when teammates or CI pipelines reuse them.
+5. **Post-refactor audit**: Use a fresh read-only subagent after untangling a module to scan for leftover dead code,
+   stale comments, or missed edge cases.
+
 ---
 
 ## 5. Signal-Scaled Comments and Documentation
 
-Follow `AGENTS.md` Section 3 for short comments, and activate `my-writing-docs` when drafting substantive documentation, boundary API docblocks, Korean documentation (공식 문어체 평서형 사용, 명령조 금지), or dense-code rationale blocks.
+Follow `rules/AGENTS.md` Section 3 for short comments, and activate `my-writing-docs` when drafting substantive
+documentation, boundary API docblocks, Korean documentation (공식 문어체 평서형 사용, 명령조 금지), or dense-code rationale blocks.
 
 1. **Zero code-restating comments**: Never write comments that repeat what the identifier name or static type already says (`// increment counter`). When you delete a workaround, delete its comment too.
 2. **Phase headers in longer functions**: Use short title-case headers (`// Input Validation`, `// Ledger Settlement`) only when a function spans distinct procedural stages.

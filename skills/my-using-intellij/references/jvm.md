@@ -1,6 +1,9 @@
 # Using IntelliJ JVM MCP Tools (Java and Kotlin)
 
-Use your default agent tools (`read_file`, `edit_file`, `write_file`) and project build scripts (`./gradlew`, `./mvnw`) first for normal edits and CLI test runs. Escalate to these JVM MCP tools (and core [SKILL.md](../SKILL.md) tools) for Java-to-Kotlin conversion, live JVM or coroutine thread dumps, exception or method breakpoints, diffing JDI memory snapshots for leaks, or `.jar` and `.class` decompilation.
+Use your built-in file tools and project build scripts (`./gradlew`, `./mvnw`) first for normal edits and CLI test runs.
+Escalate to these JVM MCP tools (and core [SKILL.md](../SKILL.md) tools) for Java-to-Kotlin conversion, live JVM or
+coroutine thread dumps, exception or method breakpoints, diffing JDI memory snapshots for leaks, or `.jar` and `.class`
+decompilation.
 
 Parameters marked with `*` are required. Always pass `projectPath` on every tool call.
 

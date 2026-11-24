@@ -1,8 +1,9 @@
 {
   "name": "my-agents",
   "displayName": "My Agents",
-  "version": "1.9.0",
-  "description": "Personal engineering rules, modular skills, and repository scout subagents for AI coding agents. Covers multi-task session planning, default-first tool selection, MCP workflows for IntelliJ IDEs, deletable code architecture, caller-focused error design, Practical Software STE documentation, self-learning DIY guidance, and RSCSS.",
+  "version": "2.0.0",
+  "description": "Harness-agnostic personal engineering rules, modular skills, per-host adapters, and repository scout subagents for AI coding agents. Covers multi-task session planning, IntelliJ IDE MCP workflows, deletable code architecture, caller-focused error design, Practical Software STE documentation, self-learning DIY guidance, and RSCSS.",
+  "repository": "https://github.com/NewfolderGames/.agents",
   "suggestedPrompts": [
     "Plan a multi-step feature with clear scope boundaries, live task tracking, and a verification report",
     "Untangle coupled modules and document dense code with why and how using my-working-project",

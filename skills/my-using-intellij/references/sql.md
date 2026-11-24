@@ -1,11 +1,17 @@
 # Using IntelliJ Database and SQL MCP Tools
 
-Use your default agent tools (`read_file`, `edit_file`, `rg`) first when inspecting or editing local `.sql` scripts, schema migrations, and ORM models. Escalate to these Database tools (alongside core [SKILL.md](../SKILL.md) tools) when querying live IDE data sources, testing JDBC connections, introspecting schemas, joining data across databases, or importing and exporting tabular data.
+Use your built-in file tools and `rg` first when inspecting or editing local `.sql` scripts, schema migrations, and ORM
+models. Escalate to these Database tools (alongside core [SKILL.md](../SKILL.md) tools) when querying live IDE data
+sources, testing JDBC connections, introspecting schemas, joining data across databases, or importing and exporting
+tabular data.
 
 Parameters marked with `*` are required. Always pass `projectPath` on every tool call.
 
 > [!WARNING]
-> Never ask the user for database usernames or passwords in chat, and never embed plaintext credentials into JDBC URLs passed to `create_database_connection` or `edit_database_connection`. Let the user enter credentials inside the IDE UI when authentication is required, and never read or dump credential or secret tables into model context (`AGENTS.md` Section 1.2).
+> Never ask the user for database usernames or passwords in chat, and never embed plaintext credentials into JDBC URLs
+passed to `create_database_connection` or `edit_database_connection`. Let the user enter credentials inside the IDE UI
+when authentication is required, and never read or dump credential or secret tables into model context
+(`rules/AGENTS.md` Section 1.2).
 
 ---
 
@@ -31,7 +37,9 @@ Parameters marked with `*` are required. Always pass `projectPath` on every tool
 ## 3. Table Preview, SQL Queries, and Execution Control
 
 > [!CAUTION]
-> Ask for explicit user confirmation before executing `DROP`, `TRUNCATE`, bulk `DELETE`/`UPDATE` without `WHERE`, irreversible DDL or DML writes, or `import_data` writes, because those statements mutate or destroy live database rows and schemas (see `AGENTS.md` Section 1.2).
+> Ask for explicit user confirmation before executing `DROP`, `TRUNCATE`, bulk `DELETE`/`UPDATE` without `WHERE`,
+irreversible DDL or DML writes, or `import_data` writes, because those statements mutate or destroy live database rows
+and schemas (see `rules/AGENTS.md` Section 1.2).
 
 - `preview_table_data` (`connectionId`*, `databaseName`*, `schemaName`*, `tableName`*, `maxRowCount`): Preview CSV rows using dialect-specific paging (`maxRowCount` default `10`, must be `>= 1`) without writing SQL. Requires an introspected schema and non-DDL connection.
 - `execute_sql_query` (`connectionId`*, `databaseName`*, `queryText`*, `schemaName`*): Run one SQL statement on one non-DDL connection (10-row CSV cap, returns `resultSetId` or `"Query executed successfully"`). Put each major clause (`SELECT`, `FROM`, `WHERE`, `JOIN`, `GROUP BY`, `ORDER BY`) on its own line and indent its body.

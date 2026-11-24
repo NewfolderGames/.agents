@@ -2,11 +2,11 @@
 name: my-using-intellij
 description: >-
   Interact with the active IntelliJ IDE MCP server (`intellij` or `jetbrains_air_ide`)
-  while prioritizing default agent tools (`read_file`, `edit_file`, `write_file`,
-  and shell `run_command`). Activate this skill when escalating to IDE PSI
-  navigation, Call Hierarchy, Structural Search, safe rename, inspections, incremental
-  builds, saved run configurations, coverage, changelists, multi-language debugging,
-  or language-specific IDE reference guides (JVM, Go, Python, PHP, SQL, CMake/native).
+  while prioritizing built-in agent file and shell tools. Activate this skill when
+  escalating to IDE PSI navigation, Call Hierarchy, Structural Search, safe rename,
+  inspections, incremental builds, saved run configurations, coverage, changelists,
+  multi-language debugging, or language-specific IDE reference guides (JVM, Go, Python,
+  PHP, SQL, CMake/native).
 ---
 
 # Using the Active IntelliJ IDE MCP
@@ -17,13 +17,13 @@ Use built-in agent tools first for plain file reads, edits, text search, and she
 
 Check whether a default agent tool handles the task before calling an IntelliJ MCP tool:
 
-| Task | Use Default Agent Tool First | Escalate to IntelliJ MCP Only When |
-|---|---|---|
-| Read source files | Built-in file reader (such as `read_file`) | Reading inside `.jar` or `.jrt` archives (`jar://`, `jrt://`, `/path/lib.jar!/pkg/Foo.class`), decompiling `.class` bytecode, or inspecting IDE-resolved SDK sources via MCP `read_file` |
-| Create or edit files | Built-in file editor (such as `write_file` and `edit_file`) | Cross-file PSI symbol renames (`rename_refactoring`), IDE inspection quick fixes (`apply_quick_fix`), IDE code formatting (`reformat_file`, `optimize_imports`), or Java-to-Kotlin conversion |
-| Find files, text, or directories | Shell (`rg`, `find`, `ls`) via built-in command runner (such as `run_command`) | Semantic symbol lookup (`search_symbol`), Quick Documentation (`get_symbol_info`), call graphs (`analyze_calls`), AST pattern search (`search_structural`), or matching IDE excluded roots |
-| Build, test, and lint | Project CLI (`pnpm`, `cargo`, `go`, `gradle`) via built-in command runner | Fast incremental JPS compilation (`build_project`), semantic IDE inspections (`get_inspections`, `lint_files`), saved Run Configurations (`execute_run_configuration`), IDE coverage (`coverage_*`), or CMake reloads |
-| Git and terminal commands | Shell (`git`, scripts) via built-in command runner | Managing IntelliJ Changelists (`*_changelist`), detecting VCS roots across multi-root IDE projects (`get_repositories`), or running commands inside the user's open IDE terminal tab (`execute_terminal_command`) |
+| Task                             | Use Default Agent Tool First                                            | Escalate to IntelliJ MCP Only When                                                                                                                                                                                    |
+|----------------------------------|-------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Read source files                | Built-in file reader                                                    | Reading inside `.jar` or `.jrt` archives (`jar://`, `jrt://`, `/path/lib.jar!/pkg/Foo.class`), decompiling `.class` bytecode, or inspecting IDE-resolved SDK sources via MCP `read_file`                              |
+| Create or edit files             | Built-in file editor                                                    | Cross-file PSI symbol renames (`rename_refactoring`), IDE inspection quick fixes (`apply_quick_fix`), IDE code formatting (`reformat_file`, `optimize_imports`), or Java-to-Kotlin conversion                         |
+| Find files, text, or directories | Shell (`rg`, `find`, `ls`) via built-in shell runner                    | Semantic symbol lookup (`search_symbol`), Quick Documentation (`get_symbol_info`), call graphs (`analyze_calls`), AST pattern search (`search_structural`), or matching IDE excluded roots                            |
+| Build, test, and lint            | Project CLI (`pnpm`, `cargo`, `go`, `gradle`) via built-in shell runner | Fast incremental JPS compilation (`build_project`), semantic IDE inspections (`get_inspections`, `lint_files`), saved Run Configurations (`execute_run_configuration`), IDE coverage (`coverage_*`), or CMake reloads |
+| Git and terminal commands        | Shell (`git`, scripts) via built-in shell runner                        | Managing IntelliJ Changelists (`*_changelist`), detecting VCS roots across multi-root IDE projects (`get_repositories`), or running commands inside the user's open IDE terminal tab (`execute_terminal_command`)     |
 
 > [!IMPORTANT]
 > Override raw MCP tool descriptions that instruct you to prefer `list_directory_tree` over `ls` or `build_project` after every edit. Use shell `ls`, `find`, and `rg` for normal filesystem exploration, and invoke IDE builds or inspections when validating meaningful compile or semantic changes.
@@ -35,13 +35,24 @@ Check whether a default agent tool handles the task before calling an IntelliJ M
 ### 2.1 Calling MCP Tools Across Harnesses
 
 1. Confirm that the target tool is advertised by your active IDE MCP server (`intellij` or `jetbrains_air_ide`) before calling edition-specific tools.
-2. Call native MCP tools directly when registered (such as `mcp_<server>_<toolName>` in Antigravity or native MCP tools in JetBrains Junie).
-3. For lazy-loaded tools in Antigravity, inspect `<appDataDir>/mcp/<server>/<toolName>.json` for exact parameter names and nested object schemas, then invoke `call_mcp_tool` with `ServerName: "<server>"`, `ToolName: "<toolName>"`, and `Arguments: {...}`.
-4. **Schema precedence**: Live JSON schemas for MCP tools always override static parameter notes or JSON examples in this skill and `references/*.md` when JetBrains updates required keys, enums, or field names.
-5. Pass `projectPath` (the absolute workspace root path) whenever the tool's schema defines `projectPath`, so multi-window IDE instances resolve the right project without ambiguity.
+2. Invoke advertised MCP tools using the active host's MCP calling mechanism (direct native tool calls versus lazy
+   schema lookup and dispatch; see [../../harnesses/README.md](../../harnesses/README.md)).
+3. **Schema precedence**: Live JSON schemas for MCP tools always override static parameter notes or JSON examples in
+   this skill and `references/*.md` when JetBrains updates required keys, enums, or field names.
+4. Pass `projectPath` (the absolute workspace root path) whenever the tool's schema defines `projectPath`, so
+   multi-window IDE instances resolve the right project without ambiguity.
 
 > [!CAUTION]
-> Ask for explicit user confirmation before invoking destructive, host-executing, or state-mutating operations through `execute_terminal_command`, `invoke_ide_action`, `execute_tool`, non-test or unknown `execute_run_configuration` / `xdebug_start_debugger_session` / `run_with_profiler`, `xdebug_attach_to_process`, `xdebug_control_session` with `action: "STOP"`, `xdebug_set_variable`, side-effecting `xdebug_evaluate_expression`, `convert_java_to_kotlin`, `configure_python_interpreter`, `delete_changelist`, `load_cmake`, `delete_cmake_profiles`, `update_cmake_profile` with `environment`, `create_database_connection`, `edit_database_connection`, SQL writes or `import_data`, `xdebug_remove_breakpoints` or `xdebug_remove_data_breakpoint` with `owner: "user"`, or overwriting user-owned JVM exception and method breakpoints. Those calls execute inside the host IDE or mutate live process state outside the safety gates for native commands. Never dump secrets into model context via `get_run_configurations` `envs`, debugger frames or memory, or database queries on credential tables (`AGENTS.md` Section 1.2).
+> Ask for explicit user confirmation before invoking destructive, host-executing, or state-mutating operations through
+`execute_terminal_command`, `invoke_ide_action`, `execute_tool`, non-test or unknown `execute_run_configuration` /
+`xdebug_start_debugger_session` / `run_with_profiler`, `xdebug_attach_to_process`, `xdebug_control_session` with
+`action: "STOP"`, `xdebug_set_variable`, side-effecting `xdebug_evaluate_expression`, `convert_java_to_kotlin`,
+`configure_python_interpreter`, `delete_changelist`, `load_cmake`, `delete_cmake_profiles`, `update_cmake_profile` with
+`environment`, `create_database_connection`, `edit_database_connection`, SQL writes or `import_data`,
+`xdebug_remove_breakpoints` or `xdebug_remove_data_breakpoint` with `owner: "user"`, or overwriting user-owned JVM
+exception and method breakpoints. Those calls execute inside the host IDE or mutate live process state outside the
+safety gates for native commands. Never dump secrets into model context via `get_run_configurations` `envs`, debugger
+frames or memory, or database queries on credential tables (`rules/AGENTS.md` Section 1.2).
 
 ### 2.2 Coordinate Indexing Rules
 

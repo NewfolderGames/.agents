@@ -18,21 +18,18 @@ Run engineering sessions with clear scope boundaries, scannable immutable plans,
 ### 1.1 Project Workflow Precedence
 
 Before you plan steps, run checks, or create commits, inspect the target repository's `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `README.md`, and `CONTRIBUTING.md`:
-1. Follow the repository's required verification commands, branch rules, code generation steps, and commit message conventions first (while preserving `AGENTS.md` Section 1.2 operational safety gates).
+
+1. Follow the repository's required verification commands, branch rules, code generation steps, and commit message
+   conventions first (while preserving `rules/AGENTS.md` Section 1.2 operational safety gates).
 2. Apply the rules in this skill whenever the repository does not specify its own workflow.
 
-### 1.2 Session Directory Resolution
+### 1.2 Session Directory, Numbering, and Immutability
 
-When a task triggers session documents (Section 2), write them to the first accessible location in this order (Antigravity and JetBrains Junie are the primary harnesses):
-1. **Antigravity `<Artifact Directory Path>`**: Write `<appDataDir>/brain/<conversation-id>/tasks.md`, `NN-<slug>.plan.md`, and `NN-<slug>.report.md` with `ArtifactMetadata` when exposed by the active file-write tool (`UserFacing: true`, `RequestFeedback: true` on `NN-<slug>.plan.md` when awaiting user approval, and `RequestFeedback: false` on `tasks.md` and `NN-<slug>.report.md`). Use absolute `file://` links for both sibling artifacts and workspace source files.
-2. **JetBrains Junie and other agent-native directories**: Write plain Markdown files (without `ArtifactMetadata`) to a per-session subdirectory under the harness's accessible plan directory (for example, `.junie/plans/<YYYYMMDD-HHMM>-<session-slug>/` in JetBrains Junie or `~/.claude/plans/<repo-slug>/<YYYYMMDD-HHMM>-<session-slug>/` in Claude Code). Check `.gitignore` or `.git/info/exclude`, use relative links between sibling session files, and never stage or commit `.junie/plans/` session files unless the user explicitly asks.
-3. **Workspace fallback**: When no agent-native directory exists or is accessible, write to `.agents/sessions/<YYYYMMDD-HHMM>-<session-slug>/` inside the workspace. Check `.gitignore` or `.git/info/exclude`, use relative links between sibling session files so the directory stays portable, and never stage or commit fallback `.agents/sessions/` files unless the user explicitly asks.
-
-### 1.3 Sequential Task IDs, Immutability, and Language Parity
-
-1. **Allocate zero-padded IDs starting at `01`**: Before creating any task file, inspect `tasks.md` and existing `NN-*.md` files in the session directory and assign `max(NN) + 1` (`01`, `02`, `03`). Name files `NN-<kebab-slug>.plan.md` and `NN-<kebab-slug>.report.md`, keeping `<kebab-slug>` to 3 to 5 lowercase ASCII words. Never reuse an ID or overwrite an earlier task's plan or report.
-2. **One mutable hub, two immutable artifacts**: Mutate only `tasks.md` during execution and across tasks. Keep `NN-<slug>.plan.md` immutable after approval (record mid-execution adjustments in the report's `Plan Deviations` section) and keep `NN-<slug>.report.md` immutable after delivery.
-3. **Keep one language per task**: Write the `tasks.md` entry, `NN-<slug>.plan.md`, and `NN-<slug>.report.md` in the same language (matching the user's prompt language or explicit language request) instead of mixing languages across documents for the same task.
+Follow [../../references/session-contract.md](../../references/session-contract.md) and the active host adapter
+in [../../harnesses/README.md](../../harnesses/README.md) for `<session-dir>`, file-write metadata, link formatting,
+sequential `NN` allocation (`NN-<kebab-slug>.<role>.md` starting at `01`), mutability boundaries (`tasks.md` mutable,
+`NN-<slug>.plan.md` immutable after approval, `NN-<slug>.report.md` immutable after delivery), VCS exclusion, and
+one-language parity per task.
 
 ---
 
@@ -53,11 +50,14 @@ Select the document set based on task scope and runtime:
 
 ## 3. Preparation Phase: `NN-<slug>.plan.md` and `tasks.md`
 
-Use the copy-ready skeletons in [references/session-templates.md](references/session-templates.md). Follow `AGENTS.md` Section 3 for routine `tasks.md` entries, and activate `my-writing-docs` when drafting substantial plans, reports, or Korean session documents.
+Use the copy-ready skeletons in [references/session-templates.md](references/session-templates.md). Follow
+`rules/AGENTS.md` Section 3 for routine `tasks.md` entries, and activate `my-writing-docs` when drafting substantial
+plans, reports, or Korean session documents.
 
 ### 3.1 Authoring Clear, Scannable `NN-<slug>.plan.md` Documents
 
-Model `NN-<slug>.plan.md` on JetBrains Junie's technical design format so reviewers grasp boundaries and architecture in one pass:
+Model `NN-<slug>.plan.md` on the structured technical design format so reviewers grasp boundaries and architecture in
+one pass:
 1. **Header metadata and strict heading hierarchy**: Open with `# Plan NN: <Short Task Title>`, followed by `Task` (link to `tasks.md`), `Target` (`<repo> @ <branch> (<short-sha>)`), and optional `Follows` (link to a prior task's report when chaining work). Use monotonic `H1 -> H2 -> H3 -> H4` nesting with one `H1` per document.
 2. **Required core in every plan**:
    - `## Requirements`: `### Overview & Goals` (2 to 3 sentences plus bulleted `Expected outcomes`) and `### Scope` split into `#### In Scope` and `#### Out of Scope`.
@@ -74,7 +74,12 @@ Model `NN-<slug>.plan.md` on JetBrains Junie's technical design format so review
 1. **Maintain the top Overview Table**: Keep `# Session Tasks` and the `# | Status | Task | Docs` table at the top of `tasks.md` so every task's status and `[plan]` / `[report]` links remain visible in the first 10 lines.
 2. **Collapse finished tasks safely**: Before adding Task `NN`, confirm that any prior completed or cancelled task is collapsed in a `<details>` block (`<summary>[x] Task 01 - Title</summary>`). Place Markdown links in the Overview Table and on the first Markdown line inside `<details>`, never inside `<summary>`. Once more than 3 tasks finish in one session, older collapsed `<details>` blocks can keep only `Docs` and `Summary` instead of every historical checkbox.
 3. **Expand the active task**: Append `## Task NN - <Title>` with `Status`, `Docs`, a 1-sentence `Summary`, and 3 to 7 `### Step N: <Title>` blocks (imperative in English, declarative in Korean). Start each step with one sentence stating what works when that step finishes. Follow with 2 to 5 bounded `- [ ]` checkboxes naming target files, symbols, and test commands (one action per checkbox, without chaining sequential actions via "and then").
-4. **Plan Approval Gate**: Use `NN-<slug>.plan.md` unless the user or host workflow explicitly requires a host-native plan artifact. If the user invoked `/plan` or requested approval before edits, stop after creating `NN-<slug>.plan.md` and updating `tasks.md`. Reply in 1 to 2 sentences linking both files (flagging open decisions if present) without re-summarizing the plan, and wait for explicit approval (or click Proceed in Antigravity). On autonomous multi-step requests without a plan-approval request, proceed directly to Step 1.
+4. **Plan Approval Gate**: Use `NN-<slug>.plan.md` unless the user or host workflow explicitly requires a host-native
+   plan artifact. If the user invoked `/plan` or requested approval before edits, stop after creating
+   `NN-<slug>.plan.md` and updating `tasks.md`. Reply in 1 to 2 sentences linking both files (flagging open decisions if
+   present) without re-summarizing the plan, and wait for explicit approval using the active host's approval prompt
+   ([../../harnesses/README.md](../../harnesses/README.md)). On autonomous multi-step requests without a plan-approval
+   request, move directly to Step 1.
 
 ---
 
@@ -93,7 +98,10 @@ Calibrate implementation passes to change complexity instead of rushing multi-fi
 - **Multi-function features, new modules, or structural refactors**: Build in four phases:
   1. **Phase 1 (Scaffold contracts)**: Create target files, data types, interfaces, boundary docblocks, and function signatures with stub bodies (`todo!()`, `throw new Error("TODO: ...")`, `raise NotImplementedError("TODO: ...")`).
   2. **Phase 2 (Validate the skeleton)**: Run the compiler, type checker, or IDE diagnostics (`my-using-intellij`) on the skeleton to verify module boundaries and caller-callee types before writing internal logic.
-  3. **Phase 3 (Fill bodies incrementally)**: Implement bodies in dependency order (foundational domain/data helpers first, outer handlers/UI second). When 2 or more independent stubs can run in parallel, delegate them to subagents (`my-using-tools`).
+  3. **Phase 3 (Fill bodies incrementally)**: Implement bodies in dependency order (foundational domain/data helpers
+     first, outer handlers/UI second). When 2 or more independent read-only subsystem explorations or independent
+     function stub implementations can run in parallel once interfaces and contracts compile, delegate them concurrently
+     to subagents.
   4. **Phase 4 (Validate each slice)**: Run formatters, linters, and targeted tests after each logical slice before checking off the step in `tasks.md`.
 
 ### 4.3 Clean Human Handoff When Pausing Mid-Session
@@ -107,7 +115,8 @@ Keep the working tree compiling between steps. When pausing multi-step work or a
 1. **Active code stubs**: Put any blocker or condition first (`// TODO: Once webhook v2 payload lands, remove legacy signature fallback.`). Delete all temporary `TODO` comments and stubs before marking the task complete unless work was explicitly deferred with user approval.
 2. **Atomic Git commits** (when committing is requested or part of the repository workflow):
    - Verify formatters, linters, targeted tests, and affected docs before committing.
-   - Commit one verified logical change per commit without mixing unrelated formatting sweeps or temporary session files under `.junie/plans/` or `.agents/sessions/`.
+   - Commit one verified logical change per commit without mixing unrelated formatting sweeps or temporary workspace
+     session files (see [../../references/session-contract.md](../../references/session-contract.md)).
    - Match repository commit history (`feat:`, `fix:`, or plain imperative subject lines) under the user's configured Git author identity.
 
 ---
@@ -123,12 +132,16 @@ When a Tier 2 task, Tier 0-Extended audit, or escalated task finishes:
      - Conditional `## Operational Notes & Rollback` and `## Follow-Up & Future Work` (`ID | Priority | Location | Follow-Up Action` using `F1`, `F2`, ...).
    - **Audit / Investigation mode** (read-only reviews or root-cause analyses): Include `## Summary & Verdict`, `## Scope & Verification Matrix`, `## Findings` grouped by severity (`Critical`, `High`, `Medium`, `Low` with `C1`/`H1`/`M1`/`L1` IDs and `file:line`), and `## Recommended Next Tasks` (`ID | Priority | Location | Follow-Up Action`).
 2. **Close out Task `NN` in `tasks.md`**: Mark all completed checkboxes `- [x]`, set the Overview Table row to `Done` with the `[report]` link, and collapse Task `NN` into a `<details>` block.
-3. **Minimal chat handoff**: Do not paste action lists, verification logs, or follow-up rows into chat. Reply in 1 to 2 sentences stating completion and linking `[NN-<slug>.report.md](file:///...)`.
+3. **Minimal chat handoff**: Do not paste action lists, verification logs, or follow-up rows into chat. Reply in 1 to 2
+   sentences stating completion and linking `NN-<slug>.report.md` using the active host's link format
+   ([../../harnesses/README.md](../../harnesses/README.md)).
 
 ---
 
 ## 6. Anti-Spiral Debugging, Safety Gates, and References
 
 1. **Anti-spiral protocol**: Read complete error output and stack traces before editing code. If a failure remains unresolved after 2 to 3 fix attempts, stop editing, state confirmed facts versus unverified assumptions, and ask one focused diagnostic question.
-2. **Destructive action and secret gate**: Follow `AGENTS.md` Section 1.2 for secret-file exclusion and destructive-action confirmation gates across file deletions, Git history mutations, database mutations, and external publishes or production deploys.
+2. **Destructive action and secret gate**: Follow `rules/AGENTS.md` Section 1.2 for secret-file exclusion and
+   destructive-action confirmation gates across file deletions, Git history mutations, database mutations, and external
+   publishes or production deploys.
 3. **Templates**: Read [references/session-templates.md](references/session-templates.md) for copy-ready `tasks.md`, `NN-<slug>.plan.md`, Implementation and Audit `NN-<slug>.report.md`, and chat handoff structures.

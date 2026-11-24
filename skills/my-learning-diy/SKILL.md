@@ -23,8 +23,17 @@ When this skill is active, follow these non-negotiable guardrails:
    - **API or syntax friction**: A 2-to-5 line signature or syntax reminder when unfamiliar tooling syntax blocks progress without teaching domain concepts.
    - **Tier 4 hint reveal**: The user explicitly requests a concrete snippet after progressing through earlier hint tiers in `active` mode.
 4. **No inline formula or parenthetical answer leaks**: Never leak exact task expressions, formulas, or answers inside parentheses or prose bullets immediately after a guiding question, pitfall check, or self-check question.
-5. **Verify exact language syntax before citing constructs**: Confirm exact syntax via documentation or web search (such as `search_web` when available) before naming a language-specific syntax construct. Otherwise keep phrasing syntax-neutral (for example, "a 16-element constant array or a 4x4 matrix type").
-6. **Precedence, scope, and exit boundary**: While `my-learning-diy` is active for a DIY task, suspend `AGENTS.md` Sections 2.1 and 2.2 and Tier 2 agent-driven planning in Section 2.3 (single-line chat handoffs, 5-item list caps, and single-question limits). Keep Operational Safety Gates (`AGENTS.md` Section 1.2), the clarity and anti-slop rules of Practical Software STE (`AGENTS.md` Section 3 and `my-writing-docs`), session directory conventions (`<Artifact Directory Path>` in Antigravity, `.junie/plans/<YYYYMMDD-HHMM>-<session-slug>/` in JetBrains Junie, or `.agents/sessions/<YYYYMMDD-HHMM>-<session-slug>/` fallback), and `tasks.md` progress tracking for milestones. This Priority 3 hands-off override applies strictly to the active DIY task and deactivates automatically once that task closes or when the user begins a non-DIY task.
+5. **Verify exact language syntax before citing constructs**: Confirm exact syntax via documentation or web search (when
+   available in the active host) before naming a language-specific syntax construct. Otherwise keep phrasing
+   syntax-neutral (for example, "a 16-element constant array or a 4x4 matrix type").
+6. **Precedence, scope, and exit boundary**: While `my-learning-diy` is active for a DIY task, suspend `rules/AGENTS.md`
+   Section 2.1 Mode 1 chat caps and Tier 2 agent-driven planning in Section 2.2. Keep Operational Safety Gates
+   (`rules/AGENTS.md` Section 1.2), the clarity and anti-slop rules of Practical Software STE (`rules/AGENTS.md` Section
+   3 and `my-writing-docs`), session directory conventions
+   ([../../references/session-contract.md](../../references/session-contract.md)
+   and [../../harnesses/README.md](../../harnesses/README.md)), and `tasks.md` progress tracking for milestones. This
+   Priority 3 hands-off override applies strictly to the active DIY task and deactivates automatically once that task
+   closes or when the user begins a non-DIY task.
 
 ---
 
@@ -34,9 +43,14 @@ Before writing a guide or starting Chunk 1, run a thorough diagnostic intake acr
 
 ### 2.1 Mode Selection, Specification, and Open Follow-Up Probing
 
-1. **Confirm mode**: If the user did not specify `guide` or `active`, ask using `ask_question` when available (or numbered options in chat): `guide` for a full self-paced study and task document, or `active` for chunked interactive pair coding.
+1. **Confirm mode**: If the user did not specify `guide` or `active`, ask using the host's structured user prompt tool
+   when available (or numbered options in chat): `guide` for a full self-paced study and task document, or `active` for
+   chunked interactive pair coding.
 2. **Sharpen goals and lock cross-milestone forks**: Turn broad goals into concrete visual, functional, or measurable properties (for example, clarifying which retro console era and visual artifacts define "old console game"). When an architectural fork affects every subsequent milestone (such as host container type or rendering backend), resolve the user's preferred primary path during intake. If the user is undecided, commit the roadmap to one recommended primary path and keep alternatives inside Milestone 1's trade-off table so later milestones do not branch on two architectures at once.
-3. **Probe all relevant prerequisite concepts across multiple rounds**: Break the task into every prerequisite sub-skill that matters (do not cap the list artificially). Use `ask_question` when available for fast structured ratings alongside open questions (or numbered questions in chat), and ask follow-up rounds whenever an answer exposes a new branch, unfamiliar dependency, or deeper trade-off.
+3. **Probe all relevant prerequisite concepts across multiple rounds**: Break the task into every prerequisite sub-skill
+   that matters (do not cap the list artificially). Use the host's structured user prompt tool when available for fast
+   ratings alongside open questions (or numbered questions in chat), and ask follow-up rounds whenever an answer exposes
+   a new branch, unfamiliar dependency, or deeper trade-off.
 
 ### 2.2 Adaptive 3-Tier Depth Matrix
 
@@ -54,14 +68,21 @@ Calibrate every explanation and milestone strictly to the user's knowledge level
 
 Read [references/guide-template.md](references/guide-template.md) before drafting a `guide` document.
 
-1. **Generate one durable blueprint and register `NN`**: Inspect `tasks.md` and existing `NN-*` files to allocate the next `NN`. Write `NN-<slug>.diy-guide.md` in the session directory (`<Artifact Directory Path>` in Antigravity with `UserFacing: true` and `RequestFeedback: false` when `ArtifactMetadata` is exposed by the active file-write tool, `.junie/plans/<YYYYMMDD-HHMM>-<session-slug>/` in JetBrains Junie, or `.agents/sessions/<YYYYMMDD-HHMM>-<session-slug>/` fallback). Record a `Done` entry in `tasks.md` so later tasks never collide on `NN`. If the user asks to keep the guide in their repository, save it inside the workspace (for example, `docs/learning/`).
+1. **Generate one durable blueprint and register `NN`**: Inspect `tasks.md` and existing `NN-*` files inside
+   `<session-dir>` to allocate the next `NN`. Write `NN-<slug>.diy-guide.md`
+   following [../../references/session-contract.md](../../references/session-contract.md) and the active host adapter
+   in [../../harnesses/README.md](../../harnesses/README.md). Record a `Done` entry in `tasks.md` so later tasks never
+   collide on `NN`. If the user asks to keep the guide in their repository, save it inside the workspace (for example,
+   `docs/learning/`).
 2. **Balance task guidance and learning material**: Include these core sections in every guide:
    - A compact `Before You Start` reading map, the calibrated learning profile, and a high-level mental model diagram (Mermaid or ASCII pipeline without code spoilers).
    - Adaptive concept primers (place upfront when 0 to 2 concepts are Level 0, and embed just-in-time inside milestones or link in Appendix A when 3 or more concepts are Level 0 so Milestone 1 appears early).
    - Phased milestones with observable verification checkpoints, guiding questions ("what to figure out"), 2 to 3 design alternatives with trade-offs, common pitfalls paired with debugging signals, and self-check questions with collapsed conceptual `<details>` verification blocks.
    - "Good to know" engineering nuances and future learning topics.
 3. **Keep prose readable, verified, and spoiler-free**: Write in Practical Software STE (`my-writing-docs`), run a quick anti-slop scan before delivery, never paste finished solution code, and never leak formulas or answers inside parenthetical hints.
-4. **Verify learning resources**: When citing external articles, specifications, or interactive tutorials, verify URLs via `search_web` when available. Otherwise cite canonical book titles, official documentation sections, and exact search keywords rather than unverified deep links.
+4. **Verify learning resources**: When citing external articles, specifications, or interactive tutorials, verify URLs
+   via web search when available. Otherwise cite canonical book titles, official documentation sections, and exact
+   search keywords rather than unverified deep links.
 5. **Hand off cleanly**: Link `NN-<slug>.diy-guide.md` in chat in 1 to 2 sentences and invite the user to work at their own pace, return with questions, or switch into `active` mode on any milestone.
 
 ---
@@ -74,7 +95,7 @@ Read [references/active-session-playbook.md](references/active-session-playbook.
 2. **Run the 5-stage micro-loop on each chunk**:
    - **Stage 1 (Chunk Brief as a Sliced Guide)**: At the start of each chunk, provide the full calibrated guide slice for that single task without solution code or inline formula leaks:
      - Objective and observable verification check.
-     - How to proceed ("what to figure out" guiding questions) and why the mechanism works that way.
+     - How to approach it ("what to figure out" guiding questions) and why the mechanism works that way.
      - Calibrated concept primers and verified learning materials (applying Section 2.2 strictly to concepts needed in this chunk, including derivation rules and short paper-and-pencil traces for Level 0 math).
      - Design choices and alternatives (2 to 3 viable approaches with trade-offs) for the user to decide before coding.
      - Common pitfalls with debugging signals, plus chunk-relevant good-to-know nuances and related topics.
@@ -85,7 +106,12 @@ Read [references/active-session-playbook.md](references/active-session-playbook.
      2. *Tier 2 (Structural pinpoint)*: Identify the failing invariant, coordinate space, or line range without writing the fix.
      3. *Tier 3 (API or toy analogy)*: Show a short API signature or analogous toy snippet in a different context.
      4. *Tier 4 (Minimal reveal)*: Only when explicitly requested after earlier hints, show the minimal needed lines and ask the user to explain or adapt them.
-   - **Stage 4 (Multi-Round Socratic Code Review)**: When the user requests a review, inspect their actual code (`read_file` or `git diff`). Confirm what works against the observable check first. Ask as many line-grounded questions as the implementation warrants (covering design rationale, edge-case tracing, trade-offs, bug discovery without spoiling the fix, and mental-model transfer). Continue across multiple back-and-forth questioning rounds whenever follow-up probes help the user examine an assumption, trace a defect, or clarify their reasoning before you offer deeper commentary.
+   - **Stage 4 (Multi-Round Socratic Code Review)**: When the user requests a review, inspect their actual code (using
+     the built-in file reader or `git diff`). Confirm what works against the observable check first. Ask as many
+     line-grounded questions as the implementation warrants (covering design rationale, edge-case tracing, trade-offs,
+     bug discovery without spoiling the fix, and mental-model transfer). Continue across multiple back-and-forth
+     questioning rounds whenever follow-up probes help the user examine an assumption, trace a defect, or clarify their
+     reasoning before you offer deeper commentary.
    - **Stage 5 (Consolidate and Advance)**: Capture 1 to 2 concrete takeaways from the chunk, check off the milestone in `tasks.md`, and present the next chunk (or pause if the user wants a break).
 3. **Wrap up with a learning log and close out `tasks.md`**: When all chunks finish or the user ends the session, offer to write `NN-<slug>.learning-log.md` recording concepts mastered, design choices made, bugs that the user diagnosed themselves, and recommended next topics. Then mark the task `Done` in the `tasks.md` Overview Table, link `[learning-log]` if written, and collapse Task `NN` into a `<details>` block.
 

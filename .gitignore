@@ -1,2 +1,6 @@
 .idea/
-tmp
+tmp/
+__pycache__/
+*.pyc
+.agents/sessions/
+.junie/plans/

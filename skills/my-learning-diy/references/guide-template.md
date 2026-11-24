@@ -1,6 +1,11 @@
 # Guide Mode Template and 3-Tier Calibration Reference
 
-Use this reference when running `my-learning-diy` in `guide` mode. Draft `NN-<slug>.diy-guide.md` in Practical Software STE (`my-writing-docs`), matching the user's language and keeping solution code and inline formula leaks out of milestone instructions unless the narrow exception gate in [SKILL.md](../SKILL.md) applies. Use absolute `file:///...` links in Antigravity `<Artifact Directory Path>`, and use relative `./NN-...` sibling links in JetBrains Junie (`.junie/plans/<YYYYMMDD-HHMM>-<session-slug>/`) and workspace fallback directories (`.agents/sessions/<YYYYMMDD-HHMM>-<session-slug>/`).
+Use this reference when running `my-learning-diy` in `guide` mode. Draft `NN-<slug>.diy-guide.md` in Practical Software
+STE (`my-writing-docs`), matching the user's language and keeping solution code and inline formula leaks out of
+milestone instructions unless the narrow exception gate in [SKILL.md](../SKILL.md) applies.
+Follow [../../../references/session-contract.md](../../../references/session-contract.md) and the active host adapter
+in [../../../harnesses/README.md](../../../harnesses/README.md) for `<session-dir>` paths and host-specific link formats
+(`<session-link>` below).
 
 ---
 
@@ -21,7 +26,7 @@ Omit any section marked `<!-- Conditional: ... -->` when it adds no value for th
 ````markdown
 # DIY Guide NN: <Task Title>
 
-- **Task**: `NN` ([tasks.md](file:///absolute/path/to/tasks.md))
+- **Task**: `NN` ([tasks.md](<session-link>/tasks.md))
 - **Mode**: `guide`
 - **Target Goal**: <1 to 2 sentences defining the concrete visual, functional, or behavioral target.>
 - **Constraints / Environment**: <Language, engine, runtime, or API version.>
@@ -178,10 +183,13 @@ Use this side-by-side example to calibrate how much detail to write for the same
 ## 4. Verification, Spoiler Hygiene, and Citation Rules
 
 1. **Make every milestone visually or programmatically verifiable**: Pair each milestone with a concrete intermediate output (for example, rendering raw quantized channel values before adding dithering, or printing intermediate transformed values for one known test input).
-2. **Verify and link real URLs**: When `search_web` confirms an official documentation page or canonical tutorial URL, emit it as a clickable Markdown link (`[Title](https://...)`) rather than plain domain text. Never fabricate URLs. When web search is unavailable or a URL cannot be verified, fall back to stable entry points:
+2. **Verify and link real URLs**: When web search confirms an official documentation page or canonical tutorial URL,
+   emit it as a clickable Markdown link (`[Title](https://...)`) rather than plain domain text. Never fabricate URLs.
+   When web search is unavailable or a URL cannot be verified, fall back to stable entry points:
    - Official documentation names and exact page headings (for example, "MDN Web Docs: WebGL2 `texImage2D`").
    - Canonical books and chapter titles (for example, *Real-Time Rendering*, 4th Edition, Chapter 5).
    - Exact search keywords (for example, search terms: `ordered dithering Bayer matrix GLSL`).
 3. **Avoid solution leakage in every form**: Never hide complete task implementations inside "hint" blocks, 1-to-1 pseudocode, inline prose expressions (`floor(UV / TEXTURE_PIXEL_SIZE)`), or parenthetical hints that answer your own guiding question. In Level 0 math tables and paper traces, use generic variables (`u`, `texel_width`, `steps`) rather than engine built-ins (`UV`, `TEXTURE_PIXEL_SIZE`) when the user must map math onto engine APIs in that milestone.
-4. **Verify language syntax before citing constructs**: Check exact syntax against official docs or `search_web` before writing language-specific type or declaration forms. When unverified, describe the concept syntax-neutrally.
+4. **Verify language syntax before citing constructs**: Check exact syntax against official docs or web search before
+   writing language-specific type or declaration forms. When unverified, describe the concept syntax-neutrally.
 5. **Run a pre-delivery STE scan**: Before presenting `NN-<slug>.diy-guide.md`, scan the document against `my-writing-docs` to strip AI filler modifiers (`seamlessly`, `simply`, `robust`), contractions, semicolons, and clause-joining em-dashes.

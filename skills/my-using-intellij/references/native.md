@@ -1,6 +1,8 @@
 # Using IntelliJ Native CMake, GDB, LLDB, and DAP MCP Tools
 
-Use your default agent tools (`read_file`, `edit_file`) and CLI build commands (`cmake`, `cargo`, `make`) via `run_command` first. Escalate to these native MCP tools when managing IDE CMake profiles and reloads or inspecting machine-level state inside a **suspended** GDB, LLDB, or native DAP session.
+Use your built-in file tools and CLI build commands (`cmake`, `cargo`, `make`) via your shell runner first. Escalate to
+these native MCP tools when managing IDE CMake profiles and reloads or inspecting machine-level state inside a
+**suspended** GDB, LLDB, or native DAP session.
 
 Use [SKILL.md](../SKILL.md) for general breakpoints, session launch or attach (`xdebug_start_debugger_session`, `xdebug_attach_to_process`), execution control (`xdebug_control_session`), and source-level stack or variable inspection.
 
