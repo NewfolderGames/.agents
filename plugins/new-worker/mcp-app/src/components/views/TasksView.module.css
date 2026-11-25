@@ -1,0 +1,50 @@
+.tasks-view {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+
+    & .summary {
+        margin: 0;
+        color: var(--color-text-secondary);
+        overflow-wrap: anywhere;
+    }
+
+    & .history {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    > .minrow {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        min-width: 0;
+        padding: 6px 10px;
+        border: 1px solid var(--color-border-primary);
+        border-radius: 4px;
+        background: var(--color-background-secondary);
+    }
+
+    > .minrow > .mintitle {
+        flex: 1 1 0;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    > .minrow > .minmeta {
+        display: inline-flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+}

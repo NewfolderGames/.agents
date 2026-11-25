@@ -114,6 +114,13 @@ Apply across Mode 1 chat and Mode 2 documentation:
 | `new::tools-intellij` | Skill    | Escalating beyond built-in file/shell tools to IntelliJ MCP PSI navigation, safe rename, inspections, builds, debuggers, profiler, or SQL.                                                                                                                  |
 | `new::project-scout`  | Subagent | Onboarding or scoped repo scouting via [../agents/project-scout.md](../agents/project-scout.md). Never invoke `new::project-scout-worker` directly; pass an external `OutputPath` and host fast model per [../harnesses/README.md](../harnesses/README.md). |
 
+### 4.1 `new-worker-ui` MCP Routing (With Fallback)
+
+When the `new-worker-ui` MCP server is connected, prefer its structured tools (`open_workspace`, `upsert_task`,
+`update_task_item`, `write_plan`, `write_report`, `record_handoff`, `ask_questions`, and `get_session_state`) and pass
+`exportDir: "<session-dir>"` so Markdown artifacts stay synchronized. When `new-worker-ui` is absent, write Markdown
+session files directly and use the host's structured user prompt or numbered chat options.
+
 ## 5. Pre-Send Check
 
 - [ ] **Safety and precedence**: Verified Section 1.2 gates first, then target repository guides and neighboring idioms.

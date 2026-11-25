@@ -23,6 +23,9 @@ Use this adapter when running inside JetBrains Junie.
 - **Tools**: Use Junie's native file, terminal, prompt, and web tools directly.
 - **IntelliJ MCP**: Invoke advertised `intellij` or `jetbrains_air_ide` MCP tools directly without a lazy-loader
   wrapper.
+- **Optional `new-worker-ui` stdio server**: Register `node <plugin-root>/mcp-app/dist/server.mjs --data-dir=<path>` as
+  a stdio MCP server when structured tracking is wanted, passing `exportDir` for `.junie/plans/...` Markdown sync. When
+  unconfigured, write Markdown session files directly.
 
 ## 4. Subagent Fallback (`new::project-scout`)
 

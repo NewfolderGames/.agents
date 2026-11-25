@@ -41,11 +41,26 @@ Use this adapter when running inside Google Antigravity (`<Artifact Directory Pa
   `new::project-scout`.
 - Stop calling tools and wait for reactive wakeup after launching subagents instead of polling in a loop.
 
-## 5. MCP Tool Invocation (`new::tools-intellij`)
+## 5. MCP Tool Invocation (`new::tools-intellij` and `new-worker-ui`)
 
 - Call eagerly registered MCP tools directly (`mcp_<server>_<toolName>`).
 - For lazy-loaded MCP tools, inspect `<appDataDir>/mcp/<server>/<toolName>.json` for exact schemas, then invoke
   `call_mcp_tool` with `ServerName`, `ToolName`, and `Arguments`.
+- For `new-worker-ui`: `open_workspace` registers `aux_pane` and `global` entrypoints (`"New Worker"`). Opening the
+  global view or `open_workspace` is strictly read-only and writes no JSON files when no sessions exist; persistent data
+  is stored in `mcp-app/data/` (gitignored). Pass `sessionId: "<conversation-id>"` and
+  `exportDir: "<Artifact Directory Path>"` when calling `upsert_task`, `write_plan`, `write_report`, `record_handoff`,
+  or `ask_questions` so Markdown artifacts stay synchronized.
+- For plans: `write_plan` generates `NN-<slug>.plan.md` and returns `planFilePath` so Antigravity can present it as a
+  plan artifact (`ArtifactMetadata`) for approval in Antigravity's native UI.
+- For questions & tasks: `ask_questions` supports per-question `blockingMode` (`immediate`, `before_step_finish`,
+  `anytime`). Task checklists in the UI are read-only with automatic task/step/item time tracking, `update_task_item`
+  embeds an immutable step snapshot inline so chat reloads keep exact step progress, widgets support three display
+  modes (`minimized` single-row by default, `compact`, and `full`) plus Expand/Minimize controls configured via
+  **Settings** (`Display type` and `Step display type`), **Tool Calls** includes **Clear History**, and the side-pane
+  dashboard auto-refreshes when session state changes. Numbered task steps exclude plan/workspace initialization.
+- For live UI development, set `NEW_WORKER_APP_HTML` or pass `--html-path` and refresh `new-worker_new-worker-ui`
+  through **MCP Servers** settings or `RefreshMcpServers`.
 
 ## 6. Rule Budget Guardrail
 

@@ -34,6 +34,24 @@ sequential `NN` allocation (`NN-<kebab-slug>.<role>.md` starting at `01`), mutab
 `NN-<slug>.plan.md` immutable after approval, `NN-<slug>.report.md` immutable after delivery), VCS exclusion, and
 one-language parity per task.
 
+### 1.3 `new-worker-ui` Structured MCP Tools (Preferred When Connected)
+
+When `new-worker-ui` is connected, drive session artifacts through its MCP tools and pass `sessionId` plus
+`exportDir: "<session-dir>"` so `tasks.md`, `NN-<slug>.plan.md`, and `NN-<slug>.report.md` stay exported on disk:
+
+- **Plan creation**: Call `write_plan` (returns `planFilePath` for the generated `NN-<slug>.plan.md`) so the harness
+  can present or move it as a native plan artifact, and call `upsert_task` (`status: "planned"`). Do not include plan
+  creation or workspace initialization as numbered steps inside `steps`.
+- **Live progress**: Call `update_task_item` as items move through `pending`, `in_progress`, and `done`; the inline UI
+  renders an immutable snapshot of only the active step with read-only checklist items.
+- **Answers and blockers**: Read submitted question answers or open blocking questions through `get_session_state` or
+  chat replies.
+- **Mid-session handoffs**: Call `record_handoff` with `workingNow`, `verifyCommand`, `entryPoint`, and `nextStep`.
+- **Completion**: Call `write_report` (`implementation` or `audit`) and close the task via `upsert_task` or
+  `update_task_item`.
+- **Dashboard**: Call `open_workspace` (read-only) to focus the side-pane or sidebar viewer. When `new-worker-ui` is
+  unavailable, write and edit the Markdown files directly using host file tools.
+
 ---
 
 ## 2. Task Triage and Mid-Session Escalation
@@ -97,9 +115,11 @@ one pass:
    one session, older collapsed `<details>` blocks can keep only `Docs` and `Summary` instead of every historical
    checkbox.
 3. **Expand the active task**: Append `## Task NN - <Title>` with `Status`, `Docs`, a 1-sentence `Summary`, and 3 to 7
-   `### Step N: <Title>` blocks (imperative in English, declarative in Korean). Start each step with one sentence
-   stating what works when that step finishes. Follow with 2 to 5 bounded `- [ ]` checkboxes naming target files,
-   symbols, and test commands (one action per checkbox, without chaining sequential actions via "and then").
+   `### Step N: <Title>` blocks (imperative in English, declarative in Korean). Steps cover concrete execution,
+   verification, and reporting work only; never create a step for initializing a plan, opening the workspace, or
+   bootstrapping `tasks.md`. Start each step with one sentence stating what works when that step finishes. Follow with
+   2 to 5 bounded `- [ ]` checkboxes naming target files, symbols, and test commands (one action per checkbox, without
+   chaining sequential actions via "and then").
 4. **Plan Approval Gate**: Use `NN-<slug>.plan.md` unless the user or host workflow explicitly requires a host-native
    plan artifact. If the user invoked `/plan` or requested approval before edits, stop after creating
    `NN-<slug>.plan.md` and updating `tasks.md`. Reply in 1 to 2 sentences linking both files (flagging open decisions if

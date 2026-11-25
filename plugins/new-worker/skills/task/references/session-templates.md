@@ -13,7 +13,8 @@ formats (`<session-link>` and `<file-link>` below). In Korean session documents,
 
 Keep `tasks.md` as the single mutable state file across all tasks in a conversation. Use standard GFM `- [ ]` and
 `- [x]` checkboxes, mark at most one active item with `**(in progress)**`, and keep Markdown links in the Overview Table
-and inside `<details>` bodies (never inside `<summary>`).
+and inside `<details>` bodies (never inside `<summary>`). Never add steps for initializing a plan, opening the
+workspace, or creating `tasks.md`; begin `### Step 1` directly with execution work.
 
 ````markdown
 # Session Tasks

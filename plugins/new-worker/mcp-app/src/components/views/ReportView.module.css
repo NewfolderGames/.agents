@@ -1,0 +1,121 @@
+.report-view {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+
+    > .selector {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    > .meta {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    > .meta > .heading {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    > .meta > .heading > .title {
+        margin: 0;
+        flex: 1 1 0;
+        min-width: 0;
+        font-size: 15px;
+        overflow-wrap: anywhere;
+    }
+
+    > .meta > .heading > .badges {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+    }
+
+    > .meta > .sub {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        color: var(--color-text-secondary);
+        font-size: 12px;
+        overflow-wrap: anywhere;
+    }
+
+    & .summarybadges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    & .list {
+        margin: 0;
+        padding-left: 18px;
+        overflow-wrap: anywhere;
+    }
+
+    & .filesummary {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        overflow-wrap: anywhere;
+    }
+
+    & .diffdisclosure > summary {
+        cursor: pointer;
+        color: var(--color-text-secondary);
+        font-size: 12px;
+    }
+
+    & .tryrow {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+    }
+
+    & .note {
+        margin: 0;
+        color: var(--color-text-secondary);
+        overflow-wrap: anywhere;
+    }
+
+    > .minrow {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        min-width: 0;
+        padding: 6px 10px;
+        border: 1px solid var(--color-border-primary);
+        border-radius: 4px;
+        background: var(--color-background-secondary);
+    }
+
+    > .minrow > .mintitle {
+        flex: 1 1 0;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    > .minrow > .minmeta {
+        display: inline-flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+}

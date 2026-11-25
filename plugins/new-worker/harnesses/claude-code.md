@@ -24,6 +24,9 @@ Use this adapter when running inside Claude Code (`Read`/`Edit`/`Write`/`Bash`/`
     - Web search: `WebSearch`
     - Subagent launcher: `Agent`
     - MCP tools: Invoke advertised MCP server tools directly.
+    - Optional `new-worker-ui` stdio server: Register `node <plugin-root>/mcp-app/dist/server.mjs --data-dir=<path>` in
+      Claude Code's MCP config and pass `exportDir` pointing to the session directory so Markdown files stay synced.
+      When unconfigured, write Markdown session files directly with `Write` and `Edit`.
 
 ## 4. Subagents (`new::project-scout`)
 

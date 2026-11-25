@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "new-worker-ui": {
+      "command": "node",
+      "args": [
+        "${PLUGIN_ROOT}/mcp-app/dist/server.mjs",
+        "--data-dir=${PLUGIN_ROOT}/mcp-app/data"
+      ]
+    }
+  }
+}

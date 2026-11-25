@@ -7,11 +7,16 @@ scratch outputs across all skills and subagents.
 
 1. Resolve `<session-dir>`, `<scratch-dir>`, file-write metadata flags, and Markdown link formatting by reading the
    single host adapter matching the active runtime in [../harnesses/README.md](../harnesses/README.md).
-2. When the active host places `<session-dir>` inside the target repository workspace, inspect `.gitignore` or
+2. When the `new-worker-ui` MCP server is connected, treat its versioned JSON store
+   (`plugins/new-worker/mcp-app/data/sessions/<sessionId>.json`, `schemaVersion: 1`) as the canonical structured state
+   and pass `exportDir: "<session-dir>"` so the server exports matching `tasks.md`, `NN-<slug>.plan.md`, and
+   `NN-<slug>.report.md` files automatically. Reading the workspace via `open_workspace` or `app_get_state` is strictly
+   read-only and never creates JSON files. When `new-worker-ui` is unavailable, write those Markdown files directly
+   using host file tools.
+3. When the active host places `<session-dir>` inside the target repository workspace, inspect `.gitignore` or
    `.git/info/exclude` first and never stage or commit session documents unless the user explicitly asks to commit them.
-3. Never write `<scratch-dir>` outputs (such as `new::project-scout` reports or temporary analysis scripts) inside a
-   target
-   repository tree.
+4. Never write `<scratch-dir>` outputs (such as `new::project-scout` reports or temporary analysis scripts) inside a
+   target repository tree.
 
 ## 2. Sequential Task Numbering (`NN`)
 
@@ -32,9 +37,12 @@ scratch outputs across all skills and subagents.
       `<details>` blocks can keep only `Docs` and `Summary` instead of every historical checkbox.
     - Keep only active tasks expanded under `## Task NN - <Title>` using standard GFM `- [ ]` and `- [x]` checkboxes,
       with at most one item marked `- [ ] **(in progress)**`.
-2. **`NN-<slug>.plan.md`**: Immutable once approved. Record mid-execution adjustments in the report's `Plan Deviations`
-   section instead of editing the approved plan.
-3. **`NN-<slug>.report.md`**: Immutable once delivered.
+2. **`NN-<slug>.plan.md`**: Immutable once approved in the harness UI. Record mid-execution adjustments in the report's
+   `Plan Deviations` section instead of editing the approved plan. When `new-worker-ui` is connected, `write_plan`
+   generates the plan Markdown file on disk and returns `planFilePath` so the harness can present or move it as a
+   native plan artifact.
+3. **`NN-<slug>.report.md`**: Immutable once delivered. The `new-worker-ui` server rejects `write_report` overwrites
+   for an existing `NN`.
 
 ## 4. Language Parity
 

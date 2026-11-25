@@ -2,11 +2,11 @@
   "name": "new-worker",
   "displayName": "new-worker",
   "version": "1.1.0",
-  "description": "Harness-agnostic agent task execution bundle covering safety gates, Mode 1 chat flow, explicit multi-round planning and execution questioning (new::ask), multi-task session planning (new::task), Practical Software STE documentation (new::docs), IntelliJ IDE MCP escalation (new::tools-intellij), and repository scouting (new::project-scout).",
+  "description": "Harness-agnostic agent task execution bundle with a SEP-1865 MCP App Web UI for live task tracking, immutable plans, dual-mode reports, structured handoffs, bulk questioning (new::ask), Practical Software STE documentation (new::docs), IntelliJ IDE MCP escalation (new::tools-intellij), and repository scouting (new::project-scout).",
   "repository": "https://github.com/NewfolderGames/.agents",
   "suggestedPrompts": [
-    "Plan a multi-step feature with clear scope boundaries, live task tracking, and a verification report",
-    "Scout this repository with new::project-scout and summarize its structure, style, and commands",
-    "Draft or review repository documentation using Practical Software STE in new::docs"
+    "Open the New Worker workspace or plan a multi-step feature with live task tracking and a verification report",
+    "Run a bulk new::ask planning interview using ask_questions",
+    "Scout this repository with new::project-scout and summarize its structure, style, and commands"
   ]
 }

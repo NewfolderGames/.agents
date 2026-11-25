@@ -1,0 +1,23 @@
+.plan-section-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    & .list {
+        margin: 0;
+        padding-left: 18px;
+        overflow-wrap: anywhere;
+    }
+
+    & .columns {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+        gap: 10px;
+    }
+
+    & .col {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+}

@@ -1,0 +1,16 @@
+.file-link {
+    display: inline;
+    padding: 0 3px;
+    border: 1px solid var(--color-border-secondary);
+    border-radius: 3px;
+    background: var(--color-background-secondary);
+    color: var(--color-text-primary);
+    text-decoration: underline;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.file-link:hover {
+    border-color: var(--color-border-primary);
+}

@@ -1,0 +1,16 @@
+.empty-state {
+    padding: 16px;
+    border: 1px solid var(--color-border-secondary);
+    border-radius: 3px;
+    background: var(--color-background-secondary);
+
+    > .title {
+        margin: 0;
+        font-weight: 700;
+    }
+
+    > .detail {
+        margin: 4px 0 0;
+        color: var(--color-text-secondary);
+    }
+}

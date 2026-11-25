@@ -1,0 +1,44 @@
+.checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 2px 4px;
+    border-radius: 3px;
+
+    > .marker {
+        flex-shrink: 0;
+        color: var(--color-text-secondary);
+        user-select: none;
+    }
+
+    > .text {
+        flex: 1 1 0;
+        min-width: 0;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    > .text > .tag {
+        color: var(--color-text-warning);
+    }
+
+    > .meta {
+        flex-shrink: 0;
+        color: var(--color-text-secondary);
+        font-size: 11px;
+        white-space: nowrap;
+    }
+
+    &.-active > .marker {
+        color: var(--color-text-warning);
+    }
+
+    &.-done > .text {
+        color: var(--color-text-secondary);
+        text-decoration: line-through;
+    }
+
+    &.-highlighted {
+        background: var(--color-background-secondary);
+    }
+}
