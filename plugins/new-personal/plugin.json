@@ -1,0 +1,12 @@
+{
+  "name": "new-personal",
+  "displayName": "new-personal",
+  "version": "1.0.0",
+  "description": "Personal engineering taste and code style preferences for human-readable, removable code, caller-focused error design, readable functional pipelines, documented dense code, and codebase untangling.",
+  "repository": "https://github.com/NewfolderGames/.agents",
+  "suggestedPrompts": [
+    "Untangle coupled modules and document dense code with why and how using new::code",
+    "Design caller-focused boundary error types and remove premature wrapper layers",
+    "Refactor a nested functional pipeline into named milestone stages and helper predicates"
+  ]
+}

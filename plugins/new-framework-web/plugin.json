@@ -1,0 +1,12 @@
+{
+  "name": "new-framework-web",
+  "displayName": "New Framework Web",
+  "version": "1.0.0",
+  "description": "Web frontend framework and stylesheet guidelines, including RSCSS conventions for scalable CSS and SCSS architecture.",
+  "repository": "https://github.com/NewfolderGames/.agents",
+  "suggestedPrompts": [
+    "Structure a new component stylesheet using RSCSS components, elements, and variants",
+    "Audit existing SCSS files for nested component bleed and layout leaks using RSCSS",
+    "Refactor a flat CSS block into RSCSS components and grid layout wrappers"
+  ]
+}

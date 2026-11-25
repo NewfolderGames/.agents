@@ -1,0 +1,12 @@
+{
+  "name": "new-learning",
+  "displayName": "new-learning",
+  "version": "1.0.0",
+  "description": "Self-learning DIY coaching plugin with calibrated study blueprints (guide mode) and chunked Socratic pair coding with tiered hints and explain-back reviews (active mode).",
+  "repository": "https://github.com/NewfolderGames/.agents",
+  "suggestedPrompts": [
+    "Create a calibrated DIY study and task guide for building a feature myself",
+    "Start an active Socratic pair-coding session where I write the implementation in chunks",
+    "Review my chunk implementation with line-grounded Socratic questions and explain-back checks"
+  ]
+}
