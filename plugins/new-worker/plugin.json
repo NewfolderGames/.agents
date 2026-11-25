@@ -1,7 +1,7 @@
 {
   "name": "new-worker",
   "displayName": "new-worker",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Harness-agnostic agent task execution bundle with a SEP-1865 MCP App Web UI for live task tracking, immutable plans, dual-mode reports, structured handoffs, bulk questioning (new::ask), Practical Software STE documentation (new::docs), IntelliJ IDE MCP escalation (new::tools-intellij), and repository scouting (new::project-scout).",
   "repository": "https://github.com/NewfolderGames/.agents",
   "suggestedPrompts": [

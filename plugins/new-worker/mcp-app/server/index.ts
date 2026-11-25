@@ -1,3 +1,4 @@
+import { realpathSync } from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -117,8 +118,18 @@ async function main(): Promise<void> {
 	console.error(`new-worker-ui MCP server running on stdio (dataDir: ${store.getDataDir()})`);
 }
 
+function safeRealpath(targetPath: string): string {
+	try {
+		return realpathSync(targetPath);
+	}
+	catch {
+		return path.resolve(targetPath);
+	}
+}
+
 const isEntrypoint
-	= process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+	= process.argv[1]
+		&& safeRealpath(process.argv[1]) === safeRealpath(fileURLToPath(import.meta.url));
 
 if (isEntrypoint) {
 	main().catch((err) => {

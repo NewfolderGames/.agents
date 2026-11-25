@@ -1,3 +1,4 @@
+import { realpathSync } from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -25435,7 +25436,14 @@ async function main() {
 	await server.connect(transport);
 	console.error(`new-worker-ui MCP server running on stdio (dataDir: ${store.getDataDir()})`);
 }
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch((err) => {
+function safeRealpath(targetPath) {
+	try {
+		return realpathSync(targetPath);
+	} catch {
+		return path.resolve(targetPath);
+	}
+}
+if (process.argv[1] && safeRealpath(process.argv[1]) === safeRealpath(fileURLToPath(import.meta.url))) main().catch((err) => {
 	console.error("Fatal error starting new-worker-ui MCP server:", err);
 	process.exit(1);
 });

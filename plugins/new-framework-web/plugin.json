@@ -1,7 +1,7 @@
 {
   "name": "new-framework-web",
-  "displayName": "New Framework Web",
-  "version": "1.0.0",
+  "displayName": "new-framework-web",
+  "version": "1.0.1",
   "description": "Web frontend framework and stylesheet guidelines, including RSCSS conventions for scalable CSS and SCSS architecture.",
   "repository": "https://github.com/NewfolderGames/.agents",
   "suggestedPrompts": [
