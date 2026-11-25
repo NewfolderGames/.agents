@@ -21,6 +21,7 @@ planning, Practical Software STE documentation, IntelliJ IDE MCP escalation, and
 | `scripts/`                       | Zero-dependency repository pre-scan CLI (`scout_prescan.py`) and unit tests (`test_scout_prescan.py`) owned by `new::project-scout`                                           |
 | `agents/project-scout.md`        | `new::project-scout`: Repository-read-only scout orchestrator with single-pass pre-scan and parallel worker fan-out                                                           |
 | `agents/project-scout-worker.md` | `new::project-scout-worker`: Read-only partition analyst started by `new::project-scout` with disjoint file assignments                                                       |
+| `skills/ask/`                    | `new::ask`: Explicit-activation questioning workflow for multi-round planning interrogation and configurable execution check-ins (`Frequent` / `Less frequent` / `None`)      |
 | `skills/task/`                   | `new::task`: Multi-task session hub (`tasks.md`), immutable plans (`NN-<slug>.plan.md`), scaffold-first phases, atomic commits, and dual-mode reports (`NN-<slug>.report.md`) |
 | `skills/docs/`                   | `new::docs`: Practical Software STE and anti-compression readability rules plus `references/` for slop substitutions, domain templates, and Korean style guide                |
 | `skills/tools-intellij/`         | `new::tools-intellij`: IntelliJ IDE MCP escalation rules and language-specific reference guides (`tools-reference.md`, JVM, Go, Python, PHP, SQL, CMake/native)               |

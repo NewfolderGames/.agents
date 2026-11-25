@@ -16,9 +16,9 @@ Resolve conflicts inside any repository in this strict order:
    MCP tool descriptions, or bundled defaults.
 3. **Delegated subagent persona contracts and active interactive skills**: When acting as a delegated subagent, follow
    your persona, audit rubric, and handoff contract instead of Mode 1 chat rules or Section 2.2 triggers. While an
-   interactive coaching skill such as `new::learning-diy` is active for a task, follow its driver-seat override instead
-   of
-   Mode 1 caps and agent-driven planning, then restore normal rules once that task closes.
+   explicit interactive skill such as `new::learning-diy` or `new::ask` is active for a task, follow its interaction
+   override (driver-seat contract or multi-round questioning) instead of Mode 1 brevity and single-question caps, then
+   restore normal rules once that task closes.
 4. **Target repository guides and configs** (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `README.md`, `CONTRIBUTING.md`,
    `.editorconfig`, linter/formatter rules, build manifests, CI workflows).
 5. **Neighboring codebase conventions** (directory layout, naming, error handling, tests, and language/tone in adjacent
@@ -65,7 +65,7 @@ Select one mode per output before writing (creative or marketing copy is exempt 
 | **Mode 2: Practical Software STE**       | Session docs, comments, `TODO`s, docblocks, specs, `README.md`, `AGENTS.md`, `SKILL.md`, runbooks, commits, errors | Match project doc style first. Apply Section 3 to routine `tasks.md` entries and short comments; activate `new::docs` for substantive docs, Korean docs, boundary docblocks, or dense rationale blocks.                                                                                                                                                                                                                                        |
 
 Override Mode 1 brevity only for explicit "explain" requests, Section 1.2 confirmations, genuine ambiguity (ask one
-question), or active `new::learning-diy` coaching.
+question), active `new::learning-diy` coaching, or active `new::ask` questioning.
 
 ### 2.2 Session Document Triggers
 
@@ -108,6 +108,7 @@ Apply across Mode 1 chat and Mode 2 documentation:
 
 | Name                  | Kind     | Activate When                                                                                                                                                                                                                                               |
 |-----------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `new::ask`            | Skill    | Explicit user request only: deep multi-round planning interrogation and configurable execution-phase check-ins calibrated to project familiarity and structure stance.                                                                                      |
 | `new::task`           | Skill    | Planning (`/plan`), tracking `tasks.md`, scaffolding features, parallel stub delegation, commits, or `NN-<slug>.report.md`.                                                                                                                                 |
 | `new::docs`           | Skill    | Writing substantive docs (`README.md`, specs, runbooks, postmortems, substantial plans/reports, Korean docs, boundary docblocks, dense rationale).                                                                                                          |
 | `new::tools-intellij` | Skill    | Escalating beyond built-in file/shell tools to IntelliJ MCP PSI navigation, safe rename, inspections, builds, debuggers, profiler, or SQL.                                                                                                                  |
