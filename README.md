@@ -33,6 +33,13 @@ repository-scouting subagents for AI coding agents.
 Read [harnesses/README.md](harnesses/README.md) for host detection, abstract capability mappings, and setup instructions
 across Antigravity, JetBrains Junie, Claude Code, and generic `AGENTS.md` hosts (Codex, Cursor, OpenCode).
 
+## Extra Plugin Recommenations
+
+- [agy-fast](https://github.com/INK-Q/agy-fast): Faster Google Antigravity
+- [ast-grep](https://github.com/ast-grep/agent-skill): `ast-grep` tool usage
+- [elephant-goldfish-model](https://github.com/google/elephant-goldfish-model): Review looper
+- [modern-web-guidance](https://github.com/googlechrome/modern-web-guidance): Guide for using newer web technologies
+
 ## Citations
 
 External sources adapted across the rules and skills in this repository:
