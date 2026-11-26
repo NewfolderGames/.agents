@@ -1,5 +1,5 @@
-import { formatFileLocation, formatTaskFilename } from "./format.js";
-import type { AuditFinding, FindingSeverity, PlanRecord, ReportRecord, SessionData, TaskItem, TaskRecord } from "./schema.js";
+import type { AuditFinding, FindingSeverity, PlanRecord, ReportFollowUp, ReportRecord, TaskItem, TaskRecord } from "./contracts.js";
+import { formatFileLocation, formatTaskId, padTaskId } from "./format.js";
 
 function formatSessionLink(fileName: string, linkBase?: string): string {
 	if (!linkBase) {
@@ -42,6 +42,9 @@ function formatTaskStatusCell(task: TaskRecord): string {
 		case "planned":
 			return "Planned";
 		case "in_progress": {
+			if (task.steps.length === 0) {
+				return "In Progress";
+			}
 			const totalSteps = task.steps.length;
 			const activeStepIndex = task.steps.findIndex(step =>
 				step.items.some(item => item.status !== "done"));
@@ -65,10 +68,9 @@ function formatTaskItemCheckbox(item: TaskItem): string {
 	return `- [ ] ${item.text}`;
 }
 
-/** Render the session's `tasks.md` hub matching `session-templates.md` Section 1. */
-export function renderTasksMarkdown(session: SessionData, linkBase?: string): string {
-	const sortedTasks = [...session.tasks].sort((a, b) =>
-		a.taskNumber.localeCompare(b.taskNumber));
+/** Render a session's `tasks.md` hub using global integer task IDs. */
+export function renderTasksMarkdown(tasks: TaskRecord[], linkBase?: string): string {
+	const sortedTasks = [...tasks].sort((a, b) => a.taskId - b.taskId);
 	const lines: string[] = [
 		"# Session Tasks",
 		"",
@@ -84,7 +86,7 @@ export function renderTasksMarkdown(session: SessionData, linkBase?: string): st
 			? `[report](${formatSessionLink(task.reportFile, linkBase)})`
 			: "-";
 		lines.push(
-			`| ${task.taskNumber} | ${formatTaskStatusCell(task)} | ${task.title} | ${planCell} \\| ${reportCell} |`,
+			`| ${formatTaskId(task.taskId)} | ${formatTaskStatusCell(task)} | ${task.title} | ${planCell} \\| ${reportCell} |`,
 		);
 	}
 
@@ -107,7 +109,7 @@ export function renderTasksMarkdown(session: SessionData, linkBase?: string): st
 			const docsLine = docsParts.length > 0 ? docsParts.join(" | ") : "-";
 
 			lines.push("<details>");
-			lines.push(`<summary>${summaryMark} Task ${task.taskNumber} - ${task.title}</summary>`);
+			lines.push(`<summary>${summaryMark} Task ${formatTaskId(task.taskId)} - ${task.title}</summary>`);
 			lines.push("");
 			lines.push(`- **Docs**: ${docsLine}`);
 			lines.push(`- **Summary**: ${task.summary}`);
@@ -139,7 +141,7 @@ export function renderTasksMarkdown(session: SessionData, linkBase?: string): st
 			docsParts.push("report (pending)");
 		}
 
-		lines.push(`## Task ${task.taskNumber} - ${task.title}`);
+		lines.push(`## Task ${formatTaskId(task.taskId)} - ${task.title}`);
 		lines.push("");
 		lines.push(`- **Status**: ${formatTaskStatusCell(task)}`);
 		lines.push(`- **Docs**: ${docsParts.join(" | ")}`);
@@ -160,252 +162,231 @@ export function renderTasksMarkdown(session: SessionData, linkBase?: string): st
 	return lines.join("\n");
 }
 
-/** Render an immutable `NN-<slug>.plan.md` matching `session-templates.md` Section 2. */
+/** Render an immutable `NNN-<slug>.plan.md` document. */
 export function renderPlanMarkdown(plan: PlanRecord, linkBase?: string): string {
+	const padded = padTaskId(plan.taskId);
 	const lines: string[] = [
-		`# Plan ${plan.taskNumber}: ${plan.title}`,
+		`# Plan ${padded}: ${plan.title}`,
 		"",
-		`- **Task**: \`${plan.taskNumber}\` ([tasks.md](${formatSessionLink("tasks.md", linkBase)}))`,
+		`- **Task**: \`${formatTaskId(plan.taskId)}\` ([tasks.md](${formatSessionLink("tasks.md", linkBase)}))`,
 		`- **Target**: \`${plan.target.repo}\` @ \`${plan.target.branch}\` (\`${plan.target.commit}\`)`,
 	];
 
 	if (plan.follows) {
 		lines.push(`- **Follows**: ${plan.follows}`);
 	}
+	if (plan.calibration) {
+		lines.push(
+			`- **Calibration**: Cadence \`${plan.calibration.cadence}\`, Familiarity \`${plan.calibration.familiarity}\`, Structure \`${plan.calibration.structureStance}\``,
+		);
+	}
 
-	lines.push(
-		"",
-		"## Requirements",
-		"",
-		"### Overview & Goals",
-		plan.overview,
-		"",
-		"Expected outcomes:",
-		...plan.expectedOutcomes.map(item => `- ${item}`),
-		"",
-		"### Scope",
-		"",
-		"#### In Scope",
-		...plan.scope.inScope.map(item => `- ${item}`),
-		"",
-		"#### Out of Scope",
-		...plan.scope.outOfScope.map(item => `- ${item}`),
-	);
+	lines.push("", "## Requirements", "", "### Overview & Goals", plan.overview, "", "Expected outcomes:");
+	for (const outcome of plan.expectedOutcomes) {
+		lines.push(`- ${outcome}`);
+	}
+
+	lines.push("", "### Scope", "", "#### In Scope");
+	for (const item of plan.scope.inScope) {
+		lines.push(`- ${item}`);
+	}
+	lines.push("", "#### Out of Scope");
+	for (const item of plan.scope.outOfScope) {
+		lines.push(`- ${item}`);
+	}
 
 	if (plan.openQuestions && plan.openQuestions.length > 0) {
 		lines.push("", "### Open Questions & Assumptions");
-		plan.openQuestions.forEach((item, idx) => {
-			lines.push(`${idx + 1}. ${item}`);
-		});
+		plan.openQuestions.forEach((q, idx) => lines.push(`${idx + 1}. ${q}`));
 	}
-
 	if (plan.userStories && plan.userStories.length > 0) {
-		lines.push("", "### User Stories", ...plan.userStories.map(item => `- ${item}`));
+		lines.push("", "### User Stories");
+		for (const story of plan.userStories) {
+			lines.push(`- ${story}`);
+		}
 	}
-
 	if (plan.functionalRequirements && plan.functionalRequirements.length > 0) {
 		lines.push("", "### Functional Requirements");
-		plan.functionalRequirements.forEach((item, idx) => {
-			lines.push(`${idx + 1}. ${item}`);
-		});
+		plan.functionalRequirements.forEach((req, idx) => lines.push(`${idx + 1}. ${req}`));
 	}
-
 	if (plan.nonFunctionalRequirements && plan.nonFunctionalRequirements.length > 0) {
-		lines.push(
-			"",
-			"### Non-Functional Requirements",
-			...plan.nonFunctionalRequirements.map(item => `- ${item}`),
-		);
+		lines.push("", "### Non-Functional Requirements");
+		for (const req of plan.nonFunctionalRequirements) {
+			lines.push(`- ${req}`);
+		}
 	}
 
-	lines.push(
-		"",
-		"## Technical Design",
-		"",
-		"### Current Implementation",
-		...plan.currentImplementation.map(item => `- ${item}`),
-		"",
-		"### Key Decisions",
-	);
-	plan.keyDecisions.forEach((item, idx) => {
-		lines.push(`${idx + 1}. ${item}`);
-	});
+	lines.push("", "## Technical Design", "", "### Current Implementation");
+	for (const item of plan.currentImplementation) {
+		lines.push(`- ${item}`);
+	}
+
+	lines.push("", "### Key Decisions");
+	plan.keyDecisions.forEach((dec, idx) => lines.push(`${idx + 1}. ${dec}`));
 
 	lines.push("", "### Proposed Changes");
-	plan.proposedChanges.forEach((item, idx) => {
-		lines.push(`${idx + 1}. ${item}`);
-	});
+	plan.proposedChanges.forEach((chg, idx) => lines.push(`${idx + 1}. ${chg}`));
 
 	if (plan.dataModels) {
-		lines.push("", "### Data Models / Contracts", plan.dataModels);
+		lines.push("", "### Data Models / Contracts", "", plan.dataModels);
 	}
-
 	if (plan.components && plan.components.length > 0) {
-		lines.push(
-			"",
-			"### Components",
-			"| Component | Package / Path | Responsibility |",
-			"|---|---|---|",
-			...plan.components.map(
-				row => `| \`${row.component}\` | \`${row.path}\` | ${row.responsibility} |`,
-			),
-		);
+		lines.push("", "### Components", "", "| Component | Package / Path | Responsibility |", "|---|---|---|");
+		for (const row of plan.components) {
+			lines.push(`| \`${row.component}\` | \`${row.path}\` | ${row.responsibility} |`);
+		}
 	}
 
-	lines.push("", "### File Structure", "```text");
+	lines.push("", "### File Structure", "", "```text");
 	for (const entry of plan.fileStructure) {
 		lines.push(`${entry.path} (${entry.action}: ${entry.reason})`);
 	}
 	lines.push("```");
 
 	if (plan.architectureDiagram) {
-		lines.push("", "### Architecture Diagram", "```mermaid", plan.architectureDiagram, "```");
+		lines.push("", "### Architecture Diagram", "", "```mermaid", plan.architectureDiagram, "```");
 	}
-
 	if (plan.risks && plan.risks.length > 0) {
-		lines.push(
-			"",
-			"### Risks",
-			"| Risk | Impact | Mitigation |",
-			"|---|---|---|",
-			...plan.risks.map(row => `| ${row.risk} | ${row.impact} | ${row.mitigation} |`),
-		);
+		lines.push("", "### Risks", "", "| Risk | Impact | Mitigation |", "|---|---|---|");
+		for (const risk of plan.risks) {
+			lines.push(`| ${risk.risk} | ${risk.impact} | ${risk.mitigation} |`);
+		}
 	}
-
 	if (plan.alternatives) {
 		lines.push("", "## Alternatives Considered", "", plan.alternatives);
 	}
 
 	lines.push("", "## Testing", "", "### Validation Approach");
-	plan.testing.validationCommands.forEach((cmd, idx) => {
-		lines.push(`${idx + 1}. Run \`${cmd}\``);
-	});
+	plan.testing.validationCommands.forEach((cmd, idx) => lines.push(`${idx + 1}. \`${cmd}\``));
 
-	lines.push("", "### Key Scenarios", ...plan.testing.keyScenarios.map(item => `- ${item}`));
-
+	lines.push("", "### Key Scenarios");
+	for (const scenario of plan.testing.keyScenarios) {
+		lines.push(`- ${scenario}`);
+	}
 	if (plan.testing.edgeCases && plan.testing.edgeCases.length > 0) {
-		lines.push("", "### Edge Cases", ...plan.testing.edgeCases.map(item => `- ${item}`));
+		lines.push("", "### Edge Cases");
+		for (const edge of plan.testing.edgeCases) {
+			lines.push(`- ${edge}`);
+		}
+	}
+	lines.push("", "### Test Changes");
+	for (const chg of plan.testing.testChanges) {
+		lines.push(`- ${chg}`);
 	}
 
-	lines.push("", "### Test Changes", ...plan.testing.testChanges.map(item => `- ${item}`), "");
+	lines.push("");
 	return lines.join("\n");
 }
 
 function groupFindingsBySeverity(
 	findings: AuditFinding[],
-): Array<{ severity: FindingSeverity; heading: string; items: AuditFinding[] }> {
-	const order: Array<{ severity: FindingSeverity; heading: string }> = [
-		{ severity: "critical", heading: "Critical" },
-		{ severity: "high", heading: "High" },
-		{ severity: "medium", heading: "Medium" },
-		{ severity: "low", heading: "Low" },
-	];
-	return order
-		.map(group => ({
-			...group,
-			items: findings.filter(item => item.severity === group.severity),
-		}))
-		.filter(group => group.items.length > 0);
+): Record<FindingSeverity, AuditFinding[]> {
+	const grouped: Record<FindingSeverity, AuditFinding[]> = {
+		critical: [],
+		high: [],
+		medium: [],
+		low: [],
+	};
+	for (const finding of findings) {
+		grouped[finding.severity].push(finding);
+	}
+	return grouped;
 }
 
-/** Render an Implementation or Audit `NN-<slug>.report.md` matching `session-templates.md` Sections 3-4. */
+function appendFollowUpsSection(
+	lines: string[],
+	heading: string,
+	followUps: ReportFollowUp[],
+	workspaceLinkBase?: string,
+): void {
+	lines.push("", `## ${heading}`, "");
+	if (followUps.length === 0) {
+		lines.push("No follow-up items identified.");
+		return;
+	}
+	lines.push("| ID | Priority | Location | Follow-Up Action |", "|---|---|---|---|");
+	for (const item of followUps) {
+		const loc = formatWorkspaceLink(
+			item.location,
+			item.lineStart,
+			item.lineEnd,
+			workspaceLinkBase,
+		);
+		lines.push(`| \`${item.id}\` | \`${item.priority}\` | ${loc} | ${item.action} |`);
+	}
+}
+
+/** Render an immutable implementation or audit `NNN-<slug>.report.md` document. */
 export function renderReportMarkdown(
 	report: ReportRecord,
 	linkBase?: string,
 	workspaceLinkBase?: string,
 ): string {
+	const padded = padTaskId(report.taskId);
 	const lines: string[] = [
-		`# Report ${report.taskNumber}: ${report.title}`,
+		`# Report ${padded}: ${report.title}`,
 		"",
-		`- **Task**: \`${report.taskNumber}\` ([tasks.md](${formatSessionLink("tasks.md", linkBase)}))`,
+		`- **Task**: \`${formatTaskId(report.taskId)}\` ([tasks.md](${formatSessionLink("tasks.md", linkBase)}))`,
 		`- **Outcome**: \`${report.outcome}\``,
 		`- **Target**: \`${report.target.repo}\` @ \`${report.target.branch}\` (\`${report.target.commit}\`)`,
 	];
 
 	if (report.planRef) {
-		lines.push(
-			`- **Plan**: [${report.planRef}](${formatSessionLink(report.planRef, linkBase)})`,
-		);
+		lines.push(`- **Plan**: [${report.planRef}](${formatSessionLink(report.planRef, linkBase)})`);
 	}
 
 	if (report.mode === "audit") {
 		lines.push("", "## Summary & Verdict", "", report.summary);
 
-		lines.push(
-			"",
-			"## Scope & Verification Matrix",
-			"",
-			"| Check / Spec | Status | Observed Result |",
-			"|---|---|---|",
-		);
-		for (const row of report.verificationMatrix) {
-			lines.push(`| \`${row.target}\` | \`${row.status}\` | ${row.observed} |`);
+		if (report.verificationMatrix.length > 0) {
+			lines.push("", "## Scope & Verification Matrix", "", "| Check / Spec | Status | Observed Result |", "|---|---|---|");
+			for (const row of report.verificationMatrix) {
+				lines.push(`| ${row.target} | \`${row.status}\` | ${row.observed} |`);
+			}
 		}
 
 		lines.push("", "## Findings");
-		const groups = groupFindingsBySeverity(report.findings);
-		if (groups.length === 0) {
-			lines.push("", "No findings recorded.");
-		}
-		else {
-			for (const group of groups) {
-				lines.push("", `### ${group.heading}`);
-				for (const item of group.items) {
-					const loc = formatWorkspaceLink(
-						item.location,
-						item.lineStart,
-						item.lineEnd,
-						workspaceLinkBase,
-					);
-					lines.push(`- **\`${item.id}\` - ${item.title}** (${loc}): ${item.detail}`);
-				}
+		const grouped = groupFindingsBySeverity(report.findings);
+		const severityOrder: Array<{ key: FindingSeverity; heading: string }> = [
+			{ key: "critical", heading: "Critical" },
+			{ key: "high", heading: "High" },
+			{ key: "medium", heading: "Medium" },
+			{ key: "low", heading: "Low" },
+		];
+		for (const { key, heading } of severityOrder) {
+			const bucket = grouped[key];
+			if (bucket.length === 0) {
+				continue;
+			}
+			lines.push("", `### ${heading}`);
+			for (const finding of bucket) {
+				const loc = formatWorkspaceLink(
+					finding.location,
+					finding.lineStart,
+					finding.lineEnd,
+					workspaceLinkBase,
+				);
+				lines.push(`- **\`${finding.id}\` - ${finding.title}** (${loc}): ${finding.detail}`);
 			}
 		}
 
-		lines.push("", "## Recommended Next Tasks");
-		if (report.followUps.length === 0) {
-			lines.push("", "No recommended next tasks.");
-		}
-		else {
-			lines.push("", "| ID | Priority | Location | Follow-Up Action |", "|---|---|---|---|");
-			for (const row of report.followUps) {
-				const loc = formatWorkspaceLink(
-					row.location,
-					row.lineStart,
-					row.lineEnd,
-					workspaceLinkBase,
-				);
-				lines.push(`| \`${row.id}\` | \`${row.priority}\` | ${loc} | ${row.action} |`);
-			}
-		}
+		appendFollowUpsSection(lines, "Recommended Next Tasks", report.followUps, workspaceLinkBase);
 		lines.push("");
 		return lines.join("\n");
 	}
 
-	lines.push("", "## Summary & Outcome", "", report.summary);
-
-	lines.push("", "## Actions Completed", "");
-	if (report.actionsCompleted.length === 0) {
-		lines.push("- No actions listed.");
-	}
-	else {
-		for (const action of report.actionsCompleted) {
-			lines.push(`- ${action}`);
-		}
+	lines.push("", "## Summary & Outcome", "", report.summary, "", "## Actions Completed");
+	for (const action of report.actionsCompleted) {
+		lines.push(`- ${action}`);
 	}
 
 	lines.push("", "### Files Changed");
 	if (report.diffStat) {
-		lines.push(`Diff stat: \`${report.diffStat}\``);
+		lines.push("", `Diff stat: \`${report.diffStat}\``);
 	}
 	lines.push("", "| File / Directory | Action | Summary |", "|---|---|---|");
 	for (const file of report.filesChanged) {
-		const loc = formatWorkspaceLink(
-			file.path,
-			file.lineStart,
-			file.lineEnd,
-			workspaceLinkBase,
-		);
+		const loc = formatWorkspaceLink(file.path, file.lineStart, file.lineEnd, workspaceLinkBase);
 		lines.push(`| ${loc} | ${file.action} | ${file.summary} |`);
 	}
 
@@ -416,13 +397,7 @@ export function renderReportMarkdown(
 		}
 	}
 
-	lines.push(
-		"",
-		"## Verification & How to Run",
-		"",
-		"| Check | Command | Result | Notes |",
-		"|---|---|---|---|",
-	);
+	lines.push("", "## Verification & How to Run", "", "| Check | Command | Result | Notes |", "|---|---|---|---|");
 	for (const row of report.verification) {
 		lines.push(`| ${row.check} | \`${row.command}\` | \`${row.result}\` | ${row.notes} |`);
 	}
@@ -440,32 +415,8 @@ export function renderReportMarkdown(
 		}
 	}
 
-	lines.push("", "## Follow-Up & Future Work");
-	if (report.followUps.length === 0) {
-		lines.push("", "No follow-up items identified.");
-	}
-	else {
-		lines.push("", "| ID | Priority | Location | Follow-Up Action |", "|---|---|---|---|");
-		for (const row of report.followUps) {
-			const loc = formatWorkspaceLink(
-				row.location,
-				row.lineStart,
-				row.lineEnd,
-				workspaceLinkBase,
-			);
-			lines.push(`| \`${row.id}\` | \`${row.priority}\` | ${loc} | ${row.action} |`);
-		}
-	}
+	appendFollowUpsSection(lines, "Follow-Up & Future Work", report.followUps, workspaceLinkBase);
 
 	lines.push("");
 	return lines.join("\n");
-}
-
-/** Return the expected Markdown filenames for a report or plan record. */
-export function getArtifactFilename(
-	taskNumber: string,
-	slug: string,
-	role: "plan" | "report",
-): string {
-	return formatTaskFilename(taskNumber, slug, role);
 }

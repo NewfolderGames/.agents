@@ -46,21 +46,30 @@ Use this adapter when running inside Google Antigravity (`<Artifact Directory Pa
 - Call eagerly registered MCP tools directly (`mcp_<server>_<toolName>`).
 - For lazy-loaded MCP tools, inspect `<appDataDir>/mcp/<server>/<toolName>.json` for exact schemas, then invoke
   `call_mcp_tool` with `ServerName`, `ToolName`, and `Arguments`.
-- For `new-worker-ui`: `open_workspace` registers `aux_pane` and `global` entrypoints (`"New Worker"`). Opening the
-  global view or `open_workspace` is strictly read-only and writes no JSON files when no sessions exist; persistent data
-  is stored in `mcp-app/data/` (gitignored). Pass `sessionId: "<conversation-id>"` and
-  `exportDir: "<Artifact Directory Path>"` when calling `upsert_task`, `write_plan`, `write_report`, `record_handoff`,
-  or `ask_questions` so Markdown artifacts stay synchronized.
-- For plans: `write_plan` generates `NN-<slug>.plan.md` and returns `planFilePath` so Antigravity can present it as a
-  plan artifact (`ArtifactMetadata`) for approval in Antigravity's native UI.
-- For questions & tasks: `ask_questions` supports per-question `blockingMode` (`immediate`, `before_step_finish`,
-  `anytime`). Task checklists in the UI are read-only with automatic task/step/item time tracking, `update_task_item`
-  embeds an immutable step snapshot inline so chat reloads keep exact step progress, widgets support three display
-  modes (`minimized` single-row by default, `compact`, and `full`) plus Expand/Minimize controls configured via
-  **Settings** (`Display type` and `Step display type`), **Tool Calls** includes **Clear History**, and the side-pane
-  dashboard auto-refreshes when session state changes. Numbered task steps exclude plan/workspace initialization.
-- For live UI development, set `NEW_WORKER_APP_HTML` or pass `--html-path` and refresh `new-worker_new-worker-ui`
-  through **MCP Servers** settings or `RefreshMcpServers`.
+- For `new-worker-ui`: `open_workspace` registers `aux_pane` and `global` entrypoints (`"New Worker"`) pointing to
+  the isolated Dashboard UI (`ui://new-worker/dashboard`), while inline model tools render dedicated lightweight widgets
+  (`ui://new-worker/widget/task`, `task-step`, `plan`, `report`, `handoff`, `questions`). Reading via `open_workspace`,
+  `query_workspace`, `query_timeline`, `app_get_dashboard_state`, or `app_get_widget_state` is strictly read-only.
+  Persistent state lives in a SQLite database (`new-worker.sqlite`) inside `--data-dir` (configured as `${PLUGIN_DATA}`
+  in `mcp_config.json`, falling back to `mcp-app/data/`). Pass `sessionId: "<conversation-id>"`, optional `rootDir` /
+  `groupId`, and `exportDir: "<Artifact Directory Path>"` when calling mutating tools so Markdown artifacts stay synced.
+- For tasks, plans, and context: `write_plan`, `upsert_task`, and standalone `write_report` allocate global
+  auto-incrementing integer `taskId` values starting at `1` across all sessions. `manage_context` manages session
+  titles, `rootDir`, 1:N session groups (`session_groups`), and manual timeline notes with polymorphic links.
+  `query_workspace` and `query_timeline` let agents inspect session/group metadata, task steps, plans, reports,
+  handoffs, questions, and timeline events on demand.
+- For plans: `write_plan` generates `NNN-<slug>.plan.md` and returns `taskId` plus `planFilePath` so Antigravity can
+  present it as a plan artifact (`ArtifactMetadata`) for approval in Antigravity's native UI.
+- For questions & tasks: `ask_questions` supports `blockingMode` (`immediate`, `before_step_finish`, `anytime`) and
+  optional global `taskId` + `stepNumber`. Task checklists in the UI are read-only with automatic task/step/item time
+  tracking, `update_task_item` embeds an immutable step snapshot inline so chat reloads keep exact step progress, inline
+  widgets support three display modes (`minimized` single-row by default, `compact`, and `full`) plus Expand/Minimize
+  controls configured via Dashboard **Settings** (`Default Widget Display` and `Step Widget Override`), **Tool Calls**
+  includes **Clear History**, **Timeline** displays polymorphic session/group events, and the Dashboard auto-refreshes
+  when
+  database state changes. Numbered task steps exclude plan/workspace initialization.
+- For live UI development, set `NEW_WORKER_DASHBOARD_HTML` / `NEW_WORKER_WIDGET_HTML` (or pass `--dashboard-html` /
+  `--widget-html`) and refresh `new-worker_new-worker-ui` through **MCP Servers** settings or `RefreshMcpServers`.
 
 ## 6. Rule Budget Guardrail
 

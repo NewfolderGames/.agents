@@ -14,11 +14,12 @@ export default defineConfig({
 		ssr: "server/index.ts",
 		outDir: "dist",
 		emptyOutDir: false,
-		target: "node20",
-		rollupOptions: {
+		target: "node22",
+		rolldownOptions: {
+			external: [/^node:/],
 			output: {
 				entryFileNames: "server.mjs",
-				inlineDynamicImports: true,
+				codeSplitting: false,
 			},
 		},
 	},

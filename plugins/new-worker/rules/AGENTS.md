@@ -117,7 +117,8 @@ Apply across Mode 1 chat and Mode 2 documentation:
 ### 4.1 `new-worker-ui` MCP Routing (With Fallback)
 
 When the `new-worker-ui` MCP server is connected, prefer its structured tools (`open_workspace`, `upsert_task`,
-`update_task_item`, `write_plan`, `write_report`, `record_handoff`, `ask_questions`, and `get_session_state`) and pass
+`update_task_item`, `write_plan`, `write_report`, `record_handoff`, `ask_questions`, `manage_context`,
+`query_workspace`, and `query_timeline`), passing global integer `taskId`, optional session `rootDir`, and
 `exportDir: "<session-dir>"` so Markdown artifacts stay synchronized. When `new-worker-ui` is absent, write Markdown
 session files directly and use the host's structured user prompt or numbered chat options.
 

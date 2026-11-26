@@ -18,7 +18,7 @@ Use this adapter on Codex, Cursor, OpenCode, or any host not listed in [README.m
   citations for source code.
 - **Structured user prompts**: Present numbered options in plain chat text when no interactive question tool exists,
   or read the plain-text fallback returned by `ask_questions` when `new-worker-ui` is registered as a stdio MCP server
-  (`node <plugin-root>/mcp-app/dist/server.mjs --data-dir=<path>`).
+  (`node <plugin-root>/mcp-app/dist/server.mjs --data-dir=<path>`, requiring Node `>= 22.13`).
 - **Web search**: Cite canonical book titles, official documentation page headings, and exact search keywords rather
   than unverified URLs when web search is unavailable.
 - **Pre-scan script (`new::project-scout`)**: Run `<plugin-root>/scripts/scout_prescan.py` when `python3` and the script

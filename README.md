@@ -39,6 +39,7 @@ OpenCode).
 
 ## Prerequisites
 
+- `node` (`>= 22.13`) to run the `new-worker-ui` MCP server (`node:sqlite`)
 - `ripgrep` (`rg`) for fast text search
 - `python3` for batch scripts, structural analysis, and `plugins/new-worker/scripts/scout_prescan.py`
 - `pnpm` as the default Node.js package manager when a project lockfile does not specify one

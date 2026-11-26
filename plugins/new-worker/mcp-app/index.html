@@ -1,16 +1,38 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <meta content="light dark" name="color-scheme"/>
-    <title>new-worker</title>
-    <link href="https://fonts.googleapis.com" rel="preconnect"/>
-    <link crossorigin href="https://fonts.gstatic.com" rel="preconnect"/>
-    <link href="https://fonts.googleapis.com/css2?family=Orbit&display=swap" rel="stylesheet"/>
+	<meta charset="UTF-8"/>
+	<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+	<meta content="light dark" name="color-scheme"/>
+	<title>new-worker Dev Routes</title>
+	<style>
+		body {
+			font-family: system-ui, sans-serif;
+			max-width: 640px;
+			margin: 2rem auto;
+			padding: 0 1rem;
+			line-height: 1.6;
+		}
+
+		ul {
+			padding-left: 1.25rem;
+		}
+
+		code {
+			font-family: ui-monospace, monospace;
+		}
+	</style>
 </head>
 <body>
-<div id="root"></div>
-<script src="/src/main.tsx" type="module"></script>
+<h1>new-worker MCP App Dev Routes</h1>
+<ul>
+	<li><a href="/dashboard"><code>/dashboard</code></a> — Multi-session Workspace Dashboard</li>
+	<li><a href="/widget/task"><code>/widget/task</code></a> — Task Card Widget</li>
+	<li><a href="/widget/task-step"><code>/widget/task-step</code></a> — Task Step Snapshot Widget</li>
+	<li><a href="/widget/plan"><code>/widget/plan</code></a> — Plan Widget</li>
+	<li><a href="/widget/report"><code>/widget/report</code></a> — Report Widget</li>
+	<li><a href="/widget/handoff"><code>/widget/handoff</code></a> — Handoff Widget</li>
+	<li><a href="/widget/questions"><code>/widget/questions</code></a> — Questions Widget</li>
+</ul>
 </body>
 </html>

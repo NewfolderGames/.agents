@@ -11,7 +11,8 @@ formats (`<session-link>` and `<file-link>` below). In Korean session documents,
 
 ## 1. `tasks.md` Template (Unified Session Hub and Live Checklist)
 
-Keep `tasks.md` as the single mutable state file across all tasks in a conversation. Use standard GFM `- [ ]` and
+Keep `tasks.md` as the single mutable state file across all tasks in a conversation (or exported automatically by
+`new-worker-ui` using global `Task #1` headers and `001-<slug>.<role>.md` filenames). Use standard GFM `- [ ]` and
 `- [x]` checkboxes, mark at most one active item with `**(in progress)**`, and keep Markdown links in the Overview Table
 and inside `<details>` bodies (never inside `<summary>`). Never add steps for initializing a plan, opening the
 workspace, or creating `tasks.md`; begin `### Step 1` directly with execution work.
@@ -21,9 +22,9 @@ workspace, or creating `tasks.md`; begin `### Step 1` directly with execution wo
 
 | # | Status | Task | Docs |
 |---|---|---|---|
-| 01 | Done | <Audit or Review Task Title> | - \| [report](<session-link>/01-audit-slug.report.md) |
-| 02 | Done | <Completed Implementation Title> | [plan](<session-link>/02-impl-slug.plan.md) \| [report](<session-link>/02-impl-slug.report.md) |
-| 03 | In Progress (Step 1/3) | <Active Task Title> | [plan](<session-link>/03-active-slug.plan.md) \| - |
+| #1 | Done | <Audit or Review Task Title> | - \| [report](<session-link>/001-audit-slug.report.md) |
+| #2 | Done | <Completed Implementation Title> | [plan](<session-link>/002-impl-slug.plan.md) \| [report](<session-link>/002-impl-slug.report.md) |
+| #3 | In Progress (Step 1/3) | <Active Task Title> | [plan](<session-link>/003-active-slug.plan.md) \| - |
 
 ---
 

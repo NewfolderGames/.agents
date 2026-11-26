@@ -1,0 +1,27 @@
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px;
+    border: 1px dashed var(--color-border-primary);
+    border-radius: 4px;
+    background: var(--color-background-secondary);
+
+    > .title {
+        margin: 0;
+        font-weight: 700;
+    }
+
+    > .detail {
+        margin: 0;
+        color: var(--color-text-secondary);
+        font-size: 12px;
+    }
+
+    > .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding-top: 4px;
+    }
+}

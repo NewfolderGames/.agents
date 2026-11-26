@@ -76,9 +76,10 @@ in chat):
 3. **Questioning mechanics**:
     - When `new-worker-ui` is connected, call `ask_questions` with grouped `sections`, `questions` (`single_select`,
       `multi_select`, `text`, `textarea`, `boolean`, `allowOther`, `hint`, `contextRefs`, plus optional per-question
-      `blockingMode`: `"immediate"` | `"before_step_finish"` | `"anytime"` with `taskNumber` and `stepNumber`), and
-      `sessionId`. Stop and wait when `"immediate"` questions are present; for `"before_step_finish"` or `"anytime"`,
-      continue allowed work and read submitted answers from chat messages or `get_session_state`.
+      `blockingMode`: `"immediate"` | `"before_step_finish"` | `"anytime"`), `sessionId`, and optional global `taskId`
+      plus `stepNumber`. Stop and wait when `"immediate"` questions are present; for `"before_step_finish"` or
+      `"anytime"`, continue allowed work and read submitted answers from chat messages or `query_workspace`
+      (`target: "questions"`).
     - When `new-worker-ui` is unavailable, group 2 to 5 related questions per round using the host's structured user
       prompt tool (putting a recommended option first with a 1-line rationale whenever feasible) alongside short open
       questions in chat.

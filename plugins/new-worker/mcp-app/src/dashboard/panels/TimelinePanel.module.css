@@ -1,0 +1,63 @@
+.timeline-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    > .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    > .filters {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+    }
+
+    > .feed {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    > .feed > .event {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 9px 11px;
+        border: 1px solid var(--color-border-secondary);
+        border-radius: 4px;
+        background: var(--color-background-primary);
+    }
+
+    > .feed > .event > .head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+    }
+
+    > .feed > .event > .head > .badges {
+        display: inline-flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+    }
+
+    > .feed > .event > .summary {
+        margin: 0;
+        color: var(--color-text-secondary);
+        font-size: 12px;
+    }
+
+    > .feed > .event > .links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+}

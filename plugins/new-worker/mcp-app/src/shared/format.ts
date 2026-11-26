@@ -1,33 +1,31 @@
-import { type QuestionAnswerValue, type QuestionBlockingMode, type QuestionItem, type QuestionSetRecord, resolveQuestionPolicy } from "./schema.js";
+import { type QuestionAnswerValue, type QuestionBlockingMode, type QuestionItem, type QuestionSetRecord, resolveQuestionPolicy } from "./contracts.js";
 
 /** Join truthy CSS Module class names safely. */
 export function cx(...classes: Array<string | false | null | undefined>): string {
 	return classes.filter(Boolean).join(" ");
 }
 
-/** Allocate the next zero-padded two-digit task ID (`max(NN) + 1`, starting at `"01"`). */
-export function allocateNextTaskNumber(existingNumbers: string[]): string {
-	let maxNum = 0;
-	for (const raw of existingNumbers) {
-		const parsed = Number.parseInt(raw, 10);
-		if (Number.isFinite(parsed) && parsed > maxNum) {
-			maxNum = parsed;
-		}
-	}
-	return String(maxNum + 1).padStart(2, "0");
+/** Format a global integer task ID for UI display (`#1`). */
+export function formatTaskId(taskId: number): string {
+	return `#${taskId}`;
 }
 
-/** Build the canonical Markdown filename for a task plan or report. */
+/** Zero-pad a global integer task ID to at least 3 digits for exported filenames (`001`). */
+export function padTaskId(taskId: number, minWidth = 3): string {
+	return String(taskId).padStart(minWidth, "0");
+}
+
+/** Build the canonical Markdown filename for an exported task plan or report (`001-slug.plan.md`). */
 export function formatTaskFilename(
-	taskNumber: string,
+	taskId: number,
 	slug: string,
 	role: "plan" | "report",
 ): string {
-	return `${taskNumber}-${slug}.${role}.md`;
+	return `${padTaskId(taskId)}-${slug}.${role}.md`;
 }
 
 /** Resolve a workspace-relative or absolute path into a `file://` URI for Antigravity aux pane. */
-export function toFileUri(filePath: string, workspacePath?: string): string | null {
+export function toFileUri(filePath: string, rootDir?: string): string | null {
 	const clean = filePath.trim();
 	if (!clean || clean.includes("\0")) {
 		return null;
@@ -37,10 +35,10 @@ export function toFileUri(filePath: string, workspacePath?: string): string | nu
 	}
 	let resolved = clean;
 	if (!clean.startsWith("/")) {
-		if (!workspacePath || !workspacePath.startsWith("/")) {
+		if (!rootDir || !rootDir.startsWith("/")) {
 			return null;
 		}
-		const base = workspacePath.endsWith("/") ? workspacePath.slice(0, -1) : workspacePath;
+		const base = rootDir.endsWith("/") ? rootDir.slice(0, -1) : rootDir;
 		resolved = `${base}/${clean.replace(/^\.\//, "")}`;
 	}
 	const encoded = resolved
@@ -97,15 +95,15 @@ export function formatAnswerValue(
 /** Format a human-readable label for a question's blocking policy. */
 export function formatBlockingModeLabel(
 	blockingMode: QuestionBlockingMode,
-	taskNumber?: string,
+	taskId?: number,
 	stepNumber?: number,
 ): string {
 	switch (blockingMode) {
 		case "immediate":
 			return "Must answer now";
 		case "before_step_finish": {
-			if (taskNumber && stepNumber) {
-				return `Before Task ${taskNumber} Step ${stepNumber}`;
+			if (taskId && stepNumber) {
+				return `Before Task #${taskId} Step ${stepNumber}`;
 			}
 			if (stepNumber) {
 				return `Before Step ${stepNumber}`;
@@ -156,7 +154,7 @@ export function formatPlainTextQuestions(questionSet: QuestionSetRecord): string
 		const policy = resolveQuestionPolicy(questionSet, q);
 		const policyTag = formatBlockingModeLabel(
 			policy.blockingMode,
-			policy.taskNumber,
+			policy.taskId,
 			policy.stepNumber,
 		);
 		lines.push(`${idx + 1}. [${q.id}] ${q.prompt} (${q.kind}, ${reqTag}, ${policyTag})`);
@@ -182,7 +180,7 @@ export function formatShortTimestamp(iso: string): string {
 	if (Number.isNaN(parsed.getTime())) {
 		return iso;
 	}
-	return parsed.toISOString().replace("T", " ").slice(0, 16) + "Z";
+	return `${parsed.toISOString().replace("T", " ").slice(0, 16)}Z`;
 }
 
 /** Format an elapsed duration between `startedAt` and `completedAt` (or `referenceIso` / now). */

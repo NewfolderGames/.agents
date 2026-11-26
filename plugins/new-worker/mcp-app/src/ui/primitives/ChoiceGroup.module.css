@@ -1,0 +1,60 @@
+.choice-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    > .option {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 6px 8px;
+        border: 1px solid var(--color-border-secondary);
+        border-radius: 3px;
+        background: var(--color-background-primary);
+        cursor: pointer;
+    }
+
+    > .option.-selected {
+        border-color: var(--color-text-primary);
+        background: var(--color-background-secondary);
+    }
+
+    > .option > .control {
+        margin-top: 2px;
+    }
+
+    > .option > .content {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+    }
+
+    > .option > .content > .top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+    }
+
+    > .option > .content > .top > .label {
+        font-weight: 600;
+    }
+
+    > .option > .content > .description {
+        color: var(--color-text-secondary);
+        font-size: 12px;
+    }
+
+    > .other {
+        padding-left: 22px;
+    }
+
+    > .other > .input {
+        width: 100%;
+        padding: 5px 8px;
+        border: 1px solid var(--color-border-primary);
+        border-radius: 3px;
+        background: var(--color-background-primary);
+    }
+}

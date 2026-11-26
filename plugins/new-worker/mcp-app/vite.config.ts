@@ -2,26 +2,45 @@ import fs from "node:fs";
 import path, { resolve } from "node:path";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
-import { viteSingleFile } from "vite-plugin-singlefile";
 
-function renameAppHtml(): Plugin {
+function devRouteRewrite(): Plugin {
 	return {
-		name: "rename-app-html",
-		apply: "build",
-		closeBundle() {
-			const distDir = resolve(import.meta.dirname, "dist");
-			const indexHtml = path.join(distDir, "index.html");
-			const appHtml = path.join(distDir, "app.html");
-			if (fs.existsSync(indexHtml)) {
-				fs.renameSync(indexHtml, appHtml);
-			}
+		name: "new-worker-dev-routes",
+		configureServer(server) {
+			server.middlewares.use((req, res, next) => {
+				const rawUrl = req.url ?? "/";
+				const pathname = rawUrl.split("?")[0] ?? "/";
+				if (pathname === "/dashboard" || pathname === "/dashboard/") {
+					req.url = "/dashboard.html";
+					next();
+					return;
+				}
+				if (pathname.startsWith("/widget/")) {
+					const route = pathname.replace(/\/+$/, "");
+					const widgetHtmlPath = path.join(import.meta.dirname, "widget.html");
+					void fs.promises
+						.readFile(widgetHtmlPath, "utf8")
+						.then(async (rawHtml) => {
+							const injected = rawHtml.replace(
+								"</head>",
+								`<script>window.__NEW_WORKER_ROUTE__=${JSON.stringify(route)};</script></head>`,
+							);
+							const transformed = await server.transformIndexHtml(rawUrl, injected);
+							res.statusCode = 200;
+							res.setHeader("Content-Type", "text/html");
+							res.end(transformed);
+						})
+						.catch(next);
+					return;
+				}
+				next();
+			});
 		},
 	};
 }
 
-// https://vite.dev/config/
 export default defineConfig({
-	plugins: [react(), viteSingleFile(), renameAppHtml()],
+	plugins: [react(), devRouteRewrite()],
 	resolve: {
 		alias: {
 			"@": resolve(import.meta.dirname, "./src"),
@@ -32,12 +51,5 @@ export default defineConfig({
 			// Preserve kebab-case and leading-dash RSCSS names so styles["-active"] resolves directly.
 			localsConvention: "dashes",
 		},
-	},
-	build: {
-		outDir: "dist",
-		emptyOutDir: false,
-		target: "esnext",
-		assetsInlineLimit: Number.MAX_SAFE_INTEGER,
-		cssCodeSplit: false,
 	},
 });

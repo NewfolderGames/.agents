@@ -1,0 +1,31 @@
+.artifact-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    > .selector {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    > .meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        color: var(--color-text-secondary);
+        font-size: 12px;
+    }
+
+    > .list {
+        margin: 0;
+        padding-left: 18px;
+    }
+
+    > .diffs {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+}

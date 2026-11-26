@@ -1,9 +1,10 @@
-import { realpathSync } from "node:fs";
-import fs from "node:fs/promises";
-import os from "node:os";
+import fs, { realpathSync } from "node:fs";
+import fs$1 from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import process$1 from "node:process";
+import os from "node:os";
+import { DatabaseSync } from "node:sqlite";
 import crypto$1 from "node:crypto";
 // node_modules/.pnpm/@modelcontextprotocol+server@2.4.0/node_modules/@modelcontextprotocol/server/dist/chunk-vYduTEsO.mjs
 var __create = Object.create;
@@ -1108,7 +1109,7 @@ function datetime$1(args) {
 	return new RegExp(`^${dateSource}T(?:${timeRegex})$`);
 }
 var anyString = /^[\s\S]{0,}$/;
-var integer = /^-?\d+$/;
+var integer$1 = /^-?\d+$/;
 var number$2 = /^-?\d+(?:\.\d+)?$/;
 var boolean$1 = /^(?:true|false)$/i;
 var _null$2 = /^null$/i;
@@ -4727,7 +4728,7 @@ function stringifyKeyNames(bySchema, json, visited) {
 	else if (typeof rest.const === "number") rest.const = String(rest.const);
 	if (!numericType) return rest;
 	rest.type = "string";
-	if (!values) rest.pattern = (types.includes("number") ? number$2 : integer).source;
+	if (!values) rest.pattern = (types.includes("number") ? number$2 : integer$1).source;
 	return rest;
 }
 /** Every record of one conversion, so the carriers are found in a single pass rather than once per record. */
@@ -5086,7 +5087,7 @@ var ZodType = /*@__PURE__*/ $constructor("ZodType", (inst, def) => {
 		return array(this);
 	},
 	or(arg) {
-		return union([this, arg]);
+		return union$1([this, arg]);
 	},
 	and(arg) {
 		return intersection(this, arg);
@@ -5661,7 +5662,7 @@ var ZodUnion = /*@__PURE__*/ $constructor("ZodUnion", (inst, def) => {
 	inst._zod.processJSONSchema = (ctx, json, params) => unionProcessor(inst, ctx, json, params);
 	inst.options = def.options;
 });
-function union(options, params) {
+function union$1(options, params) {
 	return new ZodUnion({
 		type: "union",
 		options,
@@ -6048,7 +6049,7 @@ var SUBSCRIPTION_ID_META_KEY = "io.modelcontextprotocol/subscriptionId";
 * in the specification for at least twelve months.
 */
 var LOG_LEVEL_META_KEY = "io.modelcontextprotocol/logLevel";
-var JSONValueSchema = lazy(() => union([
+var JSONValueSchema = lazy(() => union$1([
 	string(),
 	number$1(),
 	boolean(),
@@ -6061,7 +6062,7 @@ var JSONArraySchema = array(JSONValueSchema);
 /**
 * A progress token, used to associate progress notifications with the original request.
 */
-var ProgressTokenSchema = union([string(), number$1().int()]);
+var ProgressTokenSchema = union$1([string(), number$1().int()]);
 /**
 * An opaque token used to represent a cursor for pagination.
 */
@@ -6114,7 +6115,7 @@ var ResultSchema = looseObject({ _meta: ResultMetaObjectSchema.optional() });
 /**
 * A uniquely identifying ID for a request in JSON-RPC.
 */
-var RequestIdSchema = union([string(), number$1().int()]);
+var RequestIdSchema = union$1([string(), number$1().int()]);
 /**
 * A request that expects a response.
 */
@@ -6150,13 +6151,13 @@ var JSONRPCErrorResponseSchema = object({
 		data: unknown().optional()
 	})
 }).strict();
-var JSONRPCMessageSchema = union([
+var JSONRPCMessageSchema = union$1([
 	JSONRPCRequestSchema,
 	JSONRPCNotificationSchema,
 	JSONRPCResultResponseSchema,
 	JSONRPCErrorResponseSchema
 ]);
-var JSONRPCResponseSchema = union([JSONRPCResultResponseSchema, JSONRPCErrorResponseSchema]);
+var JSONRPCResponseSchema = union$1([JSONRPCResultResponseSchema, JSONRPCErrorResponseSchema]);
 /**
 * A response that indicates success but carries no data.
 */
@@ -6435,7 +6436,7 @@ var ReadResourceRequestSchema = RequestSchema.extend({
 /**
 * The server's response to a {@linkcode ReadResourceRequest | resources/read} request from the client.
 */
-var ReadResourceResultSchema = ResultSchema.extend({ contents: array(union([TextResourceContentsSchema, BlobResourceContentsSchema])) });
+var ReadResourceResultSchema = ResultSchema.extend({ contents: array(union$1([TextResourceContentsSchema, BlobResourceContentsSchema])) });
 /**
 * An optional notification from the server to the client, informing it that the list of resources it can read from has changed. This may be issued by servers without any previous subscription from the client.
 */
@@ -6606,7 +6607,7 @@ var ToolUseContentSchema = object({
 */
 var EmbeddedResourceSchema = object({
 	type: literal("resource"),
-	resource: union([TextResourceContentsSchema, BlobResourceContentsSchema]),
+	resource: union$1([TextResourceContentsSchema, BlobResourceContentsSchema]),
 	annotations: AnnotationsSchema.optional(),
 	_meta: record(string(), unknown()).optional()
 });
@@ -6619,7 +6620,7 @@ var ResourceLinkSchema = ResourceSchema.extend({ type: literal("resource_link") 
 /**
 * A content block that can be used in prompts and tool results.
 */
-var ContentBlockSchema = union([
+var ContentBlockSchema = union$1([
 	TextContentSchema,
 	ImageContentSchema,
 	AudioContentSchema,
@@ -6883,7 +6884,7 @@ var SamplingMessageContentBlockSchema = discriminatedUnion("type", [
 */
 var SamplingMessageSchema = object({
 	role: RoleSchema,
-	content: union([SamplingMessageContentBlockSchema, array(SamplingMessageContentBlockSchema)]),
+	content: union$1([SamplingMessageContentBlockSchema, array(SamplingMessageContentBlockSchema)]),
 	_meta: record(string(), unknown()).optional()
 });
 /**
@@ -6956,7 +6957,7 @@ var CreateMessageResultWithToolsSchema = ResultSchema.extend({
 		"toolUse"
 	]).or(string())),
 	role: RoleSchema,
-	content: union([SamplingMessageContentBlockSchema, array(SamplingMessageContentBlockSchema)])
+	content: union$1([SamplingMessageContentBlockSchema, array(SamplingMessageContentBlockSchema)])
 });
 /**
 * Primitive schema definition for boolean fields.
@@ -7030,7 +7031,7 @@ var LegacyTitledEnumSchemaSchema = object({
 	enumNames: array(string()).optional(),
 	default: string().optional()
 });
-var SingleSelectEnumSchemaSchema = union([UntitledSingleSelectEnumSchemaSchema, TitledSingleSelectEnumSchemaSchema]);
+var SingleSelectEnumSchemaSchema = union$1([UntitledSingleSelectEnumSchemaSchema, TitledSingleSelectEnumSchemaSchema]);
 /**
 * Schema for multiple-selection enumeration without display titles for options.
 */
@@ -7064,11 +7065,11 @@ var TitledMultiSelectEnumSchemaSchema = object({
 /**
 * Combined schema for multiple-selection enumeration
 */
-var MultiSelectEnumSchemaSchema = union([UntitledMultiSelectEnumSchemaSchema, TitledMultiSelectEnumSchemaSchema]);
+var MultiSelectEnumSchemaSchema = union$1([UntitledMultiSelectEnumSchemaSchema, TitledMultiSelectEnumSchemaSchema]);
 /**
 * Primitive schema definition for enum fields.
 */
-var EnumSchemaSchema = union([
+var EnumSchemaSchema = union$1([
 	LegacyTitledEnumSchemaSchema,
 	SingleSelectEnumSchemaSchema,
 	MultiSelectEnumSchemaSchema
@@ -7076,7 +7077,7 @@ var EnumSchemaSchema = union([
 /**
 * Union of all primitive schema definitions.
 */
-var PrimitiveSchemaDefinitionSchema = union([
+var PrimitiveSchemaDefinitionSchema = union$1([
 	EnumSchemaSchema,
 	BooleanSchemaSchema,
 	StringSchemaSchema,
@@ -7106,7 +7107,7 @@ var ElicitRequestURLParamsSchema = TaskAugmentedRequestParamsSchema.extend({
 /**
 * The parameters for a request to elicit additional information from the user via the client.
 */
-var ElicitRequestParamsSchema = union([ElicitRequestFormParamsSchema, ElicitRequestURLParamsSchema]);
+var ElicitRequestParamsSchema = union$1([ElicitRequestFormParamsSchema, ElicitRequestURLParamsSchema]);
 /**
 * A request from the server to elicit user input via the client.
 * The client should present the message and form fields to the user (form mode)
@@ -7148,7 +7149,7 @@ var ElicitResultSchema = ResultSchema.extend({
 		"decline",
 		"cancel"
 	]),
-	content: preprocess((val) => val === null ? void 0 : val, record(string(), union([
+	content: preprocess((val) => val === null ? void 0 : val, record(string(), union$1([
 		string(),
 		number$1(),
 		boolean(),
@@ -7173,7 +7174,7 @@ var PromptReferenceSchema = object({
 * Parameters for a {@linkcode CompleteRequest | completion/complete} request.
 */
 var CompleteRequestParamsSchema = BaseRequestParamsSchema.extend({
-	ref: union([PromptReferenceSchema, ResourceTemplateReferenceSchema]),
+	ref: union$1([PromptReferenceSchema, ResourceTemplateReferenceSchema]),
 	argument: object({
 		name: string(),
 		value: string()
@@ -7266,7 +7267,7 @@ var TaskStatusSchema = _enum([
 var TaskSchema = object({
 	taskId: string(),
 	status: TaskStatusSchema,
-	ttl: union([number$1(), _null()]),
+	ttl: union$1([number$1(), _null()]),
 	createdAt: string(),
 	lastUpdatedAt: string(),
 	pollInterval: optional(number$1()),
@@ -7353,7 +7354,7 @@ var CancelTaskRequestSchema = RequestSchema.extend({
 * @deprecated 2025-11-25 wire vocabulary with no SDK runtime; kept importable for interoperability only.
 */
 var CancelTaskResultSchema = ResultSchema.merge(TaskSchema);
-var ClientRequestSchema = union([
+var ClientRequestSchema = union$1([
 	PingRequestSchema,
 	InitializeRequestSchema,
 	DiscoverRequestSchema,
@@ -7370,26 +7371,26 @@ var ClientRequestSchema = union([
 	CallToolRequestSchema,
 	ListToolsRequestSchema
 ]);
-var ClientNotificationSchema = union([
+var ClientNotificationSchema = union$1([
 	CancelledNotificationSchema,
 	ProgressNotificationSchema,
 	InitializedNotificationSchema,
 	RootsListChangedNotificationSchema
 ]);
-var ClientResultSchema = union([
+var ClientResultSchema = union$1([
 	EmptyResultSchema,
 	CreateMessageResultSchema,
 	CreateMessageResultWithToolsSchema,
 	ElicitResultSchema,
 	ListRootsResultSchema
 ]);
-var ServerRequestSchema = union([
+var ServerRequestSchema = union$1([
 	PingRequestSchema,
 	CreateMessageRequestSchema,
 	ElicitRequestSchema,
 	ListRootsRequestSchema
 ]);
-var ServerNotificationSchema = union([
+var ServerNotificationSchema = union$1([
 	CancelledNotificationSchema,
 	ProgressNotificationSchema,
 	LoggingMessageNotificationSchema,
@@ -7400,7 +7401,7 @@ var ServerNotificationSchema = union([
 	SubscriptionsAcknowledgedNotificationSchema,
 	ElicitationCompleteNotificationSchema
 ]);
-var ServerResultSchema = union([
+var ServerResultSchema = union$1([
 	EmptyResultSchema,
 	InitializeResultSchema,
 	DiscoverResultSchema,
@@ -8110,7 +8111,7 @@ function normalizeContentlessToolResult(value) {
 * behavior. No runtime schema is shared with the neutral layer.
 */
 function build$1() {
-	const JSONValueSchema$1 = lazy(() => union([
+	const JSONValueSchema$1 = lazy(() => union$1([
 		string(),
 		number$1(),
 		boolean(),
@@ -8122,7 +8123,7 @@ function build$1() {
 	/**
 	* A progress token, used to associate progress notifications with the original request.
 	*/
-	const ProgressTokenSchema$1 = union([string(), number$1().int()]);
+	const ProgressTokenSchema$1 = union$1([string(), number$1().int()]);
 	/**
 	* An opaque token used to represent a cursor for pagination.
 	*/
@@ -8163,7 +8164,7 @@ function build$1() {
 	/**
 	* A uniquely identifying ID for a request in JSON-RPC.
 	*/
-	const RequestIdSchema$1 = union([string(), number$1().int()]);
+	const RequestIdSchema$1 = union$1([string(), number$1().int()]);
 	/**
 	* A response that indicates success but carries no data.
 	*/
@@ -8424,7 +8425,7 @@ function build$1() {
 	/**
 	* The server's response to a {@linkcode ReadResourceRequest | resources/read} request from the client.
 	*/
-	const ReadResourceResultSchema$1 = ResultSchema$1.extend({ contents: array(union([TextResourceContentsSchema$1, BlobResourceContentsSchema$1])) });
+	const ReadResourceResultSchema$1 = ResultSchema$1.extend({ contents: array(union$1([TextResourceContentsSchema$1, BlobResourceContentsSchema$1])) });
 	/**
 	* An optional notification from the server to the client, informing it that the list of resources it can read from has changed. This may be issued by servers without any previous subscription from the client.
 	*/
@@ -8548,7 +8549,7 @@ function build$1() {
 	*/
 	const EmbeddedResourceSchema$1 = object({
 		type: literal("resource"),
-		resource: union([TextResourceContentsSchema$1, BlobResourceContentsSchema$1]),
+		resource: union$1([TextResourceContentsSchema$1, BlobResourceContentsSchema$1]),
 		annotations: AnnotationsSchema$1.optional(),
 		_meta: record(string(), unknown()).optional()
 	});
@@ -8561,7 +8562,7 @@ function build$1() {
 	/**
 	* A content block that can be used in prompts and tool results.
 	*/
-	const ContentBlockSchema$1 = union([
+	const ContentBlockSchema$1 = union$1([
 		TextContentSchema$1,
 		ImageContentSchema$1,
 		AudioContentSchema$1,
@@ -8817,7 +8818,7 @@ function build$1() {
 	*/
 	const SamplingMessageSchema$1 = object({
 		role: RoleSchema$1,
-		content: union([SamplingMessageContentBlockSchema$1, array(SamplingMessageContentBlockSchema$1)]),
+		content: union$1([SamplingMessageContentBlockSchema$1, array(SamplingMessageContentBlockSchema$1)]),
 		_meta: record(string(), unknown()).optional()
 	});
 	/**
@@ -8890,7 +8891,7 @@ function build$1() {
 			"toolUse"
 		]).or(string())),
 		role: RoleSchema$1,
-		content: union([SamplingMessageContentBlockSchema$1, array(SamplingMessageContentBlockSchema$1)])
+		content: union$1([SamplingMessageContentBlockSchema$1, array(SamplingMessageContentBlockSchema$1)])
 	});
 	/**
 	* Primitive schema definition for boolean fields.
@@ -8964,7 +8965,7 @@ function build$1() {
 		enumNames: array(string()).optional(),
 		default: string().optional()
 	});
-	const SingleSelectEnumSchemaSchema$1 = union([UntitledSingleSelectEnumSchemaSchema$1, TitledSingleSelectEnumSchemaSchema$1]);
+	const SingleSelectEnumSchemaSchema$1 = union$1([UntitledSingleSelectEnumSchemaSchema$1, TitledSingleSelectEnumSchemaSchema$1]);
 	/**
 	* Schema for multiple-selection enumeration without display titles for options.
 	*/
@@ -8998,11 +8999,11 @@ function build$1() {
 	/**
 	* Combined schema for multiple-selection enumeration
 	*/
-	const MultiSelectEnumSchemaSchema$1 = union([UntitledMultiSelectEnumSchemaSchema$1, TitledMultiSelectEnumSchemaSchema$1]);
+	const MultiSelectEnumSchemaSchema$1 = union$1([UntitledMultiSelectEnumSchemaSchema$1, TitledMultiSelectEnumSchemaSchema$1]);
 	/**
 	* Primitive schema definition for enum fields.
 	*/
-	const EnumSchemaSchema$1 = union([
+	const EnumSchemaSchema$1 = union$1([
 		LegacyTitledEnumSchemaSchema$1,
 		SingleSelectEnumSchemaSchema$1,
 		MultiSelectEnumSchemaSchema$1
@@ -9010,7 +9011,7 @@ function build$1() {
 	/**
 	* Union of all primitive schema definitions.
 	*/
-	const PrimitiveSchemaDefinitionSchema$1 = union([
+	const PrimitiveSchemaDefinitionSchema$1 = union$1([
 		EnumSchemaSchema$1,
 		BooleanSchemaSchema$1,
 		StringSchemaSchema$1,
@@ -9040,7 +9041,7 @@ function build$1() {
 	/**
 	* The parameters for a request to elicit additional information from the user via the client.
 	*/
-	const ElicitRequestParamsSchema$1 = union([ElicitRequestFormParamsSchema$1, ElicitRequestURLParamsSchema$1]);
+	const ElicitRequestParamsSchema$1 = union$1([ElicitRequestFormParamsSchema$1, ElicitRequestURLParamsSchema$1]);
 	/**
 	* A request from the server to elicit user input via the client.
 	* The client should present the message and form fields to the user (form mode)
@@ -9074,7 +9075,7 @@ function build$1() {
 			"decline",
 			"cancel"
 		]),
-		content: preprocess((val) => val === null ? void 0 : val, record(string(), union([
+		content: preprocess((val) => val === null ? void 0 : val, record(string(), union$1([
 			string(),
 			number$1(),
 			boolean(),
@@ -9099,7 +9100,7 @@ function build$1() {
 	* Parameters for a {@linkcode CompleteRequest | completion/complete} request.
 	*/
 	const CompleteRequestParamsSchema$1 = BaseRequestParamsSchema$1.extend({
-		ref: union([PromptReferenceSchema$1, ResourceTemplateReferenceSchema$1]),
+		ref: union$1([PromptReferenceSchema$1, ResourceTemplateReferenceSchema$1]),
 		argument: object({
 			name: string(),
 			value: string()
@@ -9192,7 +9193,7 @@ function build$1() {
 	const TaskSchema$1 = object({
 		taskId: string(),
 		status: TaskStatusSchema$1,
-		ttl: union([number$1(), _null()]),
+		ttl: union$1([number$1(), _null()]),
 		createdAt: string(),
 		lastUpdatedAt: string(),
 		pollInterval: optional(number$1()),
@@ -9415,7 +9416,7 @@ function build$1() {
 		ListTasksResultSchema: ListTasksResultSchema$1,
 		CancelTaskRequestSchema: CancelTaskRequestSchema$1,
 		CancelTaskResultSchema: ResultSchema$1.merge(TaskSchema$1),
-		ClientRequestSchema: union([
+		ClientRequestSchema: union$1([
 			PingRequestSchema$1,
 			InitializeRequestSchema$1,
 			CompleteRequestSchema$1,
@@ -9434,14 +9435,14 @@ function build$1() {
 			ListTasksRequestSchema$1,
 			CancelTaskRequestSchema$1
 		]),
-		ClientNotificationSchema: union([
+		ClientNotificationSchema: union$1([
 			CancelledNotificationSchema$1,
 			ProgressNotificationSchema$1,
 			InitializedNotificationSchema$1,
 			RootsListChangedNotificationSchema$1,
 			TaskStatusNotificationSchema$1
 		]),
-		ClientResultSchema: union([
+		ClientResultSchema: union$1([
 			EmptyResultSchema$1,
 			CreateMessageResultSchema$1,
 			CreateMessageResultWithToolsSchema$1,
@@ -9451,7 +9452,7 @@ function build$1() {
 			ListTasksResultSchema$1,
 			CreateTaskResultSchema$1
 		]),
-		ServerRequestSchema: union([
+		ServerRequestSchema: union$1([
 			PingRequestSchema$1,
 			CreateMessageRequestSchema$1,
 			ElicitRequestSchema$1,
@@ -9461,7 +9462,7 @@ function build$1() {
 			ListTasksRequestSchema$1,
 			CancelTaskRequestSchema$1
 		]),
-		ServerNotificationSchema: union([
+		ServerNotificationSchema: union$1([
 			CancelledNotificationSchema$1,
 			ProgressNotificationSchema$1,
 			LoggingMessageNotificationSchema$1,
@@ -9472,7 +9473,7 @@ function build$1() {
 			TaskStatusNotificationSchema$1,
 			ElicitationCompleteNotificationSchema$1
 		]),
-		ServerResultSchema: union([
+		ServerResultSchema: union$1([
 			EmptyResultSchema$1,
 			InitializeResultSchema$1,
 			CompleteResultSchema$1,
@@ -9883,7 +9884,7 @@ var rev2025Codec = {
 * modeled anywhere (per ruling: the final revision is the only 2026-07-28).
 */
 function build() {
-	const JSONValueSchema$1 = lazy(() => union([
+	const JSONValueSchema$1 = lazy(() => union$1([
 		string(),
 		number$1(),
 		boolean(),
@@ -9895,7 +9896,7 @@ function build() {
 	/**
 	* A progress token, used to associate progress notifications with the original request.
 	*/
-	const ProgressTokenSchema$1 = union([string(), number$1().int()]);
+	const ProgressTokenSchema$1 = union$1([string(), number$1().int()]);
 	/**
 	* An opaque token used to represent a cursor for pagination.
 	*/
@@ -9903,7 +9904,7 @@ function build() {
 	/**
 	* A uniquely identifying ID for a request in JSON-RPC.
 	*/
-	const RequestIdSchema$1 = union([string(), number$1().int()]);
+	const RequestIdSchema$1 = union$1([string(), number$1().int()]);
 	/**
 	* The sender or recipient of messages and data in a conversation.
 	*/
@@ -10122,12 +10123,12 @@ function build() {
 	});
 	const EmbeddedResourceSchema$1 = object({
 		type: literal("resource"),
-		resource: union([TextResourceContentsSchema$1, BlobResourceContentsSchema$1]),
+		resource: union$1([TextResourceContentsSchema$1, BlobResourceContentsSchema$1]),
 		annotations: AnnotationsSchema$1.optional(),
 		_meta: record(string(), unknown()).optional()
 	});
 	const ResourceLinkSchema$1 = ResourceSchema$1.extend({ type: literal("resource_link") });
-	const ContentBlockSchema$1 = union([
+	const ContentBlockSchema$1 = union$1([
 		TextContentSchema$1,
 		ImageContentSchema$1,
 		AudioContentSchema$1,
@@ -10214,7 +10215,7 @@ function build() {
 		enumNames: array(string()).optional(),
 		default: string().optional()
 	});
-	const SingleSelectEnumSchemaSchema$1 = union([UntitledSingleSelectEnumSchemaSchema$1, TitledSingleSelectEnumSchemaSchema$1]);
+	const SingleSelectEnumSchemaSchema$1 = union$1([UntitledSingleSelectEnumSchemaSchema$1, TitledSingleSelectEnumSchemaSchema$1]);
 	const UntitledMultiSelectEnumSchemaSchema$1 = object({
 		type: literal("array"),
 		title: string().optional(),
@@ -10239,13 +10240,13 @@ function build() {
 		})) }),
 		default: array(string()).optional()
 	});
-	const MultiSelectEnumSchemaSchema$1 = union([UntitledMultiSelectEnumSchemaSchema$1, TitledMultiSelectEnumSchemaSchema$1]);
-	const EnumSchemaSchema$1 = union([
+	const MultiSelectEnumSchemaSchema$1 = union$1([UntitledMultiSelectEnumSchemaSchema$1, TitledMultiSelectEnumSchemaSchema$1]);
+	const EnumSchemaSchema$1 = union$1([
 		LegacyTitledEnumSchemaSchema$1,
 		SingleSelectEnumSchemaSchema$1,
 		MultiSelectEnumSchemaSchema$1
 	]);
-	const PrimitiveSchemaDefinitionSchema$1 = union([
+	const PrimitiveSchemaDefinitionSchema$1 = union$1([
 		EnumSchemaSchema$1,
 		BooleanSchemaSchema$1,
 		StringSchemaSchema$1,
@@ -10332,7 +10333,7 @@ function build() {
 		_meta: record(string(), unknown()).optional()
 	});
 	/** 2026-era sampling content union (composes the forked tool-result shape). */
-	const SamplingMessageContentBlockSchema$1 = union([
+	const SamplingMessageContentBlockSchema$1 = union$1([
 		TextContentSchema$1,
 		ImageContentSchema$1,
 		AudioContentSchema$1,
@@ -10342,7 +10343,7 @@ function build() {
 	/** 2026-era SamplingMessage (anchor-exact: single block or array). */
 	const SamplingMessageSchema$1 = object({
 		role: RoleSchema$1,
-		content: union([SamplingMessageContentBlockSchema$1, array(SamplingMessageContentBlockSchema$1)]),
+		content: union$1([SamplingMessageContentBlockSchema$1, array(SamplingMessageContentBlockSchema$1)]),
 		_meta: record(string(), unknown()).optional()
 	});
 	/** Open union per the anchor: 'complete' | 'input_required' | string. */
@@ -10399,7 +10400,7 @@ function build() {
 	const ReadResourceResultSchema$1 = wireResult({
 		ttlMs: number$1().int().min(0),
 		cacheScope: _enum(["public", "private"]),
-		contents: array(union([TextResourceContentsSchema$1, BlobResourceContentsSchema$1]))
+		contents: array(union$1([TextResourceContentsSchema$1, BlobResourceContentsSchema$1]))
 	});
 	const CompleteResultSchema$1 = wireResult({ completion: object({
 		values: array(string()).max(100),
@@ -10464,7 +10465,7 @@ function build() {
 			"decline",
 			"cancel"
 		]),
-		content: record(string(), union([
+		content: record(string(), union$1([
 			string(),
 			number$1(),
 			boolean(),
@@ -10483,20 +10484,20 @@ function build() {
 		url: string().url()
 	});
 	/** 2026-era elicitation params (form mode is revision-identical; URL mode is the fork above). */
-	const ElicitRequestParamsSchema$1 = union([ElicitRequestFormParamsSchema$1, ElicitRequestURLParamsSchema$1]);
+	const ElicitRequestParamsSchema$1 = union$1([ElicitRequestFormParamsSchema$1, ElicitRequestURLParamsSchema$1]);
 	/** 2026-era embedded elicitation request (de-JSON-RPC'd; see the URL-mode fork above). */
 	const ElicitRequestSchema$1 = object({
 		method: literal("elicitation/create"),
 		params: ElicitRequestParamsSchema$1
 	});
 	/** A single embedded input request (one of the three demoted server→client requests). */
-	const InputRequestSchema = union([
+	const InputRequestSchema = union$1([
 		CreateMessageRequestSchema$1,
 		ListRootsRequestSchema$1,
 		ElicitRequestSchema$1
 	]);
 	/** A single embedded input response — the BARE result union (never a `{method, result}` wrapper). */
-	const InputResponseSchema = union([
+	const InputResponseSchema = union$1([
 		CreateMessageResultSchema$1,
 		ListRootsResultSchema$1,
 		ElicitResultSchema$1
@@ -10565,7 +10566,7 @@ function build() {
 		...retryParamsShape
 	});
 	const completeParamsShape = {
-		ref: union([PromptReferenceSchema$1, ResourceTemplateReferenceSchema$1]),
+		ref: union$1([PromptReferenceSchema$1, ResourceTemplateReferenceSchema$1]),
 		argument: object({
 			name: string(),
 			value: string()
@@ -10660,7 +10661,7 @@ function build() {
 		"resources/read": liftedResult({
 			ttlMs: number$1().int().min(0),
 			cacheScope: _enum(["public", "private"]),
-			contents: array(union([TextResourceContentsSchema$1, BlobResourceContentsSchema$1]))
+			contents: array(union$1([TextResourceContentsSchema$1, BlobResourceContentsSchema$1]))
 		}),
 		"completion/complete": liftedResult({ completion: object({
 			values: array(string()).max(100),
@@ -10720,7 +10721,7 @@ function build() {
 	};
 	const wireResultResponse = (result) => object({
 		jsonrpc: literal("2.0"),
-		id: union([string(), number$1().int()]),
+		id: union$1([string(), number$1().int()]),
 		result
 	}).strict();
 	return {
@@ -10849,13 +10850,13 @@ function build() {
 		CancelledNotificationSchema: CancelledNotificationSchema$1,
 		notificationSchemas2026,
 		JSONRPCResultResponseSchema: wireResultResponse(ResultSchema$1),
-		CallToolResultResponseSchema: wireResultResponse(union([CallToolResultSchema$1, InputRequiredResultSchema])),
+		CallToolResultResponseSchema: wireResultResponse(union$1([CallToolResultSchema$1, InputRequiredResultSchema])),
 		ListToolsResultResponseSchema: wireResultResponse(ListToolsResultSchema$1),
 		ListPromptsResultResponseSchema: wireResultResponse(ListPromptsResultSchema$1),
-		GetPromptResultResponseSchema: wireResultResponse(union([GetPromptResultSchema$1, InputRequiredResultSchema])),
+		GetPromptResultResponseSchema: wireResultResponse(union$1([GetPromptResultSchema$1, InputRequiredResultSchema])),
 		ListResourcesResultResponseSchema: wireResultResponse(ListResourcesResultSchema$1),
 		ListResourceTemplatesResultResponseSchema: wireResultResponse(ListResourceTemplatesResultSchema$1),
-		ReadResourceResultResponseSchema: wireResultResponse(union([ReadResourceResultSchema$1, InputRequiredResultSchema])),
+		ReadResourceResultResponseSchema: wireResultResponse(union$1([ReadResourceResultSchema$1, InputRequiredResultSchema])),
 		CompleteResultResponseSchema: wireResultResponse(CompleteResultSchema$1),
 		DiscoverResultResponseSchema: wireResultResponse(DiscoverResultSchema$1),
 		SubscriptionsListenResultResponseSchema: wireResultResponse(SubscriptionsListenResultSchema$1)
@@ -13497,7 +13498,7 @@ function mergeCapabilities(base, additional) {
 	}
 	return result;
 }
-function isPlainObject$8(value) {
+function isPlainObject(value) {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 /**
@@ -13511,12 +13512,12 @@ function isPlainObject$8(value) {
 function partitionInputResponses(inputResponses) {
 	const accepted = {};
 	const droppedKeys = [];
-	if (!isPlainObject$8(inputResponses)) return {
+	if (!isPlainObject(inputResponses)) return {
 		accepted,
 		droppedKeys
 	};
 	for (const [key, entry] of Object.entries(inputResponses)) {
-		if (!isPlainObject$8(entry) || "method" in entry || "result" in entry) {
+		if (!isPlainObject(entry) || "method" in entry || "result" in entry) {
 			droppedKeys.push(key);
 			continue;
 		}
@@ -23244,8 +23245,6900 @@ var StdioServerTransport = class {
 		});
 	}
 };
+// server/config.ts
+/** Reject blank strings and unexpanded template variables such as `${PLUGIN_DATA}`. */
+function isUsableCliValue(value) {
+	if (!value) return false;
+	const trimmed = value.trim();
+	return trimmed.length > 0 && !trimmed.includes("${");
+}
+/** Resolve the persistent data directory from env or plugin-relative defaults. */
+function resolveDefaultDataDir() {
+	const envDir = process.env.NEW_WORKER_DATA_DIR;
+	if (isUsableCliValue(envDir)) return path.resolve(envDir.trim());
+	const currentDir = path.dirname(fileURLToPath(import.meta.url));
+	const base = path.basename(currentDir);
+	if (base === "dist" || base === "server") return path.resolve(currentDir, "..", "data");
+	const xdgData = process.env.XDG_DATA_HOME?.trim() || path.join(os.homedir(), ".local", "share");
+	return path.join(xdgData, "new-worker-mcp");
+}
+function readNextFlagValue(argv, index, flag) {
+	const arg = argv[index] ?? "";
+	const prefix = `${flag}=`;
+	if (arg.startsWith(prefix)) {
+		const candidate = arg.slice(prefix.length);
+		return {
+			value: isUsableCliValue(candidate) ? candidate.trim() : void 0,
+			nextIndex: index
+		};
+	}
+	if (arg === flag) {
+		const candidate = argv[index + 1];
+		return {
+			value: isUsableCliValue(candidate) ? candidate.trim() : void 0,
+			nextIndex: index + 1
+		};
+	}
+	return { nextIndex: index };
+}
+/** Parse `--data-dir`, `--dashboard-html`, and `--widget-html` flags with env fallbacks. */
+function parseCliArgs(argv) {
+	let dataDir = resolveDefaultDataDir();
+	const envDashboard = process.env.NEW_WORKER_DASHBOARD_HTML;
+	const envWidget = process.env.NEW_WORKER_WIDGET_HTML;
+	let dashboardHtmlPath = isUsableCliValue(envDashboard) ? envDashboard.trim() : void 0;
+	let widgetHtmlPath = isUsableCliValue(envWidget) ? envWidget.trim() : void 0;
+	for (let i = 0; i < argv.length; i += 1) {
+		const dataMatch = readNextFlagValue(argv, i, "--data-dir");
+		if (dataMatch.value) {
+			dataDir = path.resolve(dataMatch.value);
+			i = dataMatch.nextIndex;
+			continue;
+		}
+		if (dataMatch.nextIndex !== i) {
+			i = dataMatch.nextIndex;
+			continue;
+		}
+		const dashMatch = readNextFlagValue(argv, i, "--dashboard-html");
+		if (dashMatch.value) {
+			dashboardHtmlPath = dashMatch.value;
+			i = dashMatch.nextIndex;
+			continue;
+		}
+		if (dashMatch.nextIndex !== i) {
+			i = dashMatch.nextIndex;
+			continue;
+		}
+		const widgetMatch = readNextFlagValue(argv, i, "--widget-html");
+		if (widgetMatch.value) {
+			widgetHtmlPath = widgetMatch.value;
+			i = widgetMatch.nextIndex;
+			continue;
+		}
+		if (widgetMatch.nextIndex !== i) i = widgetMatch.nextIndex;
+	}
+	return {
+		dataDir,
+		dashboardHtmlPath,
+		widgetHtmlPath
+	};
+}
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/entity.js
+var entityKind = Symbol.for("drizzle:entityKind");
+var kindsByConstructor = /* @__PURE__ */ new WeakMap();
+function collectKinds(ctor) {
+	const kinds = /* @__PURE__ */ new Set();
+	for (let cls = ctor; cls; cls = Object.getPrototypeOf(cls)) if (entityKind in cls) kinds.add(cls[entityKind]);
+	kindsByConstructor.set(ctor, kinds);
+	return kinds;
+}
+var nativeHasInstance = Function.prototype[Symbol.hasInstance];
+function is(value, type) {
+	if (nativeHasInstance.call(type, value)) return true;
+	if (value === null || typeof value !== "object") return false;
+	const ctor = Object.getPrototypeOf(value)?.constructor;
+	if (typeof ctor !== "function") return false;
+	return (kindsByConstructor.get(ctor) ?? collectKinds(ctor)).has(type[entityKind]);
+}
+function entityKindsOf(value) {
+	if (value === null || typeof value !== "object") return void 0;
+	const ctor = Object.getPrototypeOf(value)?.constructor;
+	if (typeof ctor !== "function") return void 0;
+	return kindsByConstructor.get(ctor) ?? collectKinds(ctor);
+}
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/column-common.js
+var OriginalColumn = Symbol.for("drizzle:OriginalColumn");
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/column.js
+var noop = (v) => v;
+noop.isNoop = true;
+var Column = class {
+	static [entityKind] = "Column";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	/** @internal */
+	codec;
+	name;
+	keyAsName;
+	primary;
+	notNull;
+	default;
+	defaultFn;
+	onUpdateFn;
+	hasDefault;
+	isUnique;
+	uniqueName;
+	uniqueType;
+	dataType;
+	columnType;
+	enumValues = void 0;
+	generated = void 0;
+	generatedIdentity = void 0;
+	length;
+	isLengthExact;
+	isAlias;
+	/** @internal */
+	config;
+	/** @internal */
+	table;
+	/** @internal */
+	onInit() {}
+	constructor(table, config) {
+		this.config = config;
+		this.onInit();
+		this.table = table;
+		this.name = config.name;
+		this.isAlias = false;
+		this.keyAsName = config.keyAsName;
+		this.notNull = config.notNull;
+		this.default = config.default;
+		this.defaultFn = config.defaultFn;
+		this.onUpdateFn = config.onUpdateFn;
+		this.hasDefault = config.hasDefault;
+		this.primary = config.primaryKey;
+		this.isUnique = config.isUnique;
+		this.uniqueName = config.uniqueName;
+		this.uniqueType = config.uniqueType;
+		this.dataType = config.dataType;
+		this.columnType = config.columnType;
+		this.generated = config.generated;
+		this.generatedIdentity = config.generatedIdentity;
+		this.length = config["length"];
+		this.isLengthExact = config["isLengthExact"];
+	}
+	mapFromDriverValue = noop;
+	mapToDriverValue = noop;
+	/** @internal */
+	postBuild() {
+		return this;
+	}
+	/** @internal */
+	shouldDisableInsert() {
+		return this.config.generated !== void 0 && this.config.generated.type !== "byDefault";
+	}
+	/** @internal */
+	[OriginalColumn]() {
+		return this;
+	}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/errors.js
+var DrizzleError = class extends Error {
+	static [entityKind] = "DrizzleError";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	constructor({ message, cause }) {
+		super(message);
+		this.name = "DrizzleError";
+		this.cause = cause;
+	}
+};
+var DrizzleQueryError = class DrizzleQueryError extends Error {
+	query;
+	params;
+	cause;
+	static [entityKind] = "DrizzleQueryError";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	constructor(query, params, cause) {
+		super(params ? `Failed query: ${query}\nparams: ${params}` : `Failed query: ${query}`);
+		this.query = query;
+		this.params = params;
+		this.cause = cause;
+		this.name = "DrizzleQueryError";
+		Error.captureStackTrace(this, DrizzleQueryError);
+		if (cause) this.cause = cause;
+	}
+};
+var TransactionRollbackError = class extends DrizzleError {
+	static [entityKind] = "TransactionRollbackError";
+	constructor() {
+		super({ message: "Rollback" });
+		this.name = "TransactionRollbackError";
+	}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/table.utils.js
+/** @internal */
+var TableName = Symbol.for("drizzle:Name");
+/** @internal */
+var TableSchema = Symbol.for("drizzle:Schema");
+/** @internal */
+var TableColumns = Symbol.for("drizzle:Columns");
+/** @internal */
+var ExtraConfigColumns = Symbol.for("drizzle:ExtraConfigColumns");
+/** @internal */
+var OriginalName = Symbol.for("drizzle:OriginalName");
+/** @internal */
+var BaseName = Symbol.for("drizzle:BaseName");
+/** @internal */
+var IsAlias = Symbol.for("drizzle:IsAlias");
+/** @internal */
+var Qualifier = Symbol.for("drizzle:Qualifier");
+/** @internal */
+var ExtraConfigBuilder = Symbol.for("drizzle:ExtraConfigBuilder");
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/table.js
+var IsDrizzleTable = Symbol.for("drizzle:IsDrizzleTable");
+var Table = class {
+	static [entityKind] = "Table";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	/** @internal */
+	static Symbol = {
+		Name: TableName,
+		Schema: TableSchema,
+		OriginalName,
+		Columns: TableColumns,
+		ExtraConfigColumns,
+		BaseName,
+		IsAlias,
+		ExtraConfigBuilder
+	};
+	/**
+	* @internal
+	* Can be changed if the table is aliased.
+	*/
+	[TableName];
+	/**
+	* @internal
+	* Used to store the original name of the table, before any aliasing.
+	*/
+	[OriginalName];
+	/** @internal */
+	[TableSchema];
+	/** @internal */
+	[TableColumns];
+	/** @internal */
+	[ExtraConfigColumns];
+	/**
+	*  @internal
+	* Used to store the table name before the transformation via the `tableCreator` functions.
+	*/
+	[BaseName];
+	/** @internal */
+	[IsAlias] = false;
+	/** @internal */
+	[IsDrizzleTable] = true;
+	/** @internal */
+	[ExtraConfigBuilder] = void 0;
+	constructor(name, schema, baseName) {
+		this[TableName] = this[OriginalName] = name;
+		this[TableSchema] = schema;
+		this[BaseName] = baseName;
+	}
+};
+function getTableName(table) {
+	return table[TableName];
+}
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sql/common-chunks.js
+var StringChunk = class {
+	value;
+	static [entityKind] = "StringChunk";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	constructor(value) {
+		this.value = value;
+	}
+};
+/** Shared string chunks, keyed by their values */
+var commonStringChunks = {
+	", ": new StringChunk(", "),
+	" ": new StringChunk(" "),
+	"(": new StringChunk("("),
+	")": new StringChunk(")"),
+	"((": new StringChunk("(("),
+	"))": new StringChunk("))"),
+	"), (": new StringChunk("), ("),
+	".": new StringChunk("."),
+	default: new StringChunk("default"),
+	null: new StringChunk("null"),
+	"1 = 0": new StringChunk("1 = 0"),
+	"1 = 1": new StringChunk("1 = 1"),
+	" = ": new StringChunk(" = "),
+	" <> ": new StringChunk(" <> "),
+	" > ": new StringChunk(" > "),
+	" >= ": new StringChunk(" >= "),
+	" < ": new StringChunk(" < "),
+	" <= ": new StringChunk(" <= "),
+	" in ": new StringChunk(" in "),
+	" not in ": new StringChunk(" not in "),
+	") and (": new StringChunk(") and ("),
+	") or (": new StringChunk(") or ("),
+	"not (": new StringChunk("not ("),
+	"with ": new StringChunk("with "),
+	"select ": new StringChunk("select "),
+	"(select ": new StringChunk("(select "),
+	"values ": new StringChunk("values "),
+	" from ": new StringChunk(" from "),
+	".* from ": new StringChunk(".* from "),
+	" as ": new StringChunk(" as "),
+	") as ": new StringChunk(") as "),
+	" inner join ": new StringChunk(" inner join "),
+	" cross join ": new StringChunk(" cross join "),
+	" on ": new StringChunk(" on "),
+	" where ": new StringChunk(" where "),
+	" order by ": new StringChunk(" order by "),
+	" asc": new StringChunk(" asc"),
+	" desc": new StringChunk(" desc"),
+	" limit ": new StringChunk(" limit "),
+	" limit 1": new StringChunk(" limit 1"),
+	" offset ": new StringChunk(" offset "),
+	"top(1) ": new StringChunk("top(1) "),
+	"exists (select * from ": new StringChunk("exists (select * from "),
+	"not exists (select * from ": new StringChunk("not exists (select * from "),
+	"select count(*) as ": new StringChunk("select count(*) as "),
+	"(select count(*) from ": new StringChunk("(select count(*) from "),
+	"min(": new StringChunk("min("),
+	"max(": new StringChunk("max("),
+	"count(": new StringChunk("count("),
+	"avg(": new StringChunk("avg("),
+	"first(": new StringChunk("first(")
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/subquery.js
+var Subquery = class {
+	static [entityKind] = "Subquery";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	/** @internal */
+	get [TableName]() {
+		return this._.alias;
+	}
+	/** @internal */
+	get [TableSchema]() {}
+	/** @internal */
+	get [OriginalName]() {
+		return this._.alias;
+	}
+	/** @internal */
+	get [IsAlias]() {
+		return false;
+	}
+	/** @internal */
+	get [TableColumns]() {
+		return this._.selectedFields;
+	}
+	constructor(sql, fields, alias, isWith = false) {
+		this._ = {
+			brand: "Subquery",
+			sql,
+			selectedFields: fields,
+			alias,
+			isWith
+		};
+	}
+};
+var WithSubquery = class extends Subquery {
+	static [entityKind] = "WithSubquery";
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/view-common.js
+var ViewBaseConfig = Symbol.for("drizzle:ViewBaseConfig");
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/view.js
+var IsDrizzleView = Symbol.for("drizzle:IsDrizzleView");
+var View = class {
+	static [entityKind] = "View";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	/** @internal */
+	[ViewBaseConfig];
+	/** @internal */
+	[IsDrizzleView] = true;
+	/** @internal */
+	get [TableName]() {
+		return this[ViewBaseConfig].name;
+	}
+	/** @internal */
+	get [TableSchema]() {
+		return this[ViewBaseConfig].schema;
+	}
+	/** @internal */
+	get [IsAlias]() {
+		return this[ViewBaseConfig].isAlias;
+	}
+	/** @internal */
+	get [OriginalName]() {
+		return this[ViewBaseConfig].originalName;
+	}
+	/** @internal */
+	get [TableColumns]() {
+		return this[ViewBaseConfig].selectedFields;
+	}
+	constructor({ name, schema, selectedFields, query }) {
+		this[ViewBaseConfig] = {
+			name,
+			originalName: name,
+			schema,
+			selectedFields,
+			query,
+			isExisting: !query,
+			isAlias: false
+		};
+	}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sql/sql.js
+function isSQLWrapper(value) {
+	return value !== null && value !== void 0 && typeof value.getSQL === "function";
+}
+var SQL = class SQL {
+	queryChunks;
+	static [entityKind] = "SQL";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	/** @internal */
+	decoder = noopDecoder;
+	/** @internal */
+	shouldInlineParams = false;
+	constructor(queryChunks) {
+		this.queryChunks = queryChunks;
+	}
+	append(query) {
+		this.queryChunks.push(...query.queryChunks);
+		return this;
+	}
+	toQuery(config) {
+		return this.buildQueryFromSourceParams(this.queryChunks, config);
+	}
+	buildQueryFromSourceParams(chunks, _config) {
+		const out = { sql: "" };
+		const params = [];
+		const bounds = _config.tagged ? [] : void 0;
+		this.collectSQL(chunks, _config, _config.paramStartIndex || { value: 0 }, _config.inlineParams || this.shouldInlineParams, out, params, bounds);
+		const query = out.sql;
+		if (bounds === void 0) return {
+			sql: query,
+			params
+		};
+		const segments = new Array(bounds.length);
+		for (let i = 0; i < bounds.length; ++i) segments[i] = query.slice(bounds[i], i + 1 < bounds.length ? bounds[i + 1] : query.length);
+		return {
+			sql: query,
+			params,
+			_sql: Object.assign(segments, { raw: segments })
+		};
+	}
+	collectSQL(chunks, config, paramStartIndex, inlineParams, out, params, bounds) {
+		const { escapeName, escapeParam, codecs, invokeSource } = config;
+		for (let i = 0; i < chunks.length; ++i) {
+			if (bounds !== void 0) bounds.push(out.sql.length);
+			const chunk = chunks[i];
+			const kind = chunkKindOf(chunk);
+			if (isChunk(chunk, kind, chunkKinds.string)) {
+				out.sql += chunk.value ?? "";
+				continue;
+			}
+			if (isChunk(chunk, kind, chunkKinds.sql)) {
+				this.collectSQL(chunk.queryChunks, config, paramStartIndex, inlineParams || chunk.shouldInlineParams, out, params, void 0);
+				continue;
+			}
+			if (isChunk(chunk, kind, chunkKinds.name)) {
+				out.sql += escapeName(chunk.value);
+				continue;
+			}
+			if (chunk === void 0) continue;
+			if (isChunk(chunk, kind, chunkKinds.column)) {
+				const columnName = chunk.name;
+				if (invokeSource === "indexes") {
+					out.sql += escapeName(columnName);
+					continue;
+				}
+				const schemaName = invokeSource === "mssql-check" ? void 0 : chunk.table[Table.Symbol.Schema];
+				out.sql += chunk.isAlias ? escapeName(chunk.name) : chunk.table[IsAlias] || schemaName === void 0 ? escapeName(chunk.table[Table.Symbol.Name]) + "." + escapeName(columnName) : escapeName(schemaName) + "." + escapeName(chunk.table[Table.Symbol.Name]) + "." + escapeName(columnName);
+				continue;
+			}
+			if (isChunk(chunk, kind, chunkKinds.param)) {
+				const paramValue = chunk.value;
+				const valueKind = chunkKindOf(paramValue);
+				if (isChunk(paramValue, valueKind, chunkKinds.sql)) {
+					const nested = paramValue;
+					this.collectSQL(nested.queryChunks, config, paramStartIndex, inlineParams || nested.shouldInlineParams, out, params, void 0);
+					continue;
+				}
+				const encoder = chunk.encoder;
+				const paramCodecs = codecs && chunkKindOf(encoder) === chunkKinds.column ? codecs.codecsOf(encoder) : void 0;
+				if (valueKind === chunkKinds.placeholder) {
+					const escaped = escapeParam(paramStartIndex.value++, chunk);
+					const normalize = paramCodecs?.normalizeParam;
+					const cast = paramCodecs?.castParam;
+					chunk.codec = normalize ? (value) => normalize(value, encoder.dimensions) : void 0;
+					out.sql += cast ? cast(escaped, encoder, encoder.dimensions) : escaped;
+					params.push(chunk);
+					continue;
+				}
+				this.collectBoundValue(paramValue, encoder, paramCodecs, config, paramStartIndex, inlineParams, out, params);
+				continue;
+			}
+			if (isChunk(chunk, kind, chunkKinds.placeholder)) {
+				out.sql += escapeParam(paramStartIndex.value++, chunk);
+				params.push(chunk);
+				continue;
+			}
+			if (isChunk(chunk, kind, chunkKinds.table)) {
+				const schemaName = chunk[Table.Symbol.Schema];
+				const tableName = chunk[Table.Symbol.Name];
+				if (invokeSource === "mssql-view-with-schemabinding") {
+					out.sql += (schemaName === void 0 ? escapeName("dbo") : escapeName(schemaName)) + "." + escapeName(tableName);
+					continue;
+				}
+				out.sql += schemaName === void 0 || chunk[IsAlias] ? escapeName(tableName) : escapeName(schemaName) + "." + escapeName(tableName);
+				continue;
+			}
+			if (isChunk(chunk, kind, chunkKinds.view)) {
+				const schemaName = chunk[ViewBaseConfig].schema;
+				const viewName = chunk[ViewBaseConfig].name;
+				out.sql += schemaName === void 0 || chunk[ViewBaseConfig].isAlias ? escapeName(viewName) : escapeName(schemaName) + "." + escapeName(viewName);
+				continue;
+			}
+			if (isChunk(chunk, kind, chunkKinds.aliased) && chunk.fieldAlias !== void 0) {
+				out.sql += (chunk.origin !== void 0 ? escapeName(chunk.origin) + "." : "") + escapeName(chunk.fieldAlias);
+				continue;
+			}
+			if (isChunk(chunk, kind, chunkKinds.valueRows)) {
+				const { cells, encoders } = chunk;
+				const width = encoders.length;
+				const paramCodecs = new Array(width);
+				for (let j = 0; j < width; ++j) {
+					const encoder = encoders[j];
+					paramCodecs[j] = codecs && chunkKindOf(encoder) === chunkKinds.column ? codecs.codecsOf(encoder) : void 0;
+				}
+				out.sql += "(";
+				for (let j = 0, column = 0; j < cells.length; ++j, ++column) {
+					if (column === width) {
+						column = 0;
+						out.sql += "), (";
+					} else if (column > 0) out.sql += ", ";
+					const cell = cells[j];
+					const cellKind = chunkKindOf(cell);
+					if (cellKind === chunkKinds.other) {
+						this.collectBoundValue(cell, encoders[column], paramCodecs[column], config, paramStartIndex, inlineParams, out, params);
+						continue;
+					}
+					if (isChunk(cell, cellKind, chunkKinds.string)) {
+						out.sql += cell.value ?? "";
+						continue;
+					}
+					this.collectSQL([cellKind === chunkKinds.sql ? cell : new Param(cell, encoders[column])], config, paramStartIndex, inlineParams, out, params, void 0);
+				}
+				out.sql += ")";
+				continue;
+			}
+			if (isChunk(chunk, kind, chunkKinds.subquery)) {
+				if (chunk._.isWith) {
+					out.sql += escapeName(chunk._.alias);
+					continue;
+				}
+				const nested = chunk._.sql;
+				out.sql += "(";
+				this.collectSQL(nested.queryChunks, config, paramStartIndex, inlineParams || nested.shouldInlineParams, out, params, void 0);
+				out.sql += ") " + escapeName(chunk._.alias);
+				continue;
+			}
+			if (typeof chunk === "function" && "enumName" in chunk) {
+				if ("schema" in chunk && chunk.schema) {
+					out.sql += escapeName(chunk.schema) + "." + escapeName(chunk.enumName);
+					continue;
+				}
+				out.sql += escapeName(chunk.enumName);
+				continue;
+			}
+			if (isSQLWrapper(chunk)) {
+				const nested = chunk.getSQL();
+				const nestedInlineParams = inlineParams || nested.shouldInlineParams;
+				if (chunk.shouldOmitSQLParens?.()) {
+					this.collectSQL(nested.queryChunks, config, paramStartIndex, nestedInlineParams, out, params, void 0);
+					continue;
+				}
+				out.sql += "(";
+				this.collectSQL(nested.queryChunks, config, paramStartIndex, nestedInlineParams, out, params, void 0);
+				out.sql += ")";
+				continue;
+			}
+			if (Array.isArray(chunk)) {
+				out.sql += "(";
+				const element = [void 0];
+				for (let j = 0; j < chunk.length; ++j) {
+					if (j > 0) out.sql += ", ";
+					element[0] = chunk[j];
+					this.collectSQL(element, config, paramStartIndex, inlineParams, out, params, void 0);
+				}
+				out.sql += ")";
+				continue;
+			}
+			if (inlineParams) {
+				out.sql += this.mapInlineParam(chunk, config);
+				continue;
+			}
+			out.sql += escapeParam(paramStartIndex.value++, chunk);
+			params.push(chunk);
+		}
+	}
+	collectBoundValue(value, encoder, paramCodecs, config, paramStartIndex, inlineParams, out, params) {
+		let mappedValue = value;
+		if (value !== null) {
+			if (!encoder.mapToDriverValue.isNoop) mappedValue = encoder.mapToDriverValue(value);
+			if (chunkKindOf(mappedValue) === chunkKinds.sql) {
+				const nested = mappedValue;
+				this.collectSQL(nested.queryChunks, config, paramStartIndex, inlineParams || nested.shouldInlineParams, out, params, void 0);
+				return;
+			}
+			const normalize = paramCodecs?.normalizeParam;
+			if (!inlineParams && normalize) mappedValue = normalize(mappedValue, encoder.dimensions);
+		}
+		if (inlineParams) {
+			out.sql += this.mapInlineParam(mappedValue, config);
+			return;
+		}
+		const { escapeParam } = config;
+		const escaped = escapeParam(paramStartIndex.value++, mappedValue);
+		const cast = paramCodecs?.castParam;
+		out.sql += cast ? cast(escaped, encoder, encoder.dimensions) : escaped;
+		params.push(mappedValue);
+	}
+	mapInlineParam(chunk, { escapeString }) {
+		if (chunk === null) return "null";
+		if (typeof chunk === "number" || typeof chunk === "boolean" || typeof chunk === "bigint") return chunk.toString();
+		if (typeof chunk === "string") return escapeString(chunk);
+		if (typeof chunk === "object") {
+			const mappedValueAsString = chunk.toString();
+			if (mappedValueAsString === "[object Object]") return escapeString(JSON.stringify(chunk));
+			return escapeString(mappedValueAsString);
+		}
+		throw new Error("Unexpected param value: " + chunk);
+	}
+	getSQL() {
+		return this;
+	}
+	as(alias) {
+		if (alias === void 0) return this;
+		return new SQL.Aliased(this, alias);
+	}
+	mapWith(decoder) {
+		this.decoder = typeof decoder === "function" ? { mapFromDriverValue: decoder } : decoder;
+		return this;
+	}
+	nullable() {
+		return this;
+	}
+	inlineParams() {
+		this.shouldInlineParams = true;
+		return this;
+	}
+	/**
+	* This method is used to conditionally include a part of the query.
+	*
+	* @param condition - Condition to check
+	* @returns itself if the condition is `true`, otherwise `undefined`
+	*/
+	if(condition) {
+		return condition ? this : void 0;
+	}
+};
+/**
+* Ids of the chunk classes `chunkKindOf` tells apart
+*/
+var chunkKinds = {
+	other: 0,
+	string: 1,
+	sql: 2,
+	name: 3,
+	column: 4,
+	param: 5,
+	placeholder: 6,
+	table: 7,
+	view: 8,
+	aliased: 9,
+	subquery: 10,
+	valueRows: 11
+};
+var chunkKindByConstructor = /* @__PURE__ */ new WeakMap();
+var chunkKindKey = Symbol("drizzle:chunkKind");
+function resolveChunkKind(ctor, kinds) {
+	const kind = kinds.has(StringChunk[entityKind]) ? chunkKinds.string : kinds.has(SQL[entityKind]) ? chunkKinds.sql : kinds.has(Name[entityKind]) ? chunkKinds.name : kinds.has(Column[entityKind]) ? chunkKinds.column : kinds.has(Param[entityKind]) ? chunkKinds.param : kinds.has(Placeholder[entityKind]) ? chunkKinds.placeholder : kinds.has(Table[entityKind]) ? chunkKinds.table : kinds.has(View[entityKind]) ? chunkKinds.view : kinds.has(SQL.Aliased[entityKind]) ? chunkKinds.aliased : kinds.has(Subquery[entityKind]) ? chunkKinds.subquery : kinds.has(ValueRows[entityKind]) ? chunkKinds.valueRows : chunkKinds.other;
+	chunkKindByConstructor.set(ctor, kind);
+	if (kind !== chunkKinds.other) Object.defineProperty(ctor.prototype, chunkKindKey, { value: kind });
+	return kind;
+}
+function chunkKindOf(chunk) {
+	if (chunk === null || typeof chunk !== "object") return chunkKinds.other;
+	const cached = chunk[chunkKindKey];
+	if (cached !== void 0) return cached;
+	const ctor = Object.getPrototypeOf(chunk)?.constructor;
+	if (typeof ctor !== "function") return chunkKinds.other;
+	return chunkKindByConstructor.get(ctor) ?? resolveChunkKind(ctor, entityKindsOf(chunk));
+}
+function isChunk(_chunk, kind, expected) {
+	return kind === expected;
+}
+/**
+* Any DB name (table, column, index etc.)
+*/
+var Name = class {
+	value;
+	static [entityKind] = "Name";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	brand;
+	constructor(value) {
+		this.value = value;
+	}
+	getSQL() {
+		return new SQL([this]);
+	}
+};
+function isDriverValueEncoder(value) {
+	return typeof value === "object" && value !== null && "mapToDriverValue" in value && typeof value.mapToDriverValue === "function";
+}
+var noopDecoder = { mapFromDriverValue: (value) => value };
+noopDecoder.mapFromDriverValue.isNoop = true;
+var noopEncoder = { mapToDriverValue: (value) => value };
+noopEncoder.mapToDriverValue.isNoop = true;
+({
+	...noopDecoder,
+	...noopEncoder
+});
+/** Parameter value that is optionally bound to an encoder (for example, a column). */
+var Param = class {
+	value;
+	encoder;
+	codec;
+	static [entityKind] = "Param";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	brand;
+	/**
+	* @param value - Parameter value
+	* @param encoder - Encoder to convert the value to a driver parameter
+	*/
+	constructor(value, encoder = noopEncoder, codec) {
+		this.value = value;
+		this.encoder = encoder;
+		this.codec = codec;
+	}
+	getSQL() {
+		return new SQL([this]);
+	}
+};
+var ValueRows = class {
+	cells;
+	encoders;
+	static [entityKind] = "ValueRows";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	constructor(cells, encoders) {
+		this.cells = cells;
+		this.encoders = encoders;
+	}
+	getSQL() {
+		const { cells, encoders } = this;
+		const width = encoders.length;
+		const chunks = [];
+		for (let i = 0; i < cells.length; ++i) {
+			const column = i % width;
+			chunks.push(column === 0 ? i === 0 ? commonStringChunks["("] : commonStringChunks["), ("] : commonStringChunks[", "]);
+			const cell = cells[i];
+			const kind = chunkKindOf(cell);
+			chunks.push(kind === chunkKinds.sql || kind === chunkKinds.string ? cell : new Param(cell, encoders[column]));
+		}
+		chunks.push(commonStringChunks[")"]);
+		return new SQL(chunks);
+	}
+	shouldOmitSQLParens() {
+		return true;
+	}
+};
+function sql(strings, ...params) {
+	const queryChunks = [];
+	if (strings[0]) queryChunks.push(new StringChunk(strings[0]));
+	for (let paramIdx = 0; paramIdx < params.length; ++paramIdx) {
+		const param = params[paramIdx];
+		if (param !== void 0) queryChunks.push(param);
+		const string = strings[paramIdx + 1];
+		if (string) queryChunks.push(new StringChunk(string));
+	}
+	return new SQL(queryChunks);
+}
+(function(_sql) {
+	function empty() {
+		return new SQL([]);
+	}
+	_sql.empty = empty;
+	function fromList(list) {
+		return new SQL(list);
+	}
+	_sql.fromList = fromList;
+	function raw(str) {
+		return new SQL([new StringChunk(str)]);
+	}
+	_sql.raw = raw;
+	function join(chunks, separator) {
+		const { length } = chunks;
+		if (separator === void 0 || length === 0) return new SQL(chunks.slice());
+		const result = new Array(length * 2 - 1);
+		for (let i = 0, writeIdx = 0; i < length; ++i) {
+			result[writeIdx++] = chunks[i];
+			if (i < length - 1) result[writeIdx++] = separator;
+		}
+		return new SQL(result);
+	}
+	_sql.join = join;
+	function identifier(value) {
+		return new Name(value);
+	}
+	_sql.identifier = identifier;
+	function placeholder(name) {
+		return new Placeholder(name);
+	}
+	_sql.placeholder = placeholder;
+	function param(value, encoder) {
+		return new Param(value, encoder);
+	}
+	_sql.param = param;
+	function comment(input) {
+		const encoded = sqlCommenter(input);
+		if (!encoded.length) return void 0;
+		return sql.raw(encoded);
+	}
+	_sql.comment = comment;
+})(sql || (sql = {}));
+function sqlCommenter(input) {
+	const encoded = sqlCommenter.encodeInput(input);
+	if (!encoded.length) return "";
+	return `/*${encoded}*/`;
+}
+(function(_sqlCommenter) {
+	function merge(input1, input2) {
+		let encoded;
+		if (typeof input1 === "object" && typeof input2 === "object") encoded = encodeInput({
+			...input1,
+			...input2
+		});
+		else if (input1 && input2) encoded = [encodeInput(input1), encodeInput(input2)].filter((i) => i.length).join(",");
+		else if (input2) encoded = encodeInput(input2);
+		else if (input1) encoded = encodeInput(input1);
+		else return "";
+		if (!encoded.length) return "";
+		return `/*${encoded}*/`;
+	}
+	_sqlCommenter.merge = merge;
+	function encodeInput(input) {
+		if (typeof input === "string") {
+			if (!input.length) return input;
+			return sanitizeStringInput(input);
+		}
+		const parts = [];
+		for (const [key, value] of Object.entries(input)) {
+			if (value === null || value === void 0 || value === "") continue;
+			const encodedKey = sanitizeObjectElement(key);
+			const encodedValue = sanitizeObjectElement(String(value));
+			parts.push(`${encodedKey}='${encodedValue}'`);
+		}
+		if (!parts.length) return "";
+		return parts.sort().join(",");
+	}
+	_sqlCommenter.encodeInput = encodeInput;
+	function sanitizeObjectElement(key) {
+		return encodeURIComponent(key).replace(/'/g, `\\'`);
+	}
+	_sqlCommenter.sanitizeObjectElement = sanitizeObjectElement;
+	function sanitizeStringInput(input) {
+		return input.replace(/\/\*/g, "/ *").replace(/\*\//g, "* /");
+	}
+	_sqlCommenter.sanitizeStringInput = sanitizeStringInput;
+})(sqlCommenter || (sqlCommenter = {}));
+(function(_SQL) {
+	class Aliased {
+		sql;
+		fieldAlias;
+		static [entityKind] = "SQL.Aliased";
+		static [Symbol.hasInstance](value) {
+			return is(value, this);
+		}
+		/** @internal */
+		isSelectionField = false;
+		/** @internal */
+		origin;
+		constructor(sql, fieldAlias) {
+			this.sql = sql;
+			this.fieldAlias = fieldAlias;
+		}
+		getSQL() {
+			return this.sql;
+		}
+		/** @internal */
+		clone() {
+			return new Aliased(this.sql, this.fieldAlias);
+		}
+	}
+	_SQL.Aliased = Aliased;
+})(SQL || (SQL = {}));
+var Placeholder = class {
+	name;
+	static [entityKind] = "Placeholder";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	constructor(name) {
+		this.name = name;
+	}
+	/**
+	* @deprecated Field hidden to prevent bleeding into autocomplete
+	*/
+	getSQL() {
+		return new SQL([this]);
+	}
+};
+/**
+* @internal
+* Replaces top-level columns of `query` with their unqualified names (e.g. for `order by` of set operations) -
+* returns a copy if any are present, never modifying `query` itself
+*/
+function unqualifyColumns(query) {
+	const source = query.queryChunks;
+	let chunks;
+	for (let i = 0; i < source.length; ++i) {
+		const chunk = source[i];
+		if (is(chunk, Column)) (chunks ??= [...source])[i] = sql.identifier(chunk.name);
+	}
+	if (!chunks) return query;
+	const copy = new SQL(chunks);
+	copy.decoder = query.decoder;
+	copy.shouldInlineParams = query.shouldInlineParams;
+	return copy;
+}
+function fillPlaceholders(params, values) {
+	const filled = new Array(params.length);
+	for (let i = 0; i < params.length; ++i) {
+		const p = params[i];
+		if (is(p, Placeholder)) {
+			const { name } = p;
+			if (!(name in values)) throw new Error(`No value for placeholder "${name}" was provided`);
+			filled[i] = values[name];
+			continue;
+		}
+		if (is(p, Param) && is(p.value, Placeholder)) {
+			const { name } = p.value;
+			if (!(name in values)) throw new Error(`No value for placeholder "${name}" was provided`);
+			const value = values[name];
+			if (value === null) {
+				filled[i] = value;
+				continue;
+			}
+			const mapped = p.encoder.mapToDriverValue.isNoop ? value : p.encoder.mapToDriverValue(value);
+			filled[i] = p.codec ? p.codec(mapped) : mapped;
+			continue;
+		}
+		filled[i] = p;
+	}
+	return filled;
+}
+Column.prototype.getSQL = function() {
+	return new SQL([this]);
+};
+StringChunk.prototype.getSQL = function() {
+	return new SQL([this]);
+};
+Subquery.prototype.getSQL = function() {
+	return new SQL([this]);
+};
+function defineQualifier(prototype, build) {
+	Object.defineProperty(prototype, Qualifier, {
+		get() {
+			const value = build(this);
+			Object.defineProperty(this, Qualifier, {
+				value,
+				enumerable: false,
+				configurable: true,
+				writable: true
+			});
+			return value;
+		},
+		configurable: true
+	});
+}
+function qualifiedName(schema, name) {
+	return new SQL(schema === void 0 ? [new Name(name)] : [
+		new Name(schema),
+		commonStringChunks["."],
+		new Name(name)
+	]);
+}
+defineQualifier(Table.prototype, (table) => qualifiedName(table[TableSchema], table[TableName]));
+defineQualifier(View.prototype, (view) => qualifiedName(view[ViewBaseConfig].schema, view[ViewBaseConfig].name));
+defineQualifier(Subquery.prototype, (subquery) => new Name(subquery._.alias));
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/utils.js
+/** @internal */
+function resolveNullableObjectPaths(columns, joinsNotNullableMap) {
+	if (!joinsNotNullableMap) return void 0;
+	const tableOf = /* @__PURE__ */ new Map();
+	const order = [];
+	const seen = /* @__PURE__ */ new Set();
+	for (const { path, field, fieldType } of columns) {
+		if (path.length < 2) continue;
+		const key = path[0];
+		if (!seen.has(key)) {
+			seen.add(key);
+			order.push(key);
+		}
+		if (fieldType !== "Column") continue;
+		const tableName = getTableName(field.table);
+		const current = tableOf.get(key);
+		if (current === void 0) tableOf.set(key, tableName);
+		else if (current !== false && current !== tableName) tableOf.set(key, false);
+	}
+	const result = [];
+	for (const key of order) {
+		const table = tableOf.get(key);
+		if (typeof table === "string" && !joinsNotNullableMap[table]) result.push(key);
+	}
+	return result;
+}
+function nullablePathTargets(columns, nullableObjectPaths) {
+	const targets = new Array(nullableObjectPaths.length);
+	for (let i = 0; i < nullableObjectPaths.length; ++i) {
+		const key = nullableObjectPaths[i];
+		const leaves = [];
+		for (let j = 0; j < columns.length; ++j) {
+			const cp = columns[j].path;
+			if (cp.length > 1 && cp[0] === key) leaves.push(j);
+		}
+		targets[i] = {
+			key,
+			leaves
+		};
+	}
+	return targets;
+}
+/** @internal bypass bundle-time filtering */
+var FnConstructor = Object.getPrototypeOf(() => null).constructor;
+/** @internal */
+function makeJitQueryMapperInner(columns, nullableObjectPaths) {
+	const preFn = [];
+	const fn = [];
+	fn.push(`const [ ${columns.map((_, i) => `c${i}`).join(", ")} ] = rows[i];`);
+	const descendantIds = {};
+	const nullableKeys = new Set(nullableObjectPaths ?? []);
+	const decodes = new Array(columns.length);
+	for (let idx = 0; idx < columns.length; ++idx) {
+		const { field, fieldType, path, codec, arrayDimensions } = columns[idx];
+		let decoder;
+		let decoderStr;
+		let decoderFieldDestructure;
+		switch (fieldType) {
+			case "Column":
+				decoder = field;
+				decoderFieldDestructure = `field: decoder${idx}`;
+				break;
+			case "SQL":
+				decoder = field.decoder;
+				decoderFieldDestructure = `field: { decoder: decoder${idx} }`;
+				break;
+			case "Subquery":
+				decoder = field._.sql.decoder;
+				decoderFieldDestructure = `field: { _: { sql: { decoder: decoder${idx} } } }`;
+				break;
+			default:
+				decoder = field.sql.decoder;
+				decoderFieldDestructure = `field: { sql: { decoder: decoder${idx} } }`;
+		}
+		decoderStr = `decoder${idx}.mapFromDriverValue`;
+		if (decoder.mapFromDriverValue.isNoop) decoderStr = "";
+		if (decoderStr) preFn.push(`const { ${decoderFieldDestructure}${codec ? `, codec: codec${idx}` : ""} } = columns[${idx}];`);
+		else if (codec) preFn.push(`const { codec: codec${idx} } = columns[${idx}];`);
+		const colStr = `c${idx}`;
+		let decodedValue = colStr;
+		if (codec) decodedValue = `codec${idx}(${decodedValue}, ${arrayDimensions})`;
+		if (decoderStr) decodedValue = `${decoderStr}(${decodedValue})`;
+		decodes[idx] = colStr === decodedValue ? `${colStr}` : `${colStr} === null ? ${colStr} : ${decodedValue}`;
+		if (path.length > 1) (descendantIds[path[0]] ??= []).push(colStr);
+	}
+	fn.push(`mapped[i] = {`);
+	let currentObjectPath = [];
+	for (let idx = 0; idx < columns.length; ++idx) {
+		const { path } = columns[idx];
+		const jsonPath = path.map((e) => JSON.stringify(e));
+		const decodedValue = decodes[idx];
+		const objectPath = path.slice(0, -1);
+		let commonLen = 0;
+		while (commonLen < currentObjectPath.length && commonLen < objectPath.length && currentObjectPath[commonLen] === objectPath[commonLen]) commonLen++;
+		for (let d = currentObjectPath.length - 1; d >= commonLen; --d) fn.push(`${"	".repeat(d + 1)}},`);
+		for (let d = commonLen; d < objectPath.length; ++d) {
+			const nullable = d === 0 && nullableKeys.has(path[0]);
+			fn.push(`${"	".repeat(d + 1)}${jsonPath[d]}: ${nullable ? `${descendantIds[path[0]].map((c) => `${c} === null`).join(" && ")} ? null : {` : "{"}`);
+		}
+		currentObjectPath = objectPath;
+		fn.push(`${"	".repeat(path.length)}${jsonPath[path.length - 1]}: ${decodedValue},`);
+	}
+	for (let d = currentObjectPath.length - 1; d >= 0; --d) fn.push(`${"	".repeat(d + 1)}},`);
+	fn.push(`};`);
+	return `${preFn.length ? `${preFn.join("\n	")}\n\t` : ""}for (let i = 0; i < length; ++i) {
+		${fn.join("\n		")}
+	}`;
+}
+function makeJitQueryMapper(columns, nullableObjectPaths) {
+	const internals = `\t"use strict";
+	const { columns } = this;
+	const { length } = rows;
+	const mapped = new Array(length);
+	${makeJitQueryMapperInner(columns, nullableObjectPaths)}
+	return mapped;
+	//# sourceURL=drizzle:jit-query-mapper`;
+	return Object.assign(new FnConstructor("rows", internals).bind({ columns }), { body: `function jitQueryMapper (rows) {\n${internals}\n}` });
+}
+/** @internal */
+function jitCompatCheck(isEnabled) {
+	if (!isEnabled) return false;
+	try {
+		const res = new FnConstructor("input", "\"use strict\"; return input;")(true);
+		if (res !== true) {
+			console.warn("Unable to use jit mappers due to incompatibility: corrupted jit function output.\nFalling back to premade mappers.\nError details:");
+			console.error(`Expected to receive \`true\`, got: ${res}`);
+		}
+		return true;
+	} catch (e) {
+		console.warn("Unable to use jit mappers due to incompatibility.\nFalling back to premade mappers.\nError details:");
+		console.error(e);
+		return false;
+	}
+}
+function makeDefaultQueryMapper(columns, nullableObjectPaths) {
+	const interpretedData = new Array(columns.length);
+	for (let i = 0; i < columns.length; ++i) {
+		const { field, fieldType, codec, arrayDimensions } = columns[i];
+		let decoderSrc;
+		switch (fieldType) {
+			case "Column":
+				decoderSrc = field;
+				break;
+			case "SQL":
+				decoderSrc = field.decoder;
+				break;
+			case "Subquery":
+				decoderSrc = field._.sql.decoder;
+				break;
+			default: decoderSrc = field.sql.decoder;
+		}
+		let decoder;
+		if (decoderSrc.mapFromDriverValue.isNoop) decoder = codec ? (v) => codec(v, arrayDimensions) : void 0;
+		else decoder = codec ? (v) => decoderSrc.mapFromDriverValue(codec(v, arrayDimensions)) : (v) => decoderSrc.mapFromDriverValue(v);
+		interpretedData[i] = decoder;
+	}
+	const targets = nullableObjectPaths?.length ? nullablePathTargets(columns, nullableObjectPaths) : void 0;
+	return ((rows) => {
+		const { length: rowLength } = rows;
+		const output = new Array(rowLength);
+		for (let j = 0; j < rowLength; ++j) {
+			const row = rows[j];
+			const result = {};
+			for (let i = 0; i < columns.length; ++i) {
+				const { path } = columns[i];
+				let node = result;
+				for (let p = 0; p < path.length; ++p) {
+					const pathChunk = path[p];
+					if (p < path.length - 1) {
+						if (!(pathChunk in node)) node[pathChunk] = {};
+						node = node[pathChunk];
+					} else {
+						const decoder = interpretedData[i];
+						const rawValue = row[i];
+						node[pathChunk] = rawValue === null ? null : decoder ? decoder(rawValue) : rawValue;
+					}
+				}
+			}
+			if (targets) for (let i = 0; i < targets.length; ++i) {
+				const { key, leaves } = targets[i];
+				let allNull = true;
+				for (let j = 0; j < leaves.length; ++j) if (row[leaves[j]] !== null) {
+					allNull = false;
+					break;
+				}
+				if (allNull) result[key] = null;
+			}
+			output[j] = result;
+		}
+		return output;
+	});
+}
+/** @internal */
+function orderSelectedFields(fields, pathPrefix, codecs, result = []) {
+	const entries = Object.entries(fields);
+	for (let i = 0; i < entries.length; ++i) {
+		const [name, field] = entries[i];
+		if (typeof name !== "string") return result;
+		const newPath = pathPrefix ? [...pathPrefix, name] : [name];
+		if (is(field, Column)) result.push({
+			path: newPath,
+			field,
+			fieldType: "Column",
+			codec: codecs?.get(field, "normalize"),
+			arrayDimensions: field.dimensions,
+			column: field
+		});
+		else if (is(field, SQL)) {
+			const col = getColumnFromDecoder(field);
+			result.push(col ? {
+				path: newPath,
+				field,
+				fieldType: "SQL",
+				codec: codecs?.get(col, "normalize"),
+				arrayDimensions: col.dimensions,
+				column: col
+			} : {
+				path: newPath,
+				field,
+				fieldType: "SQL"
+			});
+		} else if (is(field, SQL.Aliased)) {
+			const col = getColumnFromDecoder(field);
+			result.push(col ? {
+				path: newPath,
+				field,
+				fieldType: "SQL.Aliased",
+				codec: codecs?.get(col, "normalize"),
+				arrayDimensions: col.dimensions,
+				column: col
+			} : {
+				path: newPath,
+				field,
+				fieldType: "SQL.Aliased"
+			});
+		} else if (is(field, Subquery)) {
+			let column;
+			const entry = Object.values(field._.selectedFields)[0];
+			let fieldDecoder;
+			if (is(entry, Column)) {
+				column = entry;
+				fieldDecoder = entry;
+			} else if (is(entry, SQL)) {
+				column = getColumnFromDecoder(entry);
+				fieldDecoder = entry.decoder;
+			} else {
+				column = getColumnFromDecoder(entry);
+				fieldDecoder = entry.sql.decoder;
+			}
+			if (fieldDecoder) field._.sql.decoder = fieldDecoder;
+			result.push(column ? {
+				path: newPath,
+				field,
+				fieldType: "Subquery",
+				codec: codecs?.get(column, "normalize"),
+				arrayDimensions: column.dimensions,
+				column
+			} : {
+				path: newPath,
+				field,
+				fieldType: "Subquery"
+			});
+		} else if (is(field, Table)) orderSelectedFields(field[Table.Symbol.Columns], newPath, codecs, result);
+		else orderSelectedFields(field, newPath, codecs, result);
+	}
+	return result;
+}
+function getColumnFromDecoder(source) {
+	const { decoder } = source.getSQL();
+	return isChunk(decoder, chunkKindOf(decoder), chunkKinds.column) ? decoder : void 0;
+}
+function haveSameKeys(left, right) {
+	const leftKeys = Object.keys(left);
+	const rightKeys = Object.keys(right);
+	if (leftKeys.length !== rightKeys.length) return false;
+	for (const [index, key] of leftKeys.entries()) if (key !== rightKeys[index]) return false;
+	return true;
+}
+/** @internal */
+function mapUpdateSet(table, values) {
+	const entries = Object.entries(values).filter(([, value]) => value !== void 0);
+	if (entries.length === 0) throw new Error("No values to set");
+	const mapped = new Array(entries.length);
+	for (let i = 0; i < entries.length; ++i) {
+		const [key, value] = entries[i];
+		const kind = chunkKindOf(value);
+		if (isChunk(value, kind, chunkKinds.sql) || isChunk(value, kind, chunkKinds.column)) mapped[i] = [key, value];
+		else mapped[i] = [key, new Param(value, table[Table.Symbol.Columns][key])];
+	}
+	return Object.fromEntries(mapped);
+}
+/** @internal */
+function applyMixins(baseClass, extendedClasses) {
+	for (const extendedClass of extendedClasses) for (const name of Object.getOwnPropertyNames(extendedClass.prototype)) {
+		if (name === "constructor") continue;
+		Object.defineProperty(baseClass.prototype, name, Object.getOwnPropertyDescriptor(extendedClass.prototype, name) || Object.create(null));
+	}
+}
+function getTableColumns(table) {
+	return table[Table.Symbol.Columns];
+}
+/** @internal */
+function getTableLikeName(table) {
+	const kind = chunkKindOf(table);
+	return isChunk(table, kind, chunkKinds.subquery) ? table._.alias : isChunk(table, kind, chunkKinds.view) ? table[ViewBaseConfig].name : isChunk(table, kind, chunkKinds.sql) ? void 0 : table[Table.Symbol.IsAlias] ? table[Table.Symbol.Name] : table[Table.Symbol.BaseName];
+}
+/** @internal */
+function getColumnNameAndConfig(a, b) {
+	return {
+		name: typeof a === "string" && a.length > 0 ? a : "",
+		config: typeof a === "object" ? a : b
+	};
+}
+var textEncoder;
+var getTextEncoder = () => {
+	if (textEncoder !== void 0) return textEncoder;
+	return textEncoder = typeof TextEncoder === "function" ? new TextEncoder() : null;
+};
+/**
+* Writes UTF-8 bytes of `value` into `dest` starting at `offset`, returns the number of written bytes.
+*
+* `dest` must have at least `value.length * 3` bytes of space after `offset`.
+*
+* Lone surrogates are written as U+FFFD, identical to `TextEncoder`.
+*/
+function encodeUtf8IntoJs(value, dest, offset) {
+	let pos = offset;
+	for (let i = 0; i < value.length; ++i) {
+		let code = value.charCodeAt(i);
+		if (code < 128) {
+			dest[pos++] = code;
+			continue;
+		}
+		if (code < 2048) {
+			dest[pos++] = 192 | code >> 6;
+			dest[pos++] = 128 | code & 63;
+			continue;
+		}
+		if (code >= 55296 && code <= 57343) {
+			const next = i + 1 < value.length ? value.charCodeAt(i + 1) : 0;
+			if (code <= 56319 && next >= 56320 && next <= 57343) {
+				code = 65536 + (code - 55296 << 10) + (next - 56320);
+				++i;
+				dest[pos++] = 240 | code >> 18;
+				dest[pos++] = 128 | code >> 12 & 63;
+				dest[pos++] = 128 | code >> 6 & 63;
+				dest[pos++] = 128 | code & 63;
+				continue;
+			}
+			code = 65533;
+		}
+		dest[pos++] = 224 | code >> 12;
+		dest[pos++] = 128 | code >> 6 & 63;
+		dest[pos++] = 128 | code & 63;
+	}
+	return pos - offset;
+}
+function encodeUtf8(value) {
+	const encoder = getTextEncoder();
+	if (encoder) return encoder.encode(value);
+	const dest = new Uint8Array(value.length * 3);
+	return dest.subarray(0, encodeUtf8IntoJs(value, dest, 0));
+}
+var textDecoder = typeof TextDecoder === "function" ? new TextDecoder() : null;
+/**
+* Decodes UTF-8, replacing malformed sequences with U+FFFD.
+*
+* Fallback follows the WHATWG UTF-8 decoder algorithm, so output is identical to `TextDecoder`'s
+*/
+function decodeUtf8(bytes) {
+	if (textDecoder) return textDecoder.decode(bytes);
+	let out = "";
+	let units = [];
+	const emit = (code) => {
+		if (code > 65535) {
+			code -= 65536;
+			units.push(55296 + (code >> 10), 56320 + (code & 1023));
+		} else units.push(code);
+		if (units.length >= 8192) {
+			out += String.fromCharCode.apply(null, units);
+			units = [];
+		}
+	};
+	let codePoint = 0;
+	let needed = 0;
+	let seen = 0;
+	let lower = 128;
+	let upper = 191;
+	for (let i = 0; i < bytes.length; ++i) {
+		const byte = bytes[i];
+		if (needed === 0) {
+			if (byte <= 127) emit(byte);
+			else if (byte >= 194 && byte <= 223) {
+				needed = 1;
+				codePoint = byte & 31;
+			} else if (byte >= 224 && byte <= 239) {
+				if (byte === 224) lower = 160;
+				if (byte === 237) upper = 159;
+				needed = 2;
+				codePoint = byte & 15;
+			} else if (byte >= 240 && byte <= 244) {
+				if (byte === 240) lower = 144;
+				if (byte === 244) upper = 143;
+				needed = 3;
+				codePoint = byte & 7;
+			} else emit(65533);
+			continue;
+		}
+		if (byte < lower || byte > upper) {
+			codePoint = needed = seen = 0;
+			lower = 128;
+			upper = 191;
+			emit(65533);
+			--i;
+			continue;
+		}
+		lower = 128;
+		upper = 191;
+		codePoint = codePoint << 6 | byte & 63;
+		if (++seen === needed) {
+			emit(codePoint);
+			codePoint = needed = seen = 0;
+		}
+	}
+	if (needed !== 0) emit(65533);
+	return out + String.fromCharCode.apply(null, units);
+}
+function memoizeEscape(escape, limit = 4096) {
+	const cache = /* @__PURE__ */ new Map();
+	return (name) => {
+		let escaped = cache.get(name);
+		if (escaped === void 0) {
+			if (cache.size >= limit) cache.clear();
+			escaped = escape(name);
+			cache.set(name, escaped);
+		}
+		return escaped;
+	};
+}
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/codecs.js
+var noopCodecs = {};
+var noCodecs = {
+	castInJson: void 0,
+	castParam: void 0,
+	normalize: void 0,
+	normalizeInJson: void 0,
+	normalizeParam: void 0
+};
+var arrayToItemTypeCodecNameMap = {
+	castInJson: "castInJson",
+	castArrayInJson: "castInJson",
+	castParam: "castParam",
+	castArrayParam: "castParam",
+	normalize: "normalize",
+	normalizeArray: "normalize",
+	normalizeInJson: "normalizeInJson",
+	normalizeArrayInJson: "normalizeInJson",
+	normalizeParam: "normalizeParam",
+	normalizeParamArray: "normalizeParam"
+};
+var CodecsCollection = class {
+	resolveTypes;
+	codecs;
+	static [entityKind] = "CodecsCollection";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	constructor(resolveTypes, codecs = noopCodecs) {
+		this.resolveTypes = resolveTypes;
+		this.codecs = codecs;
+	}
+	itemCodecsCache = /* @__PURE__ */ new Map();
+	arrayCodecsCache = /* @__PURE__ */ new Map();
+	/** @internal */
+	codecsOf(column, override) {
+		const sqlType = override ?? column.codec;
+		if (!sqlType) return noCodecs;
+		const isArray = !!column.dimensions;
+		const cache = isArray ? this.arrayCodecsCache : this.itemCodecsCache;
+		let resolved = cache.get(sqlType);
+		if (resolved === void 0) {
+			const codec = this.codecs[sqlType];
+			resolved = codec ? isArray ? {
+				castInJson: codec.castArrayInJson,
+				castParam: codec.castArrayParam,
+				normalize: codec.normalizeArray,
+				normalizeInJson: codec.normalizeArrayInJson,
+				normalizeParam: codec.normalizeParamArray
+			} : {
+				castInJson: codec.castInJson,
+				castParam: codec.castParam,
+				normalize: codec.normalize,
+				normalizeInJson: codec.normalizeInJson,
+				normalizeParam: codec.normalizeParam
+			} : noCodecs;
+			cache.set(sqlType, resolved);
+		}
+		return resolved;
+	}
+	get(column, type, override) {
+		return this.codecsOf(column, override)[arrayToItemTypeCodecNameMap[type]];
+	}
+	apply(column, type, value, override) {
+		const codecType = arrayToItemTypeCodecNameMap[type];
+		const codec = this.codecsOf(column, override)[codecType];
+		if (!codec) return value;
+		if (codecType === "castParam") return codec(value, column, column.dimensions);
+		return codec(value, column.dimensions);
+	}
+};
+function refineCodecs(source, extension = {}) {
+	const keys = (/* @__PURE__ */ new Set([...Object.keys(source), ...Object.keys(extension)])).values();
+	const result = {};
+	for (const k of keys) {
+		if (!(k in extension)) {
+			result[k] = source[k] ? { ...source[k] } : void 0;
+			continue;
+		}
+		if (!(k in source) || extension[k] === void 0) {
+			result[k] = extension[k] ? { ...extension[k] } : void 0;
+			continue;
+		}
+		const innerKeys = (/* @__PURE__ */ new Set([...Object.keys(extension[k]), ...Object.keys(source[k] ?? {})])).values();
+		result[k] = {};
+		for (const ik of innerKeys) result[k][ik] = ik in extension[k] ? extension[k][ik] : source[k]?.[ik];
+	}
+	return result;
+}
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/codecs.js
+var SQLITE_ALIAS_TO_TYPE_MAP = {
+	int: "integer",
+	int2: "integer",
+	int8: "integer",
+	tinyint: "integer",
+	smallint: "integer",
+	mediumint: "integer",
+	bool: "integer:boolean",
+	boolean: "integer:boolean",
+	float: "real",
+	double: "real",
+	"double precision": "real",
+	decimal: "numeric",
+	character: "text",
+	varchar: "text",
+	"varying character": "text",
+	nchar: "text",
+	"native character": "text",
+	nvarchar: "text",
+	clob: "text",
+	json: "text:json"
+};
+function resolveSQLiteTypeAlias(type) {
+	return SQLITE_ALIAS_TO_TYPE_MAP[type] ?? type;
+}
+var castToText = (name) => sql`cast(${name} as text)`;
+var castToHex = (name) => sql`hex(${name})`;
+var uint8ArrayFromHex = (value) => {
+	const bytes = new Uint8Array(value.length >> 1);
+	for (let i = 0; i < bytes.length; ++i) bytes[i] = Number.parseInt(value.substring(i * 2, i * 2 + 2), 16);
+	return bytes;
+};
+var bufferFromHex = typeof Buffer === "undefined" ? uint8ArrayFromHex : (value) => Buffer.from(value, "hex");
+var bufferFromBytes = (value) => Buffer.from(value.buffer, value.byteOffset, value.byteLength);
+var bytesFromUtf8 = typeof Buffer === "undefined" ? (value) => encodeUtf8(value) : (value) => Buffer.from(value);
+var integerText = /^-?\d+$/;
+var isStoredText = (value) => typeof value === "string" && !integerText.test(value);
+var dateFromStoredSeconds = (value) => isStoredText(value) ? new Date(value.replaceAll("\"", "")) : /* @__PURE__ */ new Date(Number(value) * 1e3);
+var dateFromStoredMilliseconds = (value) => isStoredText(value) ? new Date(value.replaceAll("\"", "")) : new Date(Number(value));
+var booleanFromInteger = (value) => Number(value) === 1;
+/**
+* Text of a `blob` column value as clients hand it over (`Buffer`, `Uint8Array`, `ArrayBuffer`, an array of bytes),
+* or of text stored in it
+*/
+var textFromBlob = (value) => typeof value === "string" ? value : value instanceof ArrayBuffer ? decodeUtf8(new Uint8Array(value)) : ArrayBuffer.isView(value) ? decodeUtf8(new Uint8Array(value.buffer, value.byteOffset, value.byteLength)) : decodeUtf8(Uint8Array.from(value));
+var jsonFromBlob = (value) => JSON.parse(textFromBlob(value));
+var bigintFromBlob = (value) => BigInt(textFromBlob(value));
+var genericSQLiteCodecs = {
+	integer: { normalizeInJson: Number },
+	"integer:boolean": { normalizeInJson: booleanFromInteger },
+	"integer:timestamp": { normalizeInJson: dateFromStoredSeconds },
+	"integer:timestamp_ms": { normalizeInJson: dateFromStoredMilliseconds },
+	"text:json": { normalizeInJson: JSON.parse },
+	blob: {
+		castInJson: castToHex,
+		normalizeInJson: bufferFromHex
+	},
+	"blob:json": {
+		castInJson: castToText,
+		normalizeInJson: JSON.parse
+	},
+	"blob:bigint": {
+		castInJson: castToText,
+		normalizeInJson: BigInt
+	},
+	numeric: {
+		castInJson: castToText,
+		normalizeInJson: String
+	},
+	"numeric:number": {
+		castInJson: castToText,
+		normalizeInJson: Number
+	},
+	"numeric:bigint": {
+		castInJson: castToText,
+		normalizeInJson: BigInt
+	}
+};
+var unionsTypeTable = {
+	integer: {
+		integer: "integer",
+		"integer:boolean": "integer",
+		"integer:timestamp": "integer",
+		"integer:timestamp_ms": "integer",
+		real: "integer",
+		text: "integer",
+		"text:json": "integer",
+		blob: "integer",
+		"blob:json": "integer",
+		"blob:bigint": "integer",
+		numeric: "integer",
+		"numeric:number": "integer",
+		"numeric:bigint": "integer"
+	},
+	"integer:boolean": {
+		integer: "integer:boolean",
+		"integer:boolean": "integer:boolean",
+		"integer:timestamp": "integer:boolean",
+		"integer:timestamp_ms": "integer:boolean",
+		real: "integer:boolean",
+		text: "integer:boolean",
+		"text:json": "integer:boolean",
+		blob: "integer:boolean",
+		"blob:json": "integer:boolean",
+		"blob:bigint": "integer:boolean",
+		numeric: "integer:boolean",
+		"numeric:number": "integer:boolean",
+		"numeric:bigint": "integer:boolean"
+	},
+	"integer:timestamp": {
+		integer: "integer:timestamp",
+		"integer:boolean": "integer:timestamp",
+		"integer:timestamp": "integer:timestamp",
+		"integer:timestamp_ms": "integer:timestamp",
+		real: "integer:timestamp",
+		text: "integer:timestamp",
+		"text:json": "integer:timestamp",
+		blob: "integer:timestamp",
+		"blob:json": "integer:timestamp",
+		"blob:bigint": "integer:timestamp",
+		numeric: "integer:timestamp",
+		"numeric:number": "integer:timestamp",
+		"numeric:bigint": "integer:timestamp"
+	},
+	"integer:timestamp_ms": {
+		integer: "integer:timestamp_ms",
+		"integer:boolean": "integer:timestamp_ms",
+		"integer:timestamp": "integer:timestamp_ms",
+		"integer:timestamp_ms": "integer:timestamp_ms",
+		real: "integer:timestamp_ms",
+		text: "integer:timestamp_ms",
+		"text:json": "integer:timestamp_ms",
+		blob: "integer:timestamp_ms",
+		"blob:json": "integer:timestamp_ms",
+		"blob:bigint": "integer:timestamp_ms",
+		numeric: "integer:timestamp_ms",
+		"numeric:number": "integer:timestamp_ms",
+		"numeric:bigint": "integer:timestamp_ms"
+	},
+	real: {
+		integer: "real",
+		"integer:boolean": "real",
+		"integer:timestamp": "real",
+		"integer:timestamp_ms": "real",
+		real: "real",
+		text: "real",
+		"text:json": "real",
+		blob: "real",
+		"blob:json": "real",
+		"blob:bigint": "real",
+		numeric: "real",
+		"numeric:number": "real",
+		"numeric:bigint": "real"
+	},
+	text: {
+		integer: "text",
+		"integer:boolean": "text",
+		"integer:timestamp": "text",
+		"integer:timestamp_ms": "text",
+		real: "text",
+		text: "text",
+		"text:json": "text",
+		blob: "text",
+		"blob:json": "text",
+		"blob:bigint": "text",
+		numeric: "numeric",
+		"numeric:number": "text",
+		"numeric:bigint": "text"
+	},
+	"text:json": {
+		integer: "text:json",
+		"integer:boolean": "text:json",
+		"integer:timestamp": "text:json",
+		"integer:timestamp_ms": "text:json",
+		real: "text:json",
+		text: "text:json",
+		"text:json": "text:json",
+		blob: "text:json",
+		"blob:json": "blob:json",
+		"blob:bigint": "text:json",
+		numeric: "text:json",
+		"numeric:number": "text:json",
+		"numeric:bigint": "text:json"
+	},
+	blob: {
+		integer: "blob",
+		"integer:boolean": "blob",
+		"integer:timestamp": "blob",
+		"integer:timestamp_ms": "blob",
+		real: "blob",
+		text: "blob",
+		"text:json": "blob",
+		blob: "blob",
+		"blob:json": "blob",
+		"blob:bigint": "blob",
+		numeric: "blob",
+		"numeric:number": "blob",
+		"numeric:bigint": "blob"
+	},
+	"blob:json": {
+		integer: "blob:json",
+		"integer:boolean": "blob:json",
+		"integer:timestamp": "blob:json",
+		"integer:timestamp_ms": "blob:json",
+		real: "blob:json",
+		text: "blob:json",
+		"text:json": "blob:json",
+		blob: "blob:json",
+		"blob:json": "blob:json",
+		"blob:bigint": "blob:json",
+		numeric: "blob:json",
+		"numeric:number": "blob:json",
+		"numeric:bigint": "blob:json"
+	},
+	"blob:bigint": {
+		integer: "blob:bigint",
+		"integer:boolean": "blob:bigint",
+		"integer:timestamp": "blob:bigint",
+		"integer:timestamp_ms": "blob:bigint",
+		real: "blob:bigint",
+		text: "blob:bigint",
+		"text:json": "blob:bigint",
+		blob: "blob:bigint",
+		"blob:json": "blob:bigint",
+		"blob:bigint": "blob:bigint",
+		numeric: "blob:bigint",
+		"numeric:number": "blob:bigint",
+		"numeric:bigint": "blob:bigint"
+	},
+	numeric: {
+		integer: "numeric",
+		"integer:boolean": "numeric",
+		"integer:timestamp": "numeric",
+		"integer:timestamp_ms": "numeric",
+		real: "numeric",
+		text: "numeric",
+		"text:json": "numeric",
+		blob: "numeric",
+		"blob:json": "numeric",
+		"blob:bigint": "numeric",
+		numeric: "numeric",
+		"numeric:number": "numeric",
+		"numeric:bigint": "numeric"
+	},
+	"numeric:number": {
+		integer: "numeric:number",
+		"integer:boolean": "numeric:number",
+		"integer:timestamp": "numeric:number",
+		"integer:timestamp_ms": "numeric:number",
+		real: "numeric:number",
+		text: "numeric:number",
+		"text:json": "numeric:number",
+		blob: "numeric:number",
+		"blob:json": "numeric:number",
+		"blob:bigint": "numeric:number",
+		numeric: "numeric:number",
+		"numeric:number": "numeric:number",
+		"numeric:bigint": "numeric:number"
+	},
+	"numeric:bigint": {
+		integer: "numeric:bigint",
+		"integer:boolean": "numeric:bigint",
+		"integer:timestamp": "numeric:bigint",
+		"integer:timestamp_ms": "numeric:bigint",
+		real: "numeric:bigint",
+		text: "numeric:bigint",
+		"text:json": "numeric:bigint",
+		blob: "numeric:bigint",
+		"blob:json": "numeric:bigint",
+		"blob:bigint": "numeric:bigint",
+		numeric: "numeric:bigint",
+		"numeric:number": "numeric:bigint",
+		"numeric:bigint": "numeric:bigint"
+	}
+};
+function resolveUnionType(left, right) {
+	return unionsTypeTable[left]?.[right];
+}
+var refineSqliteCodecs = (extension) => refineCodecs(genericSQLiteCodecs, extension);
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/node-sqlite/codecs.js
+var nodeSQLiteCodecs = refineSqliteCodecs({
+	integer: { normalize: Number },
+	"integer:boolean": { normalize: booleanFromInteger },
+	"integer:timestamp": { normalize: dateFromStoredSeconds },
+	"integer:timestamp_ms": { normalize: dateFromStoredMilliseconds },
+	real: { normalize: Number },
+	"text:json": { normalize: JSON.parse },
+	blob: { normalize: bufferFromBytes },
+	"blob:json": { normalize: jsonFromBlob },
+	"blob:bigint": { normalize: bigintFromBlob },
+	numeric: { normalize: String },
+	"numeric:number": { normalize: Number },
+	"numeric:bigint": { normalize: BigInt }
+});
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/logger.js
+var ConsoleLogWriter = class {
+	static [entityKind] = "ConsoleLogWriter";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	write(message) {
+		console.log(message);
+	}
+};
+var DefaultLogger = class {
+	static [entityKind] = "DefaultLogger";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	writer;
+	constructor(config) {
+		this.writer = config?.writer ?? new ConsoleLogWriter();
+	}
+	logQuery(query, params) {
+		const stringifiedParams = params.map((p) => {
+			try {
+				return JSON.stringify(p);
+			} catch {
+				return String(p);
+			}
+		});
+		const paramsStr = stringifiedParams.length ? ` -- params: [${stringifiedParams.join(", ")}]` : "";
+		this.writer.write(`Query: ${query}${paramsStr}`);
+	}
+};
+var NoopLogger = class {
+	static [entityKind] = "NoopLogger";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	logQuery() {}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/view-base.js
+var SQLiteViewBase = class extends View {
+	static [entityKind] = "SQLiteViewBase";
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/alias.js
+var ColumnTableAliasProxyHandler = class {
+	table;
+	ignoreColumnAlias;
+	static [entityKind] = "ColumnTableAliasProxyHandler";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	constructor(table, ignoreColumnAlias) {
+		this.table = table;
+		this.ignoreColumnAlias = ignoreColumnAlias;
+	}
+	get(columnObj, prop) {
+		if (prop === "table") return this.table;
+		if (prop === "isAlias" && this.ignoreColumnAlias) return false;
+		if (prop === OriginalColumn && !this.ignoreColumnAlias) return () => columnObj;
+		return columnObj[prop];
+	}
+};
+var ViewSelectionAliasProxyHandler = class {
+	view;
+	selection;
+	ignoreColumnAlias;
+	static [entityKind] = "ViewSelectionAliasProxyHandler";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	constructor(view, selection, ignoreColumnAlias) {
+		this.view = view;
+		this.selection = selection;
+		this.ignoreColumnAlias = ignoreColumnAlias;
+	}
+	memo;
+	columnHandler;
+	get(selection, prop) {
+		const value = selection[prop];
+		if (typeof value !== "object" || value === null) return value;
+		const memo = this.memo ??= /* @__PURE__ */ new WeakMap();
+		let result = memo.get(value);
+		if (result !== void 0) return result;
+		if (isChunk(value, chunkKindOf(value), chunkKinds.column)) result = new Proxy(value, this.columnHandler ??= new ColumnTableAliasProxyHandler(this.view, this.ignoreColumnAlias));
+		else if (isSQLWrapper(value)) result = value;
+		else result = new Proxy(value, this);
+		memo.set(value, result);
+		return result;
+	}
+};
+var TableAliasProxyHandler = class {
+	alias;
+	replaceOriginalName;
+	ignoreColumnAlias;
+	static [entityKind] = "TableAliasProxyHandler";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	constructor(alias, replaceOriginalName, ignoreColumnAlias) {
+		this.alias = alias;
+		this.replaceOriginalName = replaceOriginalName;
+		this.ignoreColumnAlias = ignoreColumnAlias;
+	}
+	/** Alias as identifier, replaces `[Qualifier]` of tables */
+	qualifier;
+	/** Aliased columns by name, fast path for table columns */
+	proxiedColumns;
+	/** For other props, columns & qualifier are hot paths and defined in their own variables due to performance benefits */
+	memo;
+	columnHandler;
+	get(target, prop, receiver) {
+		if (prop === Qualifier) return this.qualifier ??= sql.identifier(this.alias);
+		if (prop === Table.Symbol.IsAlias) return true;
+		if (prop === Table.Symbol.Name) return this.alias;
+		if (this.replaceOriginalName && prop === Table.Symbol.OriginalName) return this.alias;
+		if (prop === Table.Symbol.Columns) {
+			const columns = target[Table.Symbol.Columns];
+			if (!columns) return columns;
+			return isChunk(target, chunkKindOf(target), chunkKinds.view) ? this.aliasSelection(columns, receiver) : this.getProxiedColumns(columns, receiver);
+		}
+		if (prop === ViewBaseConfig) {
+			const config = target[ViewBaseConfig];
+			const memo = this.memo ??= /* @__PURE__ */ new WeakMap();
+			let result = memo.get(config);
+			if (result === void 0) memo.set(config, result = {
+				...config,
+				name: this.alias,
+				isAlias: true,
+				selectedFields: this.aliasSelection(config.selectedFields, receiver)
+			});
+			return result;
+		}
+		const value = target[prop];
+		if (isChunk(value, chunkKindOf(value), chunkKinds.column)) {
+			const columns = target[Table.Symbol.Columns];
+			if (typeof prop === "string" && columns?.[prop] === value) return this.getProxiedColumns(columns, receiver)[prop];
+			const memo = this.memo ??= /* @__PURE__ */ new WeakMap();
+			let result = memo.get(value);
+			if (result === void 0) memo.set(value, result = this.aliasColumn(value, receiver));
+			return result;
+		}
+		return value;
+	}
+	aliasColumn(column, receiver) {
+		return new Proxy(column, this.columnHandler ??= new ColumnTableAliasProxyHandler(receiver, this.ignoreColumnAlias));
+	}
+	aliasSelection(selection, receiver) {
+		const memo = this.memo ??= /* @__PURE__ */ new WeakMap();
+		let result = memo.get(selection);
+		if (result === void 0) memo.set(selection, result = new Proxy(selection, new ViewSelectionAliasProxyHandler(receiver, selection, this.ignoreColumnAlias)));
+		return result;
+	}
+	getProxiedColumns(columns, receiver) {
+		if (this.proxiedColumns) return this.proxiedColumns;
+		const proxiedColumns = {};
+		for (const key of Object.keys(columns)) proxiedColumns[key] = this.aliasColumn(columns[key], receiver);
+		return this.proxiedColumns = proxiedColumns;
+	}
+};
+var SubquerySelectionAliasProxyHandler = class {
+	subquery;
+	alias;
+	static [entityKind] = "SubquerySelectionAliasProxyHandler";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	constructor(subquery, alias) {
+		this.subquery = subquery;
+		this.alias = alias;
+	}
+	memo;
+	columnHandler;
+	get(selection, prop) {
+		const value = selection[prop];
+		if (typeof value !== "object" || value === null) return value;
+		const memo = this.memo ??= /* @__PURE__ */ new WeakMap();
+		let result = memo.get(value);
+		if (result !== void 0) return result;
+		const kind = chunkKindOf(value);
+		if (isChunk(value, kind, chunkKinds.column)) result = new Proxy(value, this.columnHandler ??= new ColumnTableAliasProxyHandler(this.subquery, true));
+		else if (isChunk(value, kind, chunkKinds.aliased)) {
+			result = value.clone();
+			result.isSelectionField = true;
+			result.origin = this.alias;
+		} else result = value;
+		memo.set(value, result);
+		return result;
+	}
+};
+var SubqueryAliasProxyHandler = class {
+	alias;
+	static [entityKind] = "SubqueryAliasProxyHandler";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	constructor(alias) {
+		this.alias = alias;
+	}
+	/** Alias as identifier, replaces `[Qualifier]` of subqueries */
+	qualifier;
+	config;
+	selection;
+	get(target, prop, receiver) {
+		if (prop === Qualifier) return this.qualifier ??= sql.identifier(this.alias);
+		if (prop === Table.Symbol.IsAlias) return true;
+		if (prop === Table.Symbol.Name) return this.alias;
+		if (prop === Table.Symbol.OriginalName) return target._.alias;
+		if (prop === Table.Symbol.Schema) return;
+		if (prop === "_") return this.config ??= {
+			...target._,
+			alias: this.alias,
+			isWith: true,
+			selectedFields: this.aliasSelection(target, receiver)
+		};
+		if (prop === Table.Symbol.Columns) return this.aliasSelection(target, receiver);
+		return target[prop];
+	}
+	aliasSelection(target, receiver) {
+		return this.selection ??= new Proxy(target._.selectedFields, new SubquerySelectionAliasProxyHandler(receiver, this.alias));
+	}
+};
+var ColumnAliasProxyHandler = class {
+	alias;
+	static [entityKind] = "ColumnAliasProxyHandler";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	constructor(alias) {
+		this.alias = alias;
+	}
+	get(target, prop) {
+		if (prop === "isAlias") return true;
+		if (prop === "name") return this.alias;
+		if (prop === "keyAsName") return false;
+		if (prop === OriginalColumn) return () => target;
+		return target[prop];
+	}
+};
+/**
+* Does not apply type-level transformation
+*
+* For typed alias, use `import { alias } from 'drizzle-orm/dialect-core/alias'`
+*/
+function aliasedTable(table, tableAlias) {
+	return isChunk(table, chunkKindOf(table), chunkKinds.subquery) ? new Proxy(table, new SubqueryAliasProxyHandler(tableAlias)) : new Proxy(table, new TableAliasProxyHandler(tableAlias, false, false));
+}
+function aliasedTableSQL(table) {
+	const schema = table[Table.Symbol.Schema];
+	const name = sql.identifier(table[Table.Symbol.OriginalName]);
+	return schema ? sql`${sql.identifier(schema)}.${name} ${table}` : sql`${name} ${table}`;
+}
+function aliasedColumn(column, alias) {
+	return new Proxy(column, new ColumnAliasProxyHandler(alias));
+}
+Column.prototype.as = function(alias) {
+	return aliasedColumn(this, alias);
+};
+function getOriginalColumnFromAlias(column) {
+	return column[OriginalColumn]();
+}
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/selection-proxy.js
+var SelectionProxyHandler = class SelectionProxyHandler {
+	static [entityKind] = "SelectionProxyHandler";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	config;
+	constructor(config) {
+		this.config = { ...config };
+	}
+	get(subquery, prop, receiver) {
+		if (prop === "_") return {
+			...subquery["_"],
+			selectedFields: new Proxy(subquery._.selectedFields, this)
+		};
+		if (prop === ViewBaseConfig) return {
+			...subquery[ViewBaseConfig],
+			selectedFields: new Proxy(subquery[ViewBaseConfig].selectedFields, this)
+		};
+		if (typeof prop === "symbol") return subquery[prop];
+		const sourceKind = chunkKindOf(subquery);
+		const value = (isChunk(subquery, sourceKind, chunkKinds.subquery) ? subquery._.selectedFields : isChunk(subquery, sourceKind, chunkKinds.view) ? subquery[ViewBaseConfig].selectedFields : subquery)[prop];
+		if (value === void 0 && prop === "getSQL") {
+			const target = subquery[prop];
+			if (typeof target !== "function") return target;
+			return target.bind(receiver ?? subquery);
+		}
+		const valueKind = chunkKindOf(value);
+		if (isChunk(value, valueKind, chunkKinds.aliased)) {
+			if (this.config.sqlAliasedBehavior === "sql" && !value.isSelectionField) return value.sql;
+			const newValue = value.clone();
+			newValue.isSelectionField = true;
+			newValue.origin = this.config.alias;
+			return newValue;
+		}
+		if (isChunk(value, valueKind, chunkKinds.sql)) {
+			if (this.config.sqlBehavior === "sql") return value;
+			throw new Error(`You tried to reference "${prop}" field from a subquery, which is a raw SQL field, but it doesn't have an alias declared. Please add an alias to the field using ".as('alias')" method.`);
+		}
+		if (isChunk(value, valueKind, chunkKinds.column)) {
+			if (this.config.alias) return new Proxy(value, new ColumnTableAliasProxyHandler(new Proxy(value.table, new TableAliasProxyHandler(this.config.alias, this.config.replaceOriginalName ?? false, true)), true));
+			return value;
+		}
+		if (typeof value !== "object" || value === null) return value;
+		return new Proxy(value, new SelectionProxyHandler(this.config));
+	}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/query-builders/query-builder.js
+var TypedQueryBuilder = class {
+	static [entityKind] = "TypedQueryBuilder";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	/** @internal */
+	getSelectedFields() {
+		return this._.selectedFields;
+	}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/query-builders/select.js
+var SQLiteSelectBuilder = class {
+	builder;
+	static [entityKind] = "SQLiteSelectBuilder";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	fields;
+	session;
+	dialect;
+	withList;
+	distinct;
+	constructor(config, builder = SQLiteSelectBase) {
+		this.builder = builder;
+		this.fields = config.fields;
+		this.session = config.session;
+		this.dialect = config.dialect;
+		this.withList = config.withList;
+		this.distinct = config.distinct;
+	}
+	from(source) {
+		const isPartialSelect = !!this.fields;
+		let fields;
+		if (this.fields) fields = this.fields;
+		else if (is(source, Subquery)) fields = Object.fromEntries(Object.keys(source._.selectedFields).map((key) => [key, source[key]]));
+		else if (is(source, SQLiteViewBase)) fields = source[ViewBaseConfig].selectedFields;
+		else if (is(source, SQL)) fields = {};
+		else fields = getTableColumns(source);
+		return new this.builder({
+			table: source,
+			fields,
+			isPartialSelect,
+			session: this.session,
+			dialect: this.dialect,
+			withList: this.withList ?? [],
+			distinct: this.distinct
+		});
+	}
+};
+var SQLiteSelectBase = class extends TypedQueryBuilder {
+	static [entityKind] = "SQLiteSelectQueryBuilder";
+	_;
+	/** @internal */
+	config;
+	joinsNotNullableMap;
+	tableName;
+	isPartialSelect;
+	session;
+	dialect;
+	constructor({ table, fields, isPartialSelect, session, dialect, withList, distinct }) {
+		super();
+		this.config = {
+			withList,
+			table,
+			fields: { ...fields },
+			distinct,
+			setOperators: []
+		};
+		this.isPartialSelect = isPartialSelect;
+		this.session = session;
+		this.dialect = dialect;
+		this._ = {
+			selectedFields: fields,
+			config: this.config
+		};
+		this.tableName = getTableLikeName(table);
+		this.joinsNotNullableMap = typeof this.tableName === "string" ? { [this.tableName]: true } : {};
+	}
+	createJoin(joinType) {
+		return (table, on) => {
+			const baseTableName = this.tableName;
+			const tableName = getTableLikeName(table);
+			if (typeof tableName === "string" && this.config.joins?.some((join) => join.alias === tableName)) throw new Error(`Alias "${tableName}" is already used in this query`);
+			this.config.fieldsFlat = void 0;
+			this.config.mapper = void 0;
+			if (!this.isPartialSelect) {
+				if (Object.keys(this.joinsNotNullableMap).length === 1 && typeof baseTableName === "string") this.config.fields = { [baseTableName]: this.config.fields };
+				if (typeof tableName === "string" && !is(table, SQL)) {
+					const selection = is(table, Subquery) ? table._.selectedFields : is(table, View) ? table[ViewBaseConfig].selectedFields : table[Table.Symbol.Columns];
+					this.config.fields[tableName] = selection;
+				}
+			}
+			if (typeof on === "function") on = on(new Proxy(this.config.fields, new SelectionProxyHandler({
+				sqlAliasedBehavior: "sql",
+				sqlBehavior: "sql"
+			})));
+			if (!this.config.joins) this.config.joins = [];
+			this.config.joins.push({
+				on,
+				table,
+				joinType,
+				alias: tableName
+			});
+			if (typeof tableName === "string") switch (joinType) {
+				case "left":
+					this.joinsNotNullableMap[tableName] = false;
+					break;
+				case "right":
+					this.joinsNotNullableMap = Object.fromEntries(Object.entries(this.joinsNotNullableMap).map(([key]) => [key, false]));
+					this.joinsNotNullableMap[tableName] = true;
+					break;
+				case "cross":
+				case "inner":
+					this.joinsNotNullableMap[tableName] = true;
+					break;
+				case "full":
+					this.joinsNotNullableMap = Object.fromEntries(Object.entries(this.joinsNotNullableMap).map(([key]) => [key, false]));
+					this.joinsNotNullableMap[tableName] = false;
+			}
+			return this;
+		};
+	}
+	/**
+	* Executes a `left join` operation by adding another table to the current query.
+	*
+	* Calling this method associates each row of the table with the corresponding row from the joined table, if a match is found. If no matching row exists, it sets all columns of the joined table to null.
+	*
+	* See docs: {@link https://orm.drizzle.team/docs/joins#left-join}
+	*
+	* @param table the table to join.
+	* @param on the `on` clause.
+	*
+	* @example
+	*
+	* ```ts
+	* // Select all users and their pets
+	* const usersWithPets: { user: User; pets: Pet | null; }[] = await db.select()
+	*   .from(users)
+	*   .leftJoin(pets, eq(users.id, pets.ownerId))
+	*
+	* // Select userId and petId
+	* const usersIdsAndPetIds: { userId: number; petId: number | null; }[] = await db.select({
+	*   userId: users.id,
+	*   petId: pets.id,
+	* })
+	*   .from(users)
+	*   .leftJoin(pets, eq(users.id, pets.ownerId))
+	* ```
+	*/
+	leftJoin = this.createJoin("left");
+	/**
+	* Executes a `right join` operation by adding another table to the current query.
+	*
+	* Calling this method associates each row of the joined table with the corresponding row from the main table, if a match is found. If no matching row exists, it sets all columns of the main table to null.
+	*
+	* See docs: {@link https://orm.drizzle.team/docs/joins#right-join}
+	*
+	* @param table the table to join.
+	* @param on the `on` clause.
+	*
+	* @example
+	*
+	* ```ts
+	* // Select all users and their pets
+	* const usersWithPets: { user: User | null; pets: Pet; }[] = await db.select()
+	*   .from(users)
+	*   .rightJoin(pets, eq(users.id, pets.ownerId))
+	*
+	* // Select userId and petId
+	* const usersIdsAndPetIds: { userId: number | null; petId: number; }[] = await db.select({
+	*   userId: users.id,
+	*   petId: pets.id,
+	* })
+	*   .from(users)
+	*   .rightJoin(pets, eq(users.id, pets.ownerId))
+	* ```
+	*/
+	rightJoin = this.createJoin("right");
+	/**
+	* Executes an `inner join` operation, creating a new table by combining rows from two tables that have matching values.
+	*
+	* Calling this method retrieves rows that have corresponding entries in both joined tables. Rows without matching entries in either table are excluded, resulting in a table that includes only matching pairs.
+	*
+	* See docs: {@link https://orm.drizzle.team/docs/joins#inner-join}
+	*
+	* @param table the table to join.
+	* @param on the `on` clause.
+	*
+	* @example
+	*
+	* ```ts
+	* // Select all users and their pets
+	* const usersWithPets: { user: User; pets: Pet; }[] = await db.select()
+	*   .from(users)
+	*   .innerJoin(pets, eq(users.id, pets.ownerId))
+	*
+	* // Select userId and petId
+	* const usersIdsAndPetIds: { userId: number; petId: number; }[] = await db.select({
+	*   userId: users.id,
+	*   petId: pets.id,
+	* })
+	*   .from(users)
+	*   .innerJoin(pets, eq(users.id, pets.ownerId))
+	* ```
+	*/
+	innerJoin = this.createJoin("inner");
+	/**
+	* Executes a `full join` operation by combining rows from two tables into a new table.
+	*
+	* Calling this method retrieves all rows from both main and joined tables, merging rows with matching values and filling in `null` for non-matching columns.
+	*
+	* See docs: {@link https://orm.drizzle.team/docs/joins#full-join}
+	*
+	* @param table the table to join.
+	* @param on the `on` clause.
+	*
+	* @example
+	*
+	* ```ts
+	* // Select all users and their pets
+	* const usersWithPets: { user: User | null; pets: Pet | null; }[] = await db.select()
+	*   .from(users)
+	*   .fullJoin(pets, eq(users.id, pets.ownerId))
+	*
+	* // Select userId and petId
+	* const usersIdsAndPetIds: { userId: number | null; petId: number | null; }[] = await db.select({
+	*   userId: users.id,
+	*   petId: pets.id,
+	* })
+	*   .from(users)
+	*   .fullJoin(pets, eq(users.id, pets.ownerId))
+	* ```
+	*/
+	fullJoin = this.createJoin("full");
+	/**
+	* Executes a `cross join` operation by combining rows from two tables into a new table.
+	*
+	* Calling this method retrieves all rows from both main and joined tables, merging all rows from each table.
+	*
+	* See docs: {@link https://orm.drizzle.team/docs/joins#cross-join}
+	*
+	* @param table the table to join.
+	*
+	* @example
+	*
+	* ```ts
+	* // Select all users, each user with every pet
+	* const usersWithPets: { user: User; pets: Pet; }[] = await db.select()
+	*   .from(users)
+	*   .crossJoin(pets)
+	*
+	* // Select userId and petId
+	* const usersIdsAndPetIds: { userId: number; petId: number; }[] = await db.select({
+	*   userId: users.id,
+	*   petId: pets.id,
+	* })
+	*   .from(users)
+	*   .crossJoin(pets)
+	* ```
+	*/
+	crossJoin = this.createJoin("cross");
+	createSetOperator(type, isAll) {
+		return (rightSelection) => {
+			const rightSelect = typeof rightSelection === "function" ? rightSelection(getSQLiteSetOperators()) : rightSelection;
+			if (!haveSameKeys(this.getSelectedFields(), rightSelect.getSelectedFields())) throw new Error("Set operator error (union / intersect / except): selected fields are not the same or are in a different order");
+			this.config.setOperators.push({
+				type,
+				isAll,
+				rightSelect
+			});
+			return this;
+		};
+	}
+	/**
+	* Adds `union` set operator to the query.
+	*
+	* Calling this method will combine the result sets of the `select` statements and remove any duplicate rows that appear across them.
+	*
+	* See docs: {@link https://orm.drizzle.team/docs/set-operations#union}
+	*
+	* @example
+	*
+	* ```ts
+	* // Select all unique names from customers and users tables
+	* await db.select({ name: users.name })
+	*   .from(users)
+	*   .union(
+	*     db.select({ name: customers.name }).from(customers)
+	*   );
+	* // or
+	* import { union } from 'drizzle-orm/sqlite-core'
+	*
+	* await union(
+	*   db.select({ name: users.name }).from(users),
+	*   db.select({ name: customers.name }).from(customers)
+	* );
+	* ```
+	*/
+	union = this.createSetOperator("union", false);
+	/**
+	* Adds `union all` set operator to the query.
+	*
+	* Calling this method will combine the result-set of the `select` statements and keep all duplicate rows that appear across them.
+	*
+	* See docs: {@link https://orm.drizzle.team/docs/set-operations#union-all}
+	*
+	* @example
+	*
+	* ```ts
+	* // Select all transaction ids from both online and in-store sales
+	* await db.select({ transaction: onlineSales.transactionId })
+	*   .from(onlineSales)
+	*   .unionAll(
+	*     db.select({ transaction: inStoreSales.transactionId }).from(inStoreSales)
+	*   );
+	* // or
+	* import { unionAll } from 'drizzle-orm/sqlite-core'
+	*
+	* await unionAll(
+	*   db.select({ transaction: onlineSales.transactionId }).from(onlineSales),
+	*   db.select({ transaction: inStoreSales.transactionId }).from(inStoreSales)
+	* );
+	* ```
+	*/
+	unionAll = this.createSetOperator("union", true);
+	/**
+	* Adds `intersect` set operator to the query.
+	*
+	* Calling this method will retain only the rows that are present in both result sets and eliminate duplicates.
+	*
+	* See docs: {@link https://orm.drizzle.team/docs/set-operations#intersect}
+	*
+	* @example
+	*
+	* ```ts
+	* // Select course names that are offered in both departments A and B
+	* await db.select({ courseName: depA.courseName })
+	*   .from(depA)
+	*   .intersect(
+	*     db.select({ courseName: depB.courseName }).from(depB)
+	*   );
+	* // or
+	* import { intersect } from 'drizzle-orm/sqlite-core'
+	*
+	* await intersect(
+	*   db.select({ courseName: depA.courseName }).from(depA),
+	*   db.select({ courseName: depB.courseName }).from(depB)
+	* );
+	* ```
+	*/
+	intersect = this.createSetOperator("intersect", false);
+	/**
+	* Adds `except` set operator to the query.
+	*
+	* Calling this method will retrieve all unique rows from the left query, except for the rows that are present in the result set of the right query.
+	*
+	* See docs: {@link https://orm.drizzle.team/docs/set-operations#except}
+	*
+	* @example
+	*
+	* ```ts
+	* // Select all courses offered in department A but not in department B
+	* await db.select({ courseName: depA.courseName })
+	*   .from(depA)
+	*   .except(
+	*     db.select({ courseName: depB.courseName }).from(depB)
+	*   );
+	* // or
+	* import { except } from 'drizzle-orm/sqlite-core'
+	*
+	* await except(
+	*   db.select({ courseName: depA.courseName }).from(depA),
+	*   db.select({ courseName: depB.courseName }).from(depB)
+	* );
+	* ```
+	*/
+	except = this.createSetOperator("except", false);
+	/** @internal */
+	addSetOperators(setOperators) {
+		this.config.setOperators.push(...setOperators);
+		return this;
+	}
+	/**
+	* Adds a `where` clause to the query.
+	*
+	* Calling this method will select only those rows that fulfill a specified condition.
+	*
+	* See docs: {@link https://orm.drizzle.team/docs/select#filtering}
+	*
+	* @param where the `where` clause.
+	*
+	* @example
+	* You can use conditional operators and `sql function` to filter the rows to be selected.
+	*
+	* ```ts
+	* // Select all cars with green color
+	* await db.select().from(cars).where(eq(cars.color, 'green'));
+	* // or
+	* await db.select().from(cars).where(sql`${cars.color} = 'green'`)
+	* ```
+	*
+	* You can logically combine conditional operators with `and()` and `or()` operators:
+	*
+	* ```ts
+	* // Select all BMW cars with a green color
+	* await db.select().from(cars).where(and(eq(cars.color, 'green'), eq(cars.brand, 'BMW')));
+	*
+	* // Select all cars with the green or blue color
+	* await db.select().from(cars).where(or(eq(cars.color, 'green'), eq(cars.color, 'blue')));
+	* ```
+	*/
+	where(where) {
+		if (typeof where === "function") where = where(new Proxy(this.config.fields, new SelectionProxyHandler({
+			sqlAliasedBehavior: "sql",
+			sqlBehavior: "sql"
+		})));
+		this.config.where = where;
+		return this;
+	}
+	/**
+	* Adds a `having` clause to the query.
+	*
+	* Calling this method will select only those rows that fulfill a specified condition. It is typically used with aggregate functions to filter the aggregated data based on a specified condition.
+	*
+	* See docs: {@link https://orm.drizzle.team/docs/select#aggregations}
+	*
+	* @param having the `having` clause.
+	*
+	* @example
+	*
+	* ```ts
+	* // Select all brands with more than one car
+	* await db.select({
+	* 	brand: cars.brand,
+	* 	count: sql<number>`cast(count(${cars.id}) as int)`,
+	* })
+	*   .from(cars)
+	*   .groupBy(cars.brand)
+	*   .having(({ count }) => gt(count, 1));
+	* ```
+	*/
+	having(having) {
+		if (typeof having === "function") having = having(new Proxy(this.config.fields, new SelectionProxyHandler({
+			sqlAliasedBehavior: "sql",
+			sqlBehavior: "sql"
+		})));
+		this.config.having = having;
+		return this;
+	}
+	groupBy(...columns) {
+		if (typeof columns[0] === "function") {
+			const groupBy = columns[0](new Proxy(this.config.fields, new SelectionProxyHandler({
+				sqlAliasedBehavior: "alias",
+				sqlBehavior: "sql"
+			})));
+			this.config.groupBy = Array.isArray(groupBy) ? groupBy : [groupBy];
+		} else this.config.groupBy = columns;
+		return this;
+	}
+	orderBy(...columns) {
+		if (typeof columns[0] === "function") {
+			const orderBy = columns[0](new Proxy(this.config.fields, new SelectionProxyHandler({
+				sqlAliasedBehavior: "alias",
+				sqlBehavior: "sql"
+			})));
+			const orderByArray = Array.isArray(orderBy) ? orderBy : [orderBy];
+			if (this.config.setOperators.length > 0) this.config.setOperators.at(-1).orderBy = orderByArray;
+			else this.config.orderBy = orderByArray;
+		} else {
+			const orderByArray = columns;
+			if (this.config.setOperators.length > 0) this.config.setOperators.at(-1).orderBy = orderByArray;
+			else this.config.orderBy = orderByArray;
+		}
+		return this;
+	}
+	/**
+	* Adds a `limit` clause to the query.
+	*
+	* Calling this method will set the maximum number of rows that will be returned by this query.
+	*
+	* See docs: {@link https://orm.drizzle.team/docs/select#limit--offset}
+	*
+	* @param limit the `limit` clause.
+	*
+	* @example
+	*
+	* ```ts
+	* // Get the first 10 people from this query.
+	* await db.select().from(people).limit(10);
+	* ```
+	*/
+	limit(limit) {
+		if (this.config.setOperators.length > 0) this.config.setOperators.at(-1).limit = limit;
+		else this.config.limit = limit;
+		return this;
+	}
+	/**
+	* Adds an `offset` clause to the query.
+	*
+	* Calling this method will skip a number of rows when returning results from this query.
+	*
+	* See docs: {@link https://orm.drizzle.team/docs/select#limit--offset}
+	*
+	* @param offset the `offset` clause.
+	*
+	* @example
+	*
+	* ```ts
+	* // Get the 10th-20th people from this query.
+	* await db.select().from(people).offset(10).limit(10);
+	* ```
+	*/
+	offset(offset) {
+		if (this.config.setOperators.length > 0) this.config.setOperators.at(-1).offset = offset;
+		else this.config.offset = offset;
+		return this;
+	}
+	getSQL() {
+		this.config.fieldsFlat ??= orderSelectedFields(this.config.fields, void 0, this.dialect.codecs);
+		return this.dialect.buildSelectQuery(this.config);
+	}
+	toSQL() {
+		return this.dialect.sqlToQuery(this.getSQL());
+	}
+	as(alias) {
+		return new Proxy(new Subquery(this.getSQL(), this.config.fields, alias), new SelectionProxyHandler({
+			alias,
+			sqlAliasedBehavior: "alias",
+			sqlBehavior: "error"
+		}));
+	}
+	/** @internal */
+	getSelectedFields() {
+		return new Proxy(this.config.fields, new SelectionProxyHandler({
+			alias: this.tableName,
+			sqlAliasedBehavior: "alias",
+			sqlBehavior: "error"
+		}));
+	}
+	$dynamic() {
+		return this;
+	}
+	/**
+	* Prepares the query on the session, for every runtime. The runtime's builder narrows the return type.
+	*
+	* @internal
+	*/
+	_prepare(prepare = false) {
+		const query = this.dialect.sqlToQuery(this.getSQL());
+		const fieldsList = this.config.fieldsFlat;
+		const mapper = this.config.mapper ??= this.dialect.mapperGenerators.rows(fieldsList, resolveNullableObjectPaths(fieldsList, this.joinsNotNullableMap));
+		return this.session.prepareQuery(query, "arrays", prepare, "all", mapper);
+	}
+};
+function createSetOperator(type, isAll) {
+	return (leftSelect, rightSelect, ...restSelects) => {
+		const setOperators = [rightSelect, ...restSelects].map((select) => ({
+			type,
+			isAll,
+			rightSelect: select
+		}));
+		for (const setOperator of setOperators) if (!haveSameKeys(leftSelect.getSelectedFields(), setOperator.rightSelect.getSelectedFields())) throw new Error("Set operator error (union / intersect / except): selected fields are not the same or are in a different order");
+		return leftSelect.addSetOperators(setOperators);
+	};
+}
+var getSQLiteSetOperators = () => ({
+	union,
+	unionAll,
+	intersect,
+	except
+});
+/**
+* Adds `union` set operator to the query.
+*
+* Calling this method will combine the result sets of the `select` statements and remove any duplicate rows that appear across them.
+*
+* See docs: {@link https://orm.drizzle.team/docs/set-operations#union}
+*
+* @example
+*
+* ```ts
+* // Select all unique names from customers and users tables
+* import { union } from 'drizzle-orm/sqlite-core'
+*
+* await union(
+*   db.select({ name: users.name }).from(users),
+*   db.select({ name: customers.name }).from(customers)
+* );
+* // or
+* await db.select({ name: users.name })
+*   .from(users)
+*   .union(
+*     db.select({ name: customers.name }).from(customers)
+*   );
+* ```
+*/
+var union = createSetOperator("union", false);
+/**
+* Adds `union all` set operator to the query.
+*
+* Calling this method will combine the result-set of the `select` statements and keep all duplicate rows that appear across them.
+*
+* See docs: {@link https://orm.drizzle.team/docs/set-operations#union-all}
+*
+* @example
+*
+* ```ts
+* // Select all transaction ids from both online and in-store sales
+* import { unionAll } from 'drizzle-orm/sqlite-core'
+*
+* await unionAll(
+*   db.select({ transaction: onlineSales.transactionId }).from(onlineSales),
+*   db.select({ transaction: inStoreSales.transactionId }).from(inStoreSales)
+* );
+* // or
+* await db.select({ transaction: onlineSales.transactionId })
+*   .from(onlineSales)
+*   .unionAll(
+*     db.select({ transaction: inStoreSales.transactionId }).from(inStoreSales)
+*   );
+* ```
+*/
+var unionAll = createSetOperator("union", true);
+/**
+* Adds `intersect` set operator to the query.
+*
+* Calling this method will retain only the rows that are present in both result sets and eliminate duplicates.
+*
+* See docs: {@link https://orm.drizzle.team/docs/set-operations#intersect}
+*
+* @example
+*
+* ```ts
+* // Select course names that are offered in both departments A and B
+* import { intersect } from 'drizzle-orm/sqlite-core'
+*
+* await intersect(
+*   db.select({ courseName: depA.courseName }).from(depA),
+*   db.select({ courseName: depB.courseName }).from(depB)
+* );
+* // or
+* await db.select({ courseName: depA.courseName })
+*   .from(depA)
+*   .intersect(
+*     db.select({ courseName: depB.courseName }).from(depB)
+*   );
+* ```
+*/
+var intersect = createSetOperator("intersect", false);
+/**
+* Adds `except` set operator to the query.
+*
+* Calling this method will retrieve all unique rows from the left query, except for the rows that are present in the result set of the right query.
+*
+* See docs: {@link https://orm.drizzle.team/docs/set-operations#except}
+*
+* @example
+*
+* ```ts
+* // Select all courses offered in department A but not in department B
+* import { except } from 'drizzle-orm/sqlite-core'
+*
+* await except(
+*   db.select({ courseName: depA.courseName }).from(depA),
+*   db.select({ courseName: depB.courseName }).from(depB)
+* );
+* // or
+* await db.select({ courseName: depA.courseName })
+*   .from(depA)
+*   .except(
+*     db.select({ courseName: depB.courseName }).from(depB)
+*   );
+* ```
+*/
+var except = createSetOperator("except", false);
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sql/expressions/conditions.js
+function bindIfParam(value, column) {
+	if (isDriverValueEncoder(column) && !isSQLWrapper(value)) {
+		const kind = chunkKindOf(value);
+		if (kind !== chunkKinds.param && kind !== chunkKinds.placeholder && kind !== chunkKinds.column && kind !== chunkKinds.table && kind !== chunkKinds.view) return new Param(value, column);
+	}
+	return value;
+}
+var checkColumnWithValue = (column, op, value) => new SQL([
+	column,
+	op,
+	bindIfParam(value, column)
+]);
+/**
+* Test that two values are equal.
+*
+* Remember that the SQL standard dictates that
+* two NULL values are not equal, so if you want to test
+* whether a value is null, you may want to use
+* `isNull` instead.
+*
+* ## Examples
+*
+* ```ts
+* // Select cars made by Ford
+* db.select().from(cars)
+*   .where(eq(cars.make, 'Ford'))
+* ```
+*
+* @see isNull for a way to test equality to NULL.
+*/
+var eq = (left, right) => checkColumnWithValue(left, commonStringChunks[" = "], right);
+/**
+* Test that two values are not equal.
+*
+* Remember that the SQL standard dictates that
+* two NULL values are not equal, so if you want to test
+* whether a value is not null, you may want to use
+* `isNotNull` instead.
+*
+* ## Examples
+*
+* ```ts
+* // Select cars not made by Ford
+* db.select().from(cars)
+*   .where(ne(cars.make, 'Ford'))
+* ```
+*
+* @see isNotNull for a way to test whether a value is not null.
+*/
+var ne = (left, right) => checkColumnWithValue(left, commonStringChunks[" <> "], right);
+var joinConditions = (conditions, separatorWithParenChunk) => {
+	const chunks = new Array(conditions.length * 2 + 1), lastIdx = conditions.length - 1;
+	chunks[0] = commonStringChunks["(("];
+	for (let i = 0; i < lastIdx; i++) {
+		chunks[i * 2 + 1] = conditions[i];
+		chunks[i * 2 + 2] = separatorWithParenChunk;
+	}
+	chunks[lastIdx * 2 + 1] = conditions[lastIdx];
+	chunks[lastIdx * 2 + 2] = commonStringChunks["))"];
+	return new SQL(chunks);
+};
+function and(...unfilteredConditions) {
+	const conditions = unfilteredConditions.filter((c) => c !== void 0);
+	if (conditions.length === 0) return;
+	if (conditions.length === 1) return new SQL(conditions);
+	return joinConditions(conditions, commonStringChunks[") and ("]);
+}
+function or(...unfilteredConditions) {
+	const conditions = unfilteredConditions.filter((c) => c !== void 0);
+	if (conditions.length === 0) return;
+	if (conditions.length === 1) return new SQL(conditions);
+	return joinConditions(conditions, commonStringChunks[") or ("]);
+}
+function not(condition) {
+	if (!condition) return void 0;
+	return is(condition, SQL) ? sql`not (${condition})` : sql`not ${condition}`;
+}
+/**
+* Test that the first expression passed is greater than
+* the second expression.
+*
+* ## Examples
+*
+* ```ts
+* // Select cars made after 2000.
+* db.select().from(cars)
+*   .where(gt(cars.year, 2000))
+* ```
+*
+* @see gte for greater-than-or-equal
+*/
+var gt = (left, right) => checkColumnWithValue(left, commonStringChunks[" > "], right);
+/**
+* Test that the first expression passed is greater than
+* or equal to the second expression. Use `gt` to
+* test whether an expression is strictly greater
+* than another.
+*
+* ## Examples
+*
+* ```ts
+* // Select cars made on or after 2000.
+* db.select().from(cars)
+*   .where(gte(cars.year, 2000))
+* ```
+*
+* @see gt for a strictly greater-than condition
+*/
+var gte = (left, right) => checkColumnWithValue(left, commonStringChunks[" >= "], right);
+/**
+* Test that the first expression passed is less than
+* the second expression.
+*
+* ## Examples
+*
+* ```ts
+* // Select cars made before 2000.
+* db.select().from(cars)
+*   .where(lt(cars.year, 2000))
+* ```
+*
+* @see lte for less-than-or-equal
+*/
+var lt = (left, right) => checkColumnWithValue(left, commonStringChunks[" < "], right);
+/**
+* Test that the first expression passed is less than
+* or equal to the second expression.
+*
+* ## Examples
+*
+* ```ts
+* // Select cars made before 2000.
+* db.select().from(cars)
+*   .where(lte(cars.year, 2000))
+* ```
+*
+* @see lt for a strictly less-than condition
+*/
+var lte = (left, right) => checkColumnWithValue(left, commonStringChunks[" <= "], right);
+function inArray(column, values) {
+	if (Array.isArray(values)) {
+		if (values.length === 0) return new SQL([commonStringChunks["1 = 0"]]);
+		return new SQL([
+			column,
+			commonStringChunks[" in "],
+			values.map((v) => bindIfParam(v, column))
+		]);
+	}
+	return checkColumnWithValue(column, commonStringChunks[" in "], values);
+}
+function notInArray(column, values) {
+	if (Array.isArray(values)) {
+		if (values.length === 0) return new SQL([commonStringChunks["1 = 1"]]);
+		return new SQL([
+			column,
+			commonStringChunks[" not in "],
+			values.map((v) => bindIfParam(v, column))
+		]);
+	}
+	return checkColumnWithValue(column, commonStringChunks[" not in "], values);
+}
+/**
+* Test whether an expression is NULL. By the SQL standard,
+* NULL is neither equal nor not equal to itself, so
+* it's recommended to use `isNull` and `notIsNull` for
+* comparisons to NULL.
+*
+* ## Examples
+*
+* ```ts
+* // Select cars that have no discontinuedAt date.
+* db.select().from(cars)
+*   .where(isNull(cars.discontinuedAt))
+* ```
+*
+* @see isNotNull for the inverse of this test
+*/
+function isNull(value) {
+	return sql`(${value} is null)`;
+}
+/**
+* Test whether an expression is not NULL. By the SQL standard,
+* NULL is neither equal nor not equal to itself, so
+* it's recommended to use `isNull` and `notIsNull` for
+* comparisons to NULL.
+*
+* ## Examples
+*
+* ```ts
+* // Select cars that have been discontinued.
+* db.select().from(cars)
+*   .where(isNotNull(cars.discontinuedAt))
+* ```
+*
+* @see isNull for the inverse of this test
+*/
+function isNotNull(value) {
+	return sql`(${value} is not null)`;
+}
+/**
+* Test whether a subquery evaluates to have any rows.
+*
+* ## Examples
+*
+* ```ts
+* // Users whose `homeCity` column has a match in a cities
+* // table.
+* db
+*   .select()
+*   .from(users)
+*   .where(
+*     exists(db.select()
+*       .from(cities)
+*       .where(eq(users.homeCity, cities.id))),
+*   );
+* ```
+*
+* @see notExists for the inverse of this test
+*/
+function exists(subquery) {
+	return sql`exists ${subquery}`;
+}
+/**
+* Test whether a subquery doesn't include any result
+* rows.
+*
+* ## Examples
+*
+* ```ts
+* // Users whose `homeCity` column doesn't match
+* // a row in the cities table.
+* db
+*   .select()
+*   .from(users)
+*   .where(
+*     notExists(db.select()
+*       .from(cities)
+*       .where(eq(users.homeCity, cities.id))),
+*   );
+* ```
+*
+* @see exists for the inverse of this test
+*/
+function notExists(subquery) {
+	return sql`not exists ${subquery}`;
+}
+function between(column, min, max) {
+	return sql`${column} between ${bindIfParam(min, column)} and ${bindIfParam(max, column)}`;
+}
+function notBetween(column, min, max) {
+	return sql`${column} not between ${bindIfParam(min, column)} and ${bindIfParam(max, column)}`;
+}
+/**
+* Compare a column to a pattern, which can include `%` and `_`
+* characters to match multiple variations. Including `%`
+* in the pattern matches zero or more characters, and including
+* `_` will match a single character.
+*
+* ## Examples
+*
+* ```ts
+* // Select all cars with 'Turbo' in their names.
+* db.select().from(cars)
+*   .where(like(cars.name, '%Turbo%'))
+* ```
+*
+* @see ilike for a case-insensitive version of this condition
+*/
+function like(column, value) {
+	return sql`${column} like ${value}`;
+}
+/**
+* The inverse of like - this tests that a given column
+* does not match a pattern, which can include `%` and `_`
+* characters to match multiple variations. Including `%`
+* in the pattern matches zero or more characters, and including
+* `_` will match a single character.
+*
+* ## Examples
+*
+* ```ts
+* // Select all cars that don't have "ROver" in their name.
+* db.select().from(cars)
+*   .where(notLike(cars.name, '%Rover%'))
+* ```
+*
+* @see like for the inverse condition
+* @see notIlike for a case-insensitive version of this condition
+*/
+function notLike(column, value) {
+	return sql`${column} not like ${value}`;
+}
+/**
+* Case-insensitively compare a column to a pattern,
+* which can include `%` and `_`
+* characters to match multiple variations. Including `%`
+* in the pattern matches zero or more characters, and including
+* `_` will match a single character.
+*
+* Unlike like, this performs a case-insensitive comparison.
+*
+* ## Examples
+*
+* ```ts
+* // Select all cars with 'Turbo' in their names.
+* db.select().from(cars)
+*   .where(ilike(cars.name, '%Turbo%'))
+* ```
+*
+* @see like for a case-sensitive version of this condition
+*/
+function ilike(column, value) {
+	return sql`${column} ilike ${value}`;
+}
+/**
+* The inverse of ilike - this case-insensitively tests that a given column
+* does not match a pattern, which can include `%` and `_`
+* characters to match multiple variations. Including `%`
+* in the pattern matches zero or more characters, and including
+* `_` will match a single character.
+*
+* ## Examples
+*
+* ```ts
+* // Select all cars that don't have "Rover" in their name.
+* db.select().from(cars)
+*   .where(notLike(cars.name, '%Rover%'))
+* ```
+*
+* @see ilike for the inverse condition
+* @see notLike for a case-sensitive version of this condition
+*/
+function notIlike(column, value) {
+	return sql`${column} not ilike ${value}`;
+}
+function arrayContains(column, values) {
+	if (Array.isArray(values)) {
+		if (values.length === 0) throw new Error("arrayContains requires at least one value");
+		const par = bindIfParam(values, column);
+		const array = sql`${Array.isArray(par) ? new Param(par) : par}`;
+		return sql`${column} @> ${array}`;
+	}
+	return sql`${column} @> ${bindIfParam(values, column)}`;
+}
+function arrayContained(column, values) {
+	if (Array.isArray(values)) {
+		if (values.length === 0) throw new Error("arrayContained requires at least one value");
+		const par = bindIfParam(values, column);
+		const array = sql`${Array.isArray(par) ? new Param(par) : par}`;
+		return sql`${column} <@ ${array}`;
+	}
+	return sql`${column} <@ ${bindIfParam(values, column)}`;
+}
+function arrayOverlaps(column, values) {
+	if (Array.isArray(values)) {
+		if (values.length === 0) throw new Error("arrayOverlaps requires at least one value");
+		const par = bindIfParam(values, column);
+		const array = sql`${Array.isArray(par) ? new Param(par) : par}`;
+		return sql`${column} && ${array}`;
+	}
+	return sql`${column} && ${bindIfParam(values, column)}`;
+}
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sql/expressions/select.js
+/**
+* Used in sorting, this specifies that the given
+* column or expression should be sorted in ascending
+* order. By the SQL standard, ascending order is the
+* default, so it is not usually necessary to specify
+* ascending sort order.
+*
+* ## Examples
+*
+* ```ts
+* // Return cars, starting with the oldest models
+* // and going in ascending order to the newest.
+* db.select().from(cars)
+*   .orderBy(asc(cars.year));
+* ```
+*
+* @see desc to sort in descending order
+*/
+function asc(column) {
+	return sql`${column} asc`;
+}
+/**
+* Used in sorting, this specifies that the given
+* column or expression should be sorted in descending
+* order.
+*
+* ## Examples
+*
+* ```ts
+* // Select users, with the most recently created
+* // records coming first.
+* db.select().from(users)
+*   .orderBy(desc(users.createdAt));
+* ```
+*
+* @see asc to sort in ascending order
+*/
+function desc(column) {
+	return sql`${column} desc`;
+}
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/relations.js
+var operators = {
+	and,
+	between,
+	eq,
+	exists,
+	gt,
+	gte,
+	ilike,
+	inArray,
+	arrayContains,
+	arrayContained,
+	arrayOverlaps,
+	isNull,
+	isNotNull,
+	like,
+	lt,
+	lte,
+	ne,
+	not,
+	notBetween,
+	notExists,
+	notLike,
+	notIlike,
+	notInArray,
+	or,
+	sql
+};
+var orderByOperators = {
+	sql,
+	asc,
+	desc
+};
+function mapRelationalRow(rows, isOne, buildQueryResultSelection, parseJson = false, parseJsonIfString = false, useJsonMappers = true) {
+	const maxIdx = isOne ? 1 : rows.length;
+	const decoders = buildQueryResultSelection.map(({ field, fieldType, codec, arrayDimensions, subqueryDecoder }) => {
+		let decoder;
+		switch (fieldType) {
+			case "Column":
+				decoder = field;
+				break;
+			case "SQL":
+				decoder = field.decoder;
+				break;
+			case "SQL.Aliased":
+				decoder = field.sql.decoder;
+				break;
+			case "Subquery":
+				decoder = subqueryDecoder ?? noopDecoder;
+				break;
+			case "Nested":
+				decoder = noopDecoder;
+				break;
+			default: decoder = field.getSQL().decoder;
+		}
+		if (useJsonMappers && field.mapFromJsonValue) return (v) => field.mapFromJsonValue(v);
+		return decoder.mapFromDriverValue.isNoop ? codec ? (value) => codec(value, arrayDimensions) : void 0 : codec ? (value) => decoder.mapFromDriverValue(codec(value, arrayDimensions)) : (value) => decoder.mapFromDriverValue(value);
+	});
+	for (let i = 0; i < maxIdx; ++i) {
+		const row = isOne ? rows : rows[i];
+		for (let selectionItemIdx = 0; selectionItemIdx < buildQueryResultSelection.length; ++selectionItemIdx) {
+			const selectionItem = buildQueryResultSelection[selectionItemIdx];
+			if (selectionItem.selection) {
+				if (row[selectionItem.key] === null) continue;
+				if (parseJson) {
+					row[selectionItem.key] = JSON.parse(row[selectionItem.key]);
+					if (row[selectionItem.key] === null) continue;
+				} else if (parseJsonIfString && typeof row[selectionItem.key] === "string") row[selectionItem.key] = JSON.parse(row[selectionItem.key]);
+				if (selectionItem.isArray) {
+					mapRelationalRow(row[selectionItem.key], false, selectionItem.selection, false, parseJsonIfString);
+					continue;
+				}
+				mapRelationalRow(row[selectionItem.key], true, selectionItem.selection, false, parseJsonIfString);
+				continue;
+			}
+			if (row[selectionItem.key] === null) continue;
+			const decoder = decoders[selectionItemIdx];
+			if (!decoder) continue;
+			row[selectionItem.key] = decoder(row[selectionItem.key]);
+		}
+	}
+	return rows;
+}
+function mapRelationalRowFromArrays(rows, isOne, buildQueryResultSelection, parseJson = false, parseJsonIfString = false) {
+	const maxIdx = isOne ? 1 : rows.length;
+	const decoders = buildQueryResultSelection.map(({ field, fieldType, codec, arrayDimensions, subqueryDecoder }) => {
+		let decoder;
+		switch (fieldType) {
+			case "Column":
+				decoder = field;
+				break;
+			case "SQL":
+				decoder = field.decoder;
+				break;
+			case "SQL.Aliased":
+				decoder = field.sql.decoder;
+				break;
+			case "Subquery":
+				decoder = subqueryDecoder ?? noopDecoder;
+				break;
+			case "Nested":
+				decoder = noopDecoder;
+				break;
+			default: decoder = field.getSQL().decoder;
+		}
+		return decoder.mapFromDriverValue.isNoop ? codec ? (value) => codec(value, arrayDimensions) : void 0 : codec ? (value) => decoder.mapFromDriverValue(codec(value, arrayDimensions)) : (value) => decoder.mapFromDriverValue(value);
+	});
+	const results = new Array(maxIdx);
+	for (let i = 0; i < maxIdx; ++i) {
+		const row = isOne ? rows : rows[i];
+		const result = {};
+		for (let selectionItemIdx = 0; selectionItemIdx < buildQueryResultSelection.length; ++selectionItemIdx) {
+			const selectionItem = buildQueryResultSelection[selectionItemIdx];
+			let value = row[selectionItemIdx];
+			if (selectionItem.selection) {
+				if (value === null) {
+					result[selectionItem.key] = null;
+					continue;
+				}
+				if (parseJson) {
+					value = JSON.parse(value);
+					if (value === null) {
+						result[selectionItem.key] = null;
+						continue;
+					}
+				} else if (parseJsonIfString && typeof value === "string") value = JSON.parse(value);
+				if (selectionItem.isArray) mapRelationalRow(value, false, selectionItem.selection, false, parseJsonIfString);
+				else mapRelationalRow(value, true, selectionItem.selection, false, parseJsonIfString);
+				result[selectionItem.key] = value;
+				continue;
+			}
+			if (value === null) {
+				result[selectionItem.key] = null;
+				continue;
+			}
+			const decoder = decoders[selectionItemIdx];
+			result[selectionItem.key] = decoder ? decoder(value) : value;
+		}
+		results[i] = result;
+	}
+	return isOne ? results[0] : results;
+}
+function makeDefaultRqbMapper({ selection, isFirst, parseJson, parseJsonIfString, rootJsonMappers, arrayModeRoot }) {
+	return ((rows) => {
+		if (isFirst && !rows[0]) return rows[0];
+		return arrayModeRoot ? mapRelationalRowFromArrays(isFirst ? rows[0] : rows, isFirst, selection, parseJson, parseJsonIfString) : mapRelationalRow(isFirst ? rows[0] : rows, isFirst, selection, parseJson, parseJsonIfString, rootJsonMappers);
+	});
+}
+function makeJitRqbMapperInner(selection, rowExpr, selectionVar, parseJson, parseJsonIfString, useJsonMappers, preFn, counter, accessByIdx) {
+	const bodyStmts = [];
+	const literalEntries = [];
+	let hasWork = false;
+	const fieldVars = selection.map(() => `c${counter.n++}`);
+	const destructurePieces = selection.map((item, idx) => accessByIdx ? fieldVars[idx] : `${JSON.stringify(item.key)}: ${fieldVars[idx]}`);
+	bodyStmts.push(accessByIdx ? `let [ ${destructurePieces.join(", ")} ] = ${rowExpr};` : `let { ${destructurePieces.join(", ")} } = ${rowExpr};`);
+	for (const [idx, { field, fieldType, key, codec, isArray, selection: innerSelection, arrayDimensions, subqueryDecoder }] of selection.entries()) {
+		const sel = `${selectionVar}[${idx}]`;
+		const keyStr = JSON.stringify(key);
+		const slot = fieldVars[idx];
+		if (innerSelection) {
+			if (parseJson) {
+				bodyStmts.push(`if (${slot} !== null) ${slot} = JSON.parse(${slot});`);
+				hasWork = true;
+			} else if (parseJsonIfString) {
+				bodyStmts.push(`if (typeof ${slot} === 'string') ${slot} = JSON.parse(${slot});`);
+				hasWork = true;
+			}
+			const nestedSelVar = `s${counter.n++}`;
+			const savedPreFnLen = preFn.length;
+			preFn.push(`const { selection: ${nestedSelVar} } = ${sel};`);
+			if (isArray) {
+				const j = `j${counter.n++}`;
+				const inner = makeJitRqbMapperInner(innerSelection, `${slot}[${j}]`, nestedSelVar, false, parseJsonIfString, true, preFn, counter, false);
+				if (inner.hasWork) {
+					hasWork = true;
+					bodyStmts.push(`if (${slot} !== null) {`);
+					bodyStmts.push(`\tfor (let ${j} = 0; ${j} < ${slot}.length; ++${j}) {`);
+					for (const s of inner.bodyStmts) bodyStmts.push(`\t\t${s}`);
+					bodyStmts.push(`\t\t${slot}[${j}] = ${inner.literal};`);
+					bodyStmts.push(`\t}`);
+					bodyStmts.push(`}`);
+				} else preFn.splice(savedPreFnLen, 1);
+			} else {
+				const inner = makeJitRqbMapperInner(innerSelection, slot, nestedSelVar, false, parseJsonIfString, true, preFn, counter, false);
+				if (inner.hasWork) {
+					hasWork = true;
+					bodyStmts.push(`if (${slot} !== null) {`);
+					for (const s of inner.bodyStmts) bodyStmts.push(`\t${s}`);
+					bodyStmts.push(`\t${slot} = ${inner.literal};`);
+					bodyStmts.push(`}`);
+				} else preFn.splice(savedPreFnLen, 1);
+			}
+			literalEntries.push(`${keyStr}: ${slot}`);
+			continue;
+		}
+		let decoderExpr = "";
+		let destructure = "";
+		let bypassCodecs = false;
+		switch (fieldType) {
+			case "Column":
+				if (useJsonMappers && field.mapFromJsonValue) {
+					bypassCodecs = true;
+					const id = counter.n++;
+					destructure = `field: dec${id}`;
+					decoderExpr = `dec${id}.mapFromJsonValue`;
+				} else if (!field.mapFromDriverValue.isNoop) {
+					const id = counter.n++;
+					destructure = `field: dec${id}`;
+					decoderExpr = `dec${id}.mapFromDriverValue`;
+				}
+				break;
+			case "SQL":
+				if (useJsonMappers && field.decoder.mapFromJsonValue) {
+					bypassCodecs = true;
+					const id = counter.n++;
+					destructure = `field: { decoder: dec${id} }`;
+					decoderExpr = `dec${id}.mapFromJsonValue`;
+				} else if (!field.decoder.mapFromDriverValue.isNoop) {
+					const id = counter.n++;
+					destructure = `field: { decoder: dec${id} }`;
+					decoderExpr = `dec${id}.mapFromDriverValue`;
+				}
+				break;
+			case "SQL.Aliased":
+				if (useJsonMappers && field.sql.decoder.mapFromJsonValue) {
+					bypassCodecs = true;
+					const id = counter.n++;
+					destructure = `field: { sql: { decoder: dec${id} } }`;
+					decoderExpr = `dec${id}.mapFromJsonValue`;
+				} else if (!field.sql.decoder.mapFromDriverValue.isNoop) {
+					const id = counter.n++;
+					destructure = `field: { sql: { decoder: dec${id} } }`;
+					decoderExpr = `dec${id}.mapFromDriverValue`;
+				}
+				break;
+			case "Subquery":
+				if (useJsonMappers && subqueryDecoder?.mapFromJsonValue) {
+					bypassCodecs = true;
+					const id = counter.n++;
+					destructure = `subqueryDecoder: dec${id}`;
+					decoderExpr = `dec${id}.mapFromJsonValue`;
+				} else if (subqueryDecoder && !subqueryDecoder.mapFromDriverValue.isNoop) {
+					const id = counter.n++;
+					destructure = `subqueryDecoder: dec${id}`;
+					decoderExpr = `dec${id}.mapFromDriverValue`;
+				}
+				break;
+			case "Nested": break;
+			default: {
+				const sqlExpr = field.getSQL();
+				if (useJsonMappers && sqlExpr.decoder.mapFromJsonValue) {
+					bypassCodecs = true;
+					const id = counter.n++;
+					preFn.push(`const dec${id} = ${sel}.field.getSQL().decoder;`);
+					decoderExpr = `dec${id}.mapFromJsonValue`;
+				} else if (!sqlExpr.decoder.mapFromDriverValue.isNoop) {
+					const id = counter.n++;
+					preFn.push(`const dec${id} = ${sel}.field.getSQL().decoder;`);
+					decoderExpr = `dec${id}.mapFromDriverValue`;
+				}
+			}
+		}
+		let codecVar = "";
+		if (!bypassCodecs && codec) codecVar = `codec${counter.n++}`;
+		if (destructure || codecVar) {
+			const parts = [];
+			if (destructure) parts.push(destructure);
+			if (codecVar) parts.push(`codec: ${codecVar}`);
+			preFn.push(`const { ${parts.join(", ")} } = ${sel};`);
+		}
+		if (decoderExpr || codecVar) {
+			hasWork = true;
+			let decoded = slot;
+			if (codecVar) decoded = `${codecVar}(${decoded}, ${arrayDimensions})`;
+			if (decoderExpr) decoded = `${decoderExpr}(${decoded})`;
+			literalEntries.push(`${keyStr}: ${slot} === null ? null : ${decoded}`);
+		} else literalEntries.push(`${keyStr}: ${slot}`);
+	}
+	return {
+		bodyStmts,
+		literal: `{ ${literalEntries.join(", ")} }`,
+		hasWork
+	};
+}
+function makeJitRqbMapper({ selection, isFirst, parseJson, parseJsonIfString, rootJsonMappers, arrayModeRoot }) {
+	const preFn = [];
+	const inner = makeJitRqbMapperInner(selection, "row", "selection", parseJson, parseJsonIfString, arrayModeRoot ? false : rootJsonMappers, preFn, { n: 0 }, !!arrayModeRoot);
+	const lines = [];
+	lines.push(`\t"use strict";
+	const { selection } = this;`);
+	for (const p of preFn) lines.push(`\t${p}`);
+	if (arrayModeRoot) {
+		if (isFirst) {
+			lines.push(`\tconst row = rows[0];`);
+			lines.push(`\tif (!row) return undefined;`);
+			for (const s of inner.bodyStmts) lines.push(`\t${s}`);
+			lines.push(`\treturn ${inner.literal};`);
+		} else {
+			lines.push(`\tconst { length } = rows;`);
+			lines.push(`\tconst mapped = new Array(length);`);
+			lines.push(`\tfor (let i = 0; i < length; ++i) {`);
+			lines.push(`\t\tconst row = rows[i];`);
+			for (const s of inner.bodyStmts) lines.push(`\t\t${s}`);
+			lines.push(`\t\tmapped[i] = ${inner.literal};`);
+			lines.push(`\t}`);
+			lines.push(`\treturn mapped;`);
+		}
+	} else if (!inner.hasWork) lines.push(isFirst ? `\treturn rows[0];` : `\treturn rows;`);
+	else if (isFirst) {
+		lines.push(`\tconst row = rows[0];`);
+		lines.push(`\tif (!row) return undefined;`);
+		for (const s of inner.bodyStmts) lines.push(`\t${s}`);
+		lines.push(`\trows[0] = ${inner.literal};`);
+		lines.push(`\treturn rows[0];`);
+	} else {
+		lines.push(`\tfor (let i = 0; i < rows.length; ++i) {`);
+		lines.push(`\t\tconst row = rows[i];`);
+		for (const s of inner.bodyStmts) lines.push(`\t\t${s}`);
+		lines.push(`\t\trows[i] = ${inner.literal};`);
+		lines.push(`\t}`);
+		lines.push(`\treturn rows;`);
+	}
+	lines.push("	//# sourceURL=drizzle:jit-relational-query-mapper");
+	const compiled = lines.join("\n");
+	return Object.assign(new FnConstructor("rows", compiled).bind({ selection }), { body: `function jitRqbMapper (rows) {\n${compiled}\n}` });
+}
+/** @internal */
+function fieldSelectionToSQL(table, target) {
+	const field = table[TableColumns][target];
+	const kind = chunkKindOf(field);
+	if (isChunk(field, kind, chunkKinds.column)) return field;
+	return new SQL([
+		table,
+		commonStringChunks["."],
+		sql.identifier(isChunk(field, kind, chunkKinds.aliased) ? field.fieldAlias : target)
+	]);
+}
+var ConditionsCollector = class {
+	chunks;
+	separator;
+	static [entityKind] = "ConditionsCollector";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	start;
+	count = 0;
+	mark = 0;
+	conditionStart = 0;
+	constructor(chunks, separator) {
+		this.chunks = chunks;
+		this.separator = separator;
+		this.start = chunks.length;
+		chunks.push(void 0);
+	}
+	/** Must be called before pushing a condition's chunks */
+	open() {
+		this.mark = this.chunks.length;
+		if (this.count) this.chunks.push(this.separator);
+		this.conditionStart = this.chunks.length;
+	}
+	/** Must be called after pushing a condition's chunks, drops the condition if nothing was pushed */
+	close() {
+		if (this.chunks.length === this.conditionStart) {
+			this.chunks.length = this.mark;
+			return;
+		}
+		++this.count;
+	}
+	push(condition) {
+		if (condition === void 0) return;
+		if (this.count) this.chunks.push(this.separator);
+		this.chunks.push(condition);
+		++this.count;
+	}
+	pushChunks(condition) {
+		if (!condition?.length) return;
+		if (this.count) this.chunks.push(this.separator);
+		for (let i = 0; i < condition.length; ++i) this.chunks.push(condition[i]);
+		++this.count;
+	}
+	/** Returns whether any condition was collected, removes reserved chunk otherwise */
+	finish() {
+		if (!this.count) {
+			this.chunks.length = this.start;
+			return false;
+		}
+		if (this.count > 1) {
+			this.chunks[this.start] = commonStringChunks["(("];
+			this.chunks.push(commonStringChunks["))"]);
+		}
+		return true;
+	}
+};
+function relationsFieldFilterToSQL(column, filter, collectTo = []) {
+	if (filter === EmptyFilter) return void 0;
+	if (filter === void 0) throw new Error(`Unexpected 'undefined' in filter value. Use 'EmptyFilter' if you want the filter field to be skipped.`);
+	if (typeof filter !== "object" || is(filter, Placeholder)) {
+		collectTo.push(eq(column, filter));
+		return collectTo;
+	}
+	const entries = Object.entries(filter);
+	if (!entries.length) return void 0;
+	const conditions = new ConditionsCollector(collectTo, commonStringChunks[") and ("]);
+	for (const [target, value] of entries) {
+		if (value === EmptyFilter) continue;
+		if (value === void 0) throw new Error(`Unexpected 'undefined' in filter value. Use 'EmptyFilter' if you want the filter field to be skipped.`);
+		switch (target) {
+			case "NOT": {
+				conditions.open();
+				const notStart = collectTo.length;
+				collectTo.push(commonStringChunks["not ("]);
+				relationsFieldFilterToSQL(column, value, collectTo);
+				if (collectTo.length === notStart + 1) collectTo.length = notStart;
+				else collectTo.push(commonStringChunks[")"]);
+				conditions.close();
+				continue;
+			}
+			case "OR":
+			case "AND": {
+				const subFilters = value;
+				if (!subFilters.length) throw new Error(`Unexpected empty array in filters' '${target}' section. Omit field or use 'EmptyFilter' if you want filter to be skipped.`);
+				conditions.open();
+				const subConditions = new ConditionsCollector(collectTo, target === "OR" ? commonStringChunks[") or ("] : commonStringChunks[") and ("]);
+				for (const subFilter of subFilters) {
+					subConditions.open();
+					relationsFieldFilterToSQL(column, subFilter, collectTo);
+					subConditions.close();
+				}
+				subConditions.finish();
+				conditions.close();
+				continue;
+			}
+			case "isNotNull":
+			case "isNull":
+				if (!value) continue;
+				conditions.push(operators[target](column));
+				continue;
+			case "in":
+				conditions.push(operators.inArray(column, value));
+				continue;
+			case "notIn":
+				conditions.push(operators.notInArray(column, value));
+				continue;
+			default:
+				conditions.push(operators[target](column, value));
+				continue;
+		}
+	}
+	return conditions.finish() ? collectTo : void 0;
+}
+function relationsFilterToSQL(table, filter, tableRelations = {}, tablesRelations = {}, withSubqueries, depth = 0, collectTo = []) {
+	if (filter === EmptyFilter) return {
+		sql: void 0,
+		hasRelationFilters: false
+	};
+	if (filter === void 0) throw new Error(`Unexpected 'undefined' in filter value. Use 'EmptyFilter' if you want the filter field to be skipped.`);
+	const entries = Object.entries(filter);
+	if (!entries.length) return {
+		sql: void 0,
+		hasRelationFilters: false
+	};
+	const conditions = new ConditionsCollector(collectTo, commonStringChunks[") and ("]);
+	let hasRelationFilters = false;
+	const buildNested = (subFilter) => {
+		if (relationsFilterToSQL(table, subFilter, tableRelations, tablesRelations, withSubqueries, depth, collectTo).hasRelationFilters) hasRelationFilters = true;
+	};
+	for (const [target, value] of entries) {
+		if (value === EmptyFilter) continue;
+		if (value === void 0) throw new Error(`Unexpected 'undefined' in filter value. Use 'EmptyFilter' if you want the filter field to be skipped.`);
+		switch (target) {
+			case "RAW": {
+				const processed = typeof value === "function" ? value(table, operators) : value.getSQL();
+				if (processed === EmptyFilter) continue;
+				conditions.push(processed);
+				hasRelationFilters = true;
+				continue;
+			}
+			case "OR":
+			case "AND": {
+				const subFilters = value;
+				if (!subFilters.length) throw new Error(`Unexpected empty array in filters' '${target}' section. Omit field or use 'EmptyFilter' if you want filter to be skipped.`);
+				conditions.open();
+				const subConditions = new ConditionsCollector(collectTo, target === "OR" ? commonStringChunks[") or ("] : commonStringChunks[") and ("]);
+				for (const subFilter of subFilters) {
+					subConditions.open();
+					buildNested(subFilter);
+					subConditions.close();
+				}
+				subConditions.finish();
+				conditions.close();
+				continue;
+			}
+			case "NOT": {
+				conditions.open();
+				const notStart = collectTo.length;
+				collectTo.push(commonStringChunks["not ("]);
+				buildNested(value);
+				if (collectTo.length === notStart + 1) collectTo.length = notStart;
+				else collectTo.push(commonStringChunks[")"]);
+				conditions.close();
+				continue;
+			}
+			default: {
+				if (Object.prototype.hasOwnProperty.call(table[TableColumns], target) && table[TableColumns][target]) {
+					conditions.open();
+					relationsFieldFilterToSQL(fieldSelectionToSQL(table, target), value, collectTo);
+					conditions.close();
+					continue;
+				}
+				const relation = Object.prototype.hasOwnProperty.call(tableRelations, target) ? tableRelations[target] : void 0;
+				if (!relation) throw new DrizzleError({ message: `Unknown relational filter field: "${target}"` });
+				if (withSubqueries) {
+					collectSubquery(withSubqueries, relation.targetTable);
+					collectSubquery(withSubqueries, relation.throughTable);
+				}
+				const targetTable = aliasedTable(relation.targetTable, `f${depth}`);
+				const throughTable = relation.throughTable ? aliasedTable(relation.throughTable, `ft${depth}`) : void 0;
+				const targetConfig = tablesRelations[relation.targetTableName];
+				const isExistsOnly = typeof value === "boolean";
+				conditions.open();
+				const conditionStart = collectTo.length;
+				collectTo.push(value ? commonStringChunks["exists (select * from "] : commonStringChunks["not exists (select * from "]);
+				getTableAsAliasSQL(targetTable, collectTo);
+				if (throughTable) {
+					collectTo.push(commonStringChunks[" inner join "]);
+					getTableAsAliasSQL(throughTable, collectTo);
+					collectTo.push(commonStringChunks[" on "]);
+				}
+				const { filter: relationFilter } = relationToSQL(relation, table, targetTable, throughTable, [], collectTo);
+				collectTo.push(commonStringChunks[" where "]);
+				const where = new ConditionsCollector(collectTo, commonStringChunks[") and ("]);
+				where.pushChunks(relationFilter);
+				if (!isExistsOnly) {
+					where.open();
+					const subfilter = relationsFilterToSQL(targetTable, value, targetConfig.relations, tablesRelations, withSubqueries, depth + 1, collectTo);
+					where.close();
+					if (!subfilter.sql) {
+						collectTo.length = conditionStart;
+						conditions.close();
+						continue;
+					}
+				}
+				where.finish();
+				collectTo.push(commonStringChunks[")"]);
+				conditions.close();
+				hasRelationFilters = true;
+			}
+		}
+	}
+	return {
+		sql: conditions.finish() ? collectTo : void 0,
+		hasRelationFilters
+	};
+}
+var relationsOrderAggregates = /* @__PURE__ */ new Set([
+	"min",
+	"max",
+	"count",
+	"avg",
+	"first"
+]);
+function parseRelationsOrderValue(value, path) {
+	if (typeof value !== "string") throw new DrizzleError({ message: `Invalid order "${path}": expected a string, got ${value === null ? "null" : typeof value}` });
+	const parts = value.split("(");
+	const direction = parts[0];
+	if (direction !== "asc" && direction !== "desc") throw new DrizzleError({ message: `Invalid order "${path}": unknown direction "${direction}" in "${value}", expected "asc" or "desc"` });
+	if (parts.length === 1) return { direction };
+	if (parts.length > 2 || !parts[1].endsWith(")")) throw new DrizzleError({ message: `Invalid order "${path}": malformed value "${value}", expected "${direction}" or "${direction}(<aggregate>)"` });
+	const aggregate = parts[1].slice(0, -1);
+	if (!relationsOrderAggregates.has(aggregate)) throw new DrizzleError({ message: `Invalid order "${path}": unknown aggregate "${aggregate}" in "${value}", expected one of: ${[...relationsOrderAggregates].join(", ")}` });
+	return {
+		direction,
+		aggregate
+	};
+}
+function relationsOrderEntriesToSQL(table, orders, tableRelations, tablesRelations, withSubqueries, singleRowLimit, source, collectTo, start = collectTo.length) {
+	for (const [target, value] of Object.entries(orders)) {
+		if (!value) continue;
+		const path = source ? `${source.path}.${target}` : target;
+		if (Object.prototype.hasOwnProperty.call(table[TableColumns], target) && table[TableColumns][target]) {
+			const { direction, aggregate } = parseRelationsOrderValue(value, path);
+			if (!!aggregate !== !!source?.isAggregated) throw new DrizzleError({ message: `Invalid order "${path}": expected ${source?.isAggregated ? "\"asc(<aggregate>)\" or \"desc(<aggregate>)\", with aggregate being one of: min, max, count, avg, first" : "\"asc\" or \"desc\""}, got "${value}"` });
+			const column = fieldSelectionToSQL(table, target);
+			if (collectTo.length > start) collectTo.push(commonStringChunks[", "]);
+			if (!source) {
+				collectTo.push(column, direction === "asc" ? commonStringChunks[" asc"] : commonStringChunks[" desc"]);
+				continue;
+			}
+			const isSingleRowLimited = !aggregate || aggregate === "first";
+			collectTo.push(commonStringChunks["(select "]);
+			if (isSingleRowLimited) {
+				if (singleRowLimit === "top") collectTo.push(commonStringChunks["top(1) "]);
+				collectTo.push(column);
+			} else collectTo.push(commonStringChunks[`${aggregate}(`], column, commonStringChunks[")"]);
+			collectTo.push(commonStringChunks[" from "]);
+			for (let i = 0; i < source.from.length; ++i) collectTo.push(source.from[i]);
+			const whereStart = collectTo.length;
+			collectTo.push(commonStringChunks[" where "]);
+			const where = new ConditionsCollector(collectTo, commonStringChunks[") and ("]);
+			for (let i = 0; i < source.filters.length; ++i) where.pushChunks(source.filters[i]);
+			if (!where.finish()) collectTo.length = whereStart;
+			if (isSingleRowLimited && singleRowLimit === "limit") collectTo.push(commonStringChunks[" limit 1"]);
+			collectTo.push(commonStringChunks[")"], direction === "asc" ? commonStringChunks[" asc"] : commonStringChunks[" desc"]);
+			continue;
+		}
+		const relation = Object.prototype.hasOwnProperty.call(tableRelations, target) ? tableRelations[target] : void 0;
+		if (!relation) throw new DrizzleError({ message: `Unknown relational order field: "${path}"` });
+		const count = relation.relationType === "many" && typeof value === "string" ? parseRelationsOrderValue(value, path) : void 0;
+		const countDirection = count?.aggregate === "count" ? count.direction : void 0;
+		if (typeof value !== "object" && !countDirection) throw new DrizzleError({ message: `Invalid order "${path}": expected an object with fields of relation to order by${relation.relationType === "many" ? ", \"asc(count)\" or \"desc(count)\"" : ""}, got "${value}"` });
+		if (withSubqueries) {
+			collectSubquery(withSubqueries, relation.targetTable);
+			collectSubquery(withSubqueries, relation.throughTable);
+		}
+		const depth = source?.depth ?? 0;
+		const targetTable = aliasedTable(relation.targetTable, `o${depth}`);
+		const throughTable = relation.throughTable ? aliasedTable(relation.throughTable, `ot${depth}`) : void 0;
+		const from = source ? [...source.from, commonStringChunks[" cross join "]] : [];
+		getTableAsAliasSQL(targetTable, from);
+		if (throughTable) {
+			from.push(commonStringChunks[" inner join "]);
+			getTableAsAliasSQL(throughTable, from);
+			from.push(commonStringChunks[" on "]);
+		}
+		const { filter } = relationToSQL(relation, table, targetTable, throughTable, [], from);
+		const filters = source ? [...source.filters, filter] : [filter];
+		if (typeof value !== "object") {
+			if (collectTo.length > start) collectTo.push(commonStringChunks[", "]);
+			collectTo.push(commonStringChunks["(select count(*) from "]);
+			for (let i = 0; i < from.length; ++i) collectTo.push(from[i]);
+			const whereStart = collectTo.length;
+			collectTo.push(commonStringChunks[" where "]);
+			const where = new ConditionsCollector(collectTo, commonStringChunks[") and ("]);
+			for (let i = 0; i < filters.length; ++i) where.pushChunks(filters[i]);
+			if (!where.finish()) collectTo.length = whereStart;
+			collectTo.push(commonStringChunks[")"], countDirection === "asc" ? commonStringChunks[" asc"] : commonStringChunks[" desc"]);
+			continue;
+		}
+		relationsOrderEntriesToSQL(targetTable, value, tablesRelations[relation.targetTableName]?.relations ?? {}, tablesRelations, withSubqueries, singleRowLimit, {
+			from,
+			filters,
+			isAggregated: !!source?.isAggregated || relation.relationType === "many",
+			depth: depth + 1,
+			path
+		}, collectTo, start);
+	}
+	return collectTo;
+}
+function relationsOrderToSQL(table, orders, tableRelations = {}, tablesRelations = {}, withSubqueries, singleRowLimit = "limit", collectTo = []) {
+	const start = collectTo.length;
+	if (typeof orders === "function") {
+		const data = orders(table, orderByOperators);
+		if (!data) return void 0;
+		const kind = chunkKindOf(data);
+		if (isChunk(data, kind, chunkKinds.sql)) collectTo.push(data);
+		else if (Array.isArray(data)) for (let i = 0; i < data.length; ++i) {
+			if (i) collectTo.push(commonStringChunks[", "]);
+			const item = data[i];
+			collectTo.push(item);
+			if (chunkKindOf(item) !== chunkKinds.sql) collectTo.push(commonStringChunks[" asc"]);
+		}
+		else if (isChunk(data, kind, chunkKinds.column)) collectTo.push(data, commonStringChunks[" asc"]);
+		return collectTo.length > start ? collectTo : void 0;
+	}
+	relationsOrderEntriesToSQL(table, orders, tableRelations, tablesRelations, withSubqueries, singleRowLimit, void 0, collectTo, start);
+	return collectTo.length > start ? collectTo : void 0;
+}
+function relationExtrasToSQL(table, extras, codecs, inJson, collectTo = []) {
+	const start = collectTo.length;
+	const selection = [];
+	for (const [key, field] of Object.entries(extras)) {
+		const extra = typeof field === "function" ? field(table, { sql: operators.sql }) : field;
+		if (!extra) continue;
+		const subq = extra.getSQL();
+		const column = codecs ? getColumnFromDecoder(subq) : void 0;
+		const query = column && inJson && !column.jsonSelectIdentifier ? new SQL([
+			codecs.apply(column, "castInJson", new SQL([
+				commonStringChunks["("],
+				subq,
+				commonStringChunks[")"]
+			])),
+			commonStringChunks[" as "],
+			sql.identifier(key)
+		]) : new SQL([
+			commonStringChunks["("],
+			subq,
+			commonStringChunks[") as "],
+			sql.identifier(key)
+		]);
+		query.decoder = subq.decoder;
+		if (collectTo.length > start) collectTo.push(commonStringChunks[", "]);
+		collectTo.push(query);
+		selection.push(column && (!inJson || !column.mapFromJsonValue) ? {
+			key,
+			field: query,
+			fieldType: "SQL",
+			codec: codecs.get(column, inJson ? "normalizeInJson" : "normalize"),
+			arrayDimensions: column.dimensions
+		} : {
+			key,
+			field: query,
+			fieldType: "SQL"
+		});
+	}
+	return {
+		sql: collectTo.length > start ? collectTo : void 0,
+		selection
+	};
+}
+function relationFieldIdentifier({ _: { column, key } }) {
+	const kind = chunkKindOf(column);
+	return sql.identifier(isChunk(column, kind, chunkKinds.column) ? column.name : isChunk(column, kind, chunkKinds.aliased) ? column.fieldAlias : key);
+}
+/** Pushes `"left"."field" = "right"."field"` as a condition */
+function collectRelationFieldsEquality(conditions, collectTo, leftTable, leftField, rightTable, rightField) {
+	conditions.open();
+	collectTo.push(leftTable, commonStringChunks["."], relationFieldIdentifier(leftField), commonStringChunks[" = "], rightTable, commonStringChunks["."], relationFieldIdentifier(rightField));
+	conditions.close();
+}
+function relationToSQL(relation, sourceTable, targetTable, throughTable, filterTo = [], joinConditionTo = []) {
+	const whereTable = relation.isFilterReversed ? sourceTable : targetTable;
+	const sourceRef = sourceTable[Qualifier];
+	const targetRef = targetTable[Qualifier];
+	const throughRef = throughTable?.[Qualifier];
+	const filter = new ConditionsCollector(filterTo, commonStringChunks[") and ("]);
+	if (relation.through) {
+		const { sourceColumns, targetColumns, through: { source, target } } = relation;
+		filter.open();
+		relationsFilterToSQL(whereTable, relation.where, {}, {}, void 0, 0, filterTo);
+		filter.close();
+		for (let i = 0; i < sourceColumns.length; ++i) collectRelationFieldsEquality(filter, filterTo, sourceRef, sourceColumns[i], throughRef, source[i]);
+		filter.finish();
+		const joinCondition = new ConditionsCollector(joinConditionTo, commonStringChunks[") and ("]);
+		for (let i = 0; i < targetColumns.length; ++i) collectRelationFieldsEquality(joinCondition, joinConditionTo, throughRef, target[i], targetRef, targetColumns[i]);
+		joinCondition.finish();
+		return {
+			filter: filterTo,
+			joinCondition: joinConditionTo
+		};
+	}
+	const { sourceColumns, targetColumns } = relation;
+	for (let i = 0; i < sourceColumns.length; ++i) collectRelationFieldsEquality(filter, filterTo, sourceRef, sourceColumns[i], targetRef, targetColumns[i]);
+	filter.open();
+	relationsFilterToSQL(whereTable, relation.where, {}, {}, void 0, 0, filterTo);
+	filter.close();
+	filter.finish();
+	return { filter: filterTo };
+}
+/**
+* @internal
+* Pushes `where` of relational query: its own filter and filter of relation it's queried through
+*/
+function relationalQueryWhereToSQL(table, params, tableRelations, tablesRelations, withSubqueries, relationWhere, collectTo = []) {
+	const conditions = new ConditionsCollector(collectTo, commonStringChunks[") and ("]);
+	let hasRelationFilters = false;
+	if (params && "where" in params) {
+		conditions.open();
+		hasRelationFilters = relationsFilterToSQL(table, params.where, tableRelations, tablesRelations, withSubqueries, 0, collectTo).hasRelationFilters;
+		conditions.close();
+	}
+	conditions.pushChunks(relationWhere);
+	return {
+		sql: conditions.finish() ? collectTo : void 0,
+		hasRelationFilters
+	};
+}
+function collectRqbFieldSelection(collectTo, tableRef, name, key, codecs, decoderColumn, inJson) {
+	if (decoderColumn && inJson) collectTo.push(codecs.apply(decoderColumn, "castInJson", new SQL([
+		tableRef,
+		commonStringChunks["."],
+		sql.identifier(name)
+	])));
+	else collectTo.push(tableRef, commonStringChunks["."], sql.identifier(name));
+	collectTo.push(commonStringChunks[" as "], sql.identifier(key));
+}
+/** Pushes field of table selected by relational query, adds it to `selection` */
+function buildRqbColumn(tableRef, field, key, inJson, selection, tableTsName, codecs, collectTo) {
+	let decoderColumn;
+	let subqueryDecoder;
+	let fieldType;
+	const kind = chunkKindOf(field);
+	if (isChunk(field, kind, chunkKinds.column)) {
+		decoderColumn = field;
+		fieldType = "Column";
+		const { jsonSelectIdentifier, dimensions } = field;
+		const cast = inJson && jsonSelectIdentifier ? void 0 : inJson ? codecs.codecsOf(field).castInJson : void 0;
+		if (cast || inJson && jsonSelectIdentifier) {
+			const name = new SQL([
+				tableRef,
+				commonStringChunks["."],
+				sql.identifier(field.name)
+			]);
+			const casted = cast ? cast(name, dimensions) : jsonSelectIdentifier.call(field, name, sql, dimensions);
+			collectTo.push(casted, commonStringChunks[" as "], sql.identifier(key));
+		} else collectTo.push(tableRef, commonStringChunks["."], sql.identifier(field.name), commonStringChunks[" as "], sql.identifier(key));
+	} else if (isChunk(field, kind, chunkKinds.sql)) {
+		decoderColumn = getColumnFromDecoder(field);
+		fieldType = "SQL";
+		collectRqbFieldSelection(collectTo, tableRef, key, key, codecs, decoderColumn, inJson);
+	} else if (isChunk(field, kind, chunkKinds.aliased)) {
+		decoderColumn = getColumnFromDecoder(field);
+		fieldType = "SQL.Aliased";
+		collectRqbFieldSelection(collectTo, tableRef, field.fieldAlias, key, codecs, decoderColumn, inJson);
+	} else if (isChunk(field, kind, chunkKinds.subquery)) {
+		const innerField = Object.values(field._.selectedFields)[0];
+		const innerKind = chunkKindOf(innerField);
+		if (isChunk(innerField, innerKind, chunkKinds.column)) {
+			decoderColumn = innerField;
+			subqueryDecoder = innerField;
+		} else if (isChunk(innerField, innerKind, chunkKinds.aliased)) {
+			decoderColumn = getColumnFromDecoder(innerField);
+			subqueryDecoder = innerField.sql.decoder;
+		} else if (isChunk(innerField, innerKind, chunkKinds.sql)) {
+			decoderColumn = getColumnFromDecoder(innerField);
+			subqueryDecoder = innerField.decoder;
+		}
+		fieldType = "Subquery";
+		collectRqbFieldSelection(collectTo, tableRef, field._.alias, key, codecs, decoderColumn, inJson);
+	} else if (isSQLWrapper(field)) {
+		decoderColumn = getColumnFromDecoder(field);
+		fieldType = "SQLWrapper";
+		collectRqbFieldSelection(collectTo, tableRef, key, key, codecs, decoderColumn, inJson);
+	} else throw new DrizzleError({ message: field === void 0 ? `Unknown column: "${tableTsName}"."${key}"` : `Views and subqueries with nested selections are not supported by the relational query builder` });
+	selection.push(decoderColumn ? {
+		key,
+		field,
+		fieldType,
+		subqueryDecoder,
+		codec: !inJson || !decoderColumn.mapFromJsonValue ? codecs.get(decoderColumn, inJson ? "normalizeInJson" : "normalize") : void 0,
+		arrayDimensions: decoderColumn.dimensions
+	} : {
+		key,
+		field,
+		fieldType,
+		subqueryDecoder
+	});
+}
+/** Pushes table's columns selected by relational query separated by commas, returns whether any were selected */
+function buildRqbColumns(tableRef, columns, selection, inJson, tableTsName, codecs, collectTo, columnsConfig) {
+	const start = collectTo.length;
+	if (!columnsConfig) {
+		for (const k of Object.keys(columns)) {
+			if (collectTo.length > start) collectTo.push(commonStringChunks[", "]);
+			buildRqbColumn(tableRef, columns[k], k, inJson, selection, tableTsName, codecs, collectTo);
+		}
+		return true;
+	}
+	let colSelectionMode;
+	for (const k of Object.keys(columnsConfig)) {
+		const v = columnsConfig[k];
+		if (v === void 0) continue;
+		colSelectionMode = colSelectionMode || v;
+		if (v) {
+			if (collectTo.length > start) collectTo.push(commonStringChunks[", "]);
+			buildRqbColumn(tableRef, columns[k], k, inJson, selection, tableTsName, codecs, collectTo);
+		}
+	}
+	if (colSelectionMode === false) for (const k of Object.keys(columns)) {
+		if (columnsConfig[k] === false) continue;
+		if (collectTo.length > start) collectTo.push(commonStringChunks[", "]);
+		buildRqbColumn(tableRef, columns[k], k, inJson, selection, tableTsName, codecs, collectTo);
+	}
+	return collectTo.length > start;
+}
+function collectSubquery(collector, entity) {
+	if (!isChunk(entity, chunkKindOf(entity), chunkKinds.subquery)) return;
+	const name = entity._.alias;
+	const existing = collector.subqueries.get(name);
+	if (existing && existing._.sql !== entity._.sql) throw new DrizzleError({ message: `Different subqueries with the same alias "${name}" are used in a single relational query - make sure every subquery in schema has a unique alias` });
+	collector.subqueries.set(name, entity);
+}
+function getTableAsAliasSQL(table, collectTo = []) {
+	if (!table[IsAlias]) {
+		collectTo.push(table);
+		return collectTo;
+	}
+	const schema = table[TableSchema];
+	if (schema) collectTo.push(sql.identifier(schema), commonStringChunks["."]);
+	collectTo.push(sql.identifier(table[OriginalName]), commonStringChunks[" as "], table[Qualifier]);
+	return collectTo;
+}
+var EmptyFilter = Symbol.for("drizzle:EmptyFilter");
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/column-builder.js
+var ColumnBuilder = class {
+	static [entityKind] = "ColumnBuilder";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	/** @internal */
+	config;
+	constructor(name, dataType, columnType) {
+		this.config = {
+			name,
+			keyAsName: name === "",
+			notNull: false,
+			default: void 0,
+			hasDefault: false,
+			primaryKey: false,
+			isUnique: false,
+			uniqueName: void 0,
+			uniqueType: void 0,
+			dataType,
+			columnType,
+			generated: void 0
+		};
+	}
+	/**
+	* Changes the data type of the column. Commonly used with `json` columns. Also, useful for branded types.
+	*
+	* @example
+	* ```ts
+	* const users = pgTable('users', {
+	* 	id: integer('id').$type<UserId>().primaryKey(),
+	* 	details: json('details').$type<UserDetails>().notNull(),
+	* });
+	* ```
+	*/
+	$type() {
+		return this;
+	}
+	/**
+	* Adds a `not null` clause to the column definition.
+	*
+	* Affects the `select` model of the table - columns *without* `not null` will be nullable on select.
+	*/
+	notNull() {
+		this.config.notNull = true;
+		return this;
+	}
+	/**
+	* Adds a `default <value>` clause to the column definition.
+	*
+	* Affects the `insert` model of the table - columns *with* `default` are optional on insert.
+	*
+	* If you need to set a dynamic default value, use {@link $defaultFn} instead.
+	*/
+	default(value) {
+		this.config.default = value;
+		this.config.hasDefault = true;
+		return this;
+	}
+	/**
+	* Adds a dynamic default value to the column.
+	* The function will be called when the row is inserted, and the returned value will be used as the column value.
+	*
+	* **Note:** This value does not affect the `drizzle-kit` behavior, it is only used at runtime in `drizzle-orm`.
+	*/
+	$defaultFn(fn) {
+		this.config.defaultFn = fn;
+		this.config.hasDefault = true;
+		return this;
+	}
+	/**
+	* Alias for {@link $defaultFn}.
+	*/
+	$default(fn) {
+		return this.$defaultFn(fn);
+	}
+	/**
+	* Adds a dynamic update value to the column.
+	* The function will be called when the row is updated, and the returned value will be used as the column value if none is provided.
+	* If no `default` (or `$defaultFn`) value is provided, the function will be called when the row is inserted as well, and the returned value will be used as the column value.
+	*
+	* **Note:** This value does not affect the `drizzle-kit` behavior, it is only used at runtime in `drizzle-orm`.
+	*/
+	$onUpdateFn(fn) {
+		this.config.onUpdateFn = fn;
+		this.config.hasDefault = true;
+		return this;
+	}
+	/**
+	* Alias for {@link $onUpdateFn}.
+	*/
+	$onUpdate(fn) {
+		return this.$onUpdateFn(fn);
+	}
+	/**
+	* Adds a `primary key` clause to the column definition. This implicitly makes the column `not null`.
+	*
+	* In SQLite, `integer primary key` implicitly makes the column auto-incrementing.
+	*/
+	primaryKey() {
+		this.config.primaryKey = true;
+		this.config.notNull = true;
+		return this;
+	}
+	/** @internal Sets the name of the column to the key within the table definition if a name was not given. */
+	setName(name, casingFn) {
+		if (this.config.name !== "") return;
+		this.config.name = casingFn(name);
+	}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/foreign-keys.js
+var ForeignKeyBuilder = class {
+	static [entityKind] = "SQLiteForeignKeyBuilder";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	/** @internal */
+	reference;
+	/** @internal */
+	_onUpdate;
+	/** @internal */
+	_onDelete;
+	constructor(config, actions) {
+		this.reference = () => {
+			const { name, columns, foreignColumns } = config();
+			return {
+				name,
+				columns,
+				foreignTable: foreignColumns[0].table,
+				foreignColumns
+			};
+		};
+		if (actions) {
+			this._onUpdate = actions.onUpdate;
+			this._onDelete = actions.onDelete;
+		}
+	}
+	onUpdate(action) {
+		this._onUpdate = action;
+		return this;
+	}
+	onDelete(action) {
+		this._onDelete = action;
+		return this;
+	}
+	/** @internal */
+	build(table) {
+		return new ForeignKey(table, this);
+	}
+};
+var ForeignKey = class {
+	table;
+	static [entityKind] = "SQLiteForeignKey";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	reference;
+	onUpdate;
+	onDelete;
+	constructor(table, builder) {
+		this.table = table;
+		this.reference = builder.reference;
+		this.onUpdate = builder._onUpdate;
+		this.onDelete = builder._onDelete;
+	}
+	getName() {
+		const { name, columns, foreignColumns } = this.reference();
+		const columnNames = columns.map((column) => column.name);
+		const foreignColumnNames = foreignColumns.map((column) => column.name);
+		const chunks = [
+			this.table[TableName],
+			...columnNames,
+			foreignColumns[0].table[TableName],
+			...foreignColumnNames
+		];
+		return name ?? `${chunks.join("_")}_fk`;
+	}
+	isNameExplicit() {
+		return !!this.reference().name;
+	}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/columns/common.js
+var SQLiteColumnBuilder = class extends ColumnBuilder {
+	static [entityKind] = "SQLiteColumnBuilder";
+	foreignKeyConfigs = [];
+	references(ref, actions = {}) {
+		this.foreignKeyConfigs.push({
+			ref,
+			actions
+		});
+		return this;
+	}
+	unique(name) {
+		this.config.isUnique = true;
+		this.config.uniqueName = name;
+		return this;
+	}
+	generatedAlwaysAs(as, config) {
+		this.config.generated = {
+			as,
+			type: "always",
+			mode: config?.mode ?? "virtual"
+		};
+		return this;
+	}
+	/** @internal */
+	buildForeignKeys(column, table) {
+		return this.foreignKeyConfigs.map(({ ref, actions }) => {
+			return ((ref, actions) => {
+				const builder = new ForeignKeyBuilder(() => {
+					const foreignColumn = ref();
+					return {
+						columns: [column],
+						foreignColumns: [foreignColumn]
+					};
+				});
+				if (actions.onUpdate) builder.onUpdate(actions.onUpdate);
+				if (actions.onDelete) builder.onDelete(actions.onDelete);
+				return builder.build(table);
+			})(ref, actions);
+		});
+	}
+};
+var SQLiteColumn = class extends Column {
+	static [entityKind] = "SQLiteColumn";
+	/** @internal */
+	table;
+	constructor(table, config) {
+		super(table, config);
+		this.table = table;
+	}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/columns/blob.js
+var SQLiteBigIntBuilder = class extends SQLiteColumnBuilder {
+	static [entityKind] = "SQLiteBigIntBuilder";
+	constructor(name) {
+		super(name, "bigint int64", "SQLiteBigInt");
+	}
+	/** @internal */
+	build(table) {
+		return new SQLiteBigInt(table, this.config);
+	}
+};
+var SQLiteBigInt = class extends SQLiteColumn {
+	static [entityKind] = "SQLiteBigInt";
+	/** @internal */
+	codec = "blob:bigint";
+	getSQLType() {
+		return "blob";
+	}
+	mapToDriverValue = (value) => {
+		return bytesFromUtf8(value.toString());
+	};
+};
+var SQLiteBlobJsonBuilder = class extends SQLiteColumnBuilder {
+	static [entityKind] = "SQLiteBlobJsonBuilder";
+	constructor(name) {
+		super(name, "object json", "SQLiteBlobJson");
+	}
+	/** @internal */
+	build(table) {
+		return new SQLiteBlobJson(table, this.config);
+	}
+};
+var SQLiteBlobJson = class extends SQLiteColumn {
+	static [entityKind] = "SQLiteBlobJson";
+	/** @internal */
+	codec = "blob:json";
+	getSQLType() {
+		return "blob";
+	}
+	mapToDriverValue = (value) => {
+		return bytesFromUtf8(JSON.stringify(value));
+	};
+};
+var SQLiteBlobBufferBuilder = class extends SQLiteColumnBuilder {
+	static [entityKind] = "SQLiteBlobBufferBuilder";
+	constructor(name) {
+		super(name, "object buffer", "SQLiteBlobBuffer");
+	}
+	/** @internal */
+	build(table) {
+		return new SQLiteBlobBuffer(table, this.config);
+	}
+};
+var SQLiteBlobBuffer = class extends SQLiteColumn {
+	static [entityKind] = "SQLiteBlobBuffer";
+	/** @internal */
+	codec = "blob";
+	getSQLType() {
+		return "blob";
+	}
+};
+function blob(a, b) {
+	const { name, config } = getColumnNameAndConfig(a, b);
+	if (config?.mode === "bigint") return new SQLiteBigIntBuilder(name);
+	if (config?.mode === "buffer") return new SQLiteBlobBufferBuilder(name);
+	return new SQLiteBlobJsonBuilder(name);
+}
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/columns/custom.js
+var SQLiteCustomColumnBuilder = class extends SQLiteColumnBuilder {
+	static [entityKind] = "SQLiteCustomColumnBuilder";
+	constructor(name, fieldConfig, customTypeParams) {
+		super(name, "custom", "SQLiteCustomColumn");
+		this.config.fieldConfig = fieldConfig;
+		this.config.customTypeParams = customTypeParams;
+	}
+	/** @internal */
+	build(table) {
+		return new SQLiteCustomColumn(table, this.config);
+	}
+};
+var SQLiteCustomColumn = class extends SQLiteColumn {
+	static [entityKind] = "SQLiteCustomColumn";
+	/** @internal */
+	codec;
+	sqlName;
+	mapFromJsonValue;
+	jsonSelectIdentifier;
+	constructor(table, config) {
+		super(table, config);
+		this.sqlName = config.customTypeParams.dataType(config.fieldConfig);
+		this.mapToDriverValue = config.customTypeParams.toDriver ?? this.mapToDriverValue;
+		this.mapFromDriverValue = config.customTypeParams.fromDriver ?? this.mapFromDriverValue;
+		this.mapFromJsonValue = config.customTypeParams.fromJson;
+		this.jsonSelectIdentifier = config.customTypeParams.forJsonSelect;
+		const cfgCodec = typeof config.customTypeParams.codec === "string" || typeof config.customTypeParams.codec === "undefined" ? config.customTypeParams.codec : config.customTypeParams.codec(config.fieldConfig);
+		this.codec = typeof cfgCodec === "string" ? resolveSQLiteTypeAlias(cfgCodec) : void 0;
+	}
+	getSQLType() {
+		return this.sqlName;
+	}
+};
+/**
+* Custom sqlite database data type generator
+*/
+function customType(customTypeParams) {
+	return (a, b) => {
+		const { name, config } = getColumnNameAndConfig(a, b);
+		return new SQLiteCustomColumnBuilder(name, config, customTypeParams);
+	};
+}
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/columns/integer.js
+var SQLiteBaseIntegerBuilder = class extends SQLiteColumnBuilder {
+	static [entityKind] = "SQLiteBaseIntegerBuilder";
+	constructor(name, dataType, columnType) {
+		super(name, dataType, columnType);
+		this.config.autoIncrement = false;
+	}
+	primaryKey(config) {
+		if (config?.autoIncrement) this.config.autoIncrement = true;
+		this.config.hasDefault = true;
+		return super.primaryKey();
+	}
+};
+var SQLiteBaseInteger = class extends SQLiteColumn {
+	static [entityKind] = "SQLiteBaseInteger";
+	autoIncrement = this.config.autoIncrement;
+	getSQLType() {
+		return "integer";
+	}
+};
+var SQLiteIntegerBuilder = class extends SQLiteBaseIntegerBuilder {
+	static [entityKind] = "SQLiteIntegerBuilder";
+	constructor(name) {
+		super(name, "number int53", "SQLiteInteger");
+	}
+	build(table) {
+		return new SQLiteInteger(table, this.config);
+	}
+};
+var SQLiteInteger = class extends SQLiteBaseInteger {
+	static [entityKind] = "SQLiteInteger";
+	/** @internal */
+	codec = "integer";
+};
+var SQLiteTimestampBuilder = class extends SQLiteBaseIntegerBuilder {
+	static [entityKind] = "SQLiteTimestampBuilder";
+	constructor(name, mode) {
+		super(name, "object date", "SQLiteTimestamp");
+		this.config.mode = mode;
+	}
+	/**
+	* @deprecated Use `default()` with your own expression instead.
+	*
+	* Adds `DEFAULT (cast((julianday('now') - 2440587.5)*86400000 as integer))` to the column, which is the current epoch timestamp in milliseconds.
+	*/
+	defaultNow() {
+		return this.default(sql`(cast((julianday('now') - 2440587.5)*86400000 as integer))`);
+	}
+	build(table) {
+		return new SQLiteTimestamp(table, this.config);
+	}
+};
+var SQLiteTimestamp = class extends SQLiteBaseInteger {
+	static [entityKind] = "SQLiteTimestamp";
+	/** @internal */
+	codec = `integer:${this.config.mode}`;
+	mode = this.config.mode;
+	mapToDriverValue = (value) => {
+		if (typeof value === "number") return value;
+		const unix = value.getTime();
+		if (this.config.mode === "timestamp") return Math.floor(unix / 1e3);
+		return unix;
+	};
+};
+var SQLiteBooleanBuilder = class extends SQLiteBaseIntegerBuilder {
+	static [entityKind] = "SQLiteBooleanBuilder";
+	constructor(name, mode) {
+		super(name, "boolean", "SQLiteBoolean");
+		this.config.mode = mode;
+	}
+	build(table) {
+		return new SQLiteBoolean(table, this.config);
+	}
+};
+var SQLiteBoolean = class extends SQLiteBaseInteger {
+	static [entityKind] = "SQLiteBoolean";
+	/** @internal */
+	codec = "integer:boolean";
+	mode = this.config.mode;
+	mapToDriverValue = (value) => {
+		return value ? 1 : 0;
+	};
+};
+function integer(a, b) {
+	const { name, config } = getColumnNameAndConfig(a, b);
+	if (config?.mode === "timestamp" || config?.mode === "timestamp_ms") return new SQLiteTimestampBuilder(name, config.mode);
+	if (config?.mode === "boolean") return new SQLiteBooleanBuilder(name, config.mode);
+	return new SQLiteIntegerBuilder(name);
+}
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/columns/numeric.js
+var SQLiteNumericBuilder = class extends SQLiteColumnBuilder {
+	static [entityKind] = "SQLiteNumericBuilder";
+	constructor(name) {
+		super(name, "string numeric", "SQLiteNumeric");
+	}
+	/** @internal */
+	build(table) {
+		return new SQLiteNumeric(table, this.config);
+	}
+};
+var SQLiteNumeric = class extends SQLiteColumn {
+	static [entityKind] = "SQLiteNumeric";
+	/** @internal */
+	codec = "numeric";
+	getSQLType() {
+		return "numeric";
+	}
+};
+var SQLiteNumericNumberBuilder = class extends SQLiteColumnBuilder {
+	static [entityKind] = "SQLiteNumericNumberBuilder";
+	constructor(name) {
+		super(name, "number", "SQLiteNumericNumber");
+	}
+	/** @internal */
+	build(table) {
+		return new SQLiteNumericNumber(table, this.config);
+	}
+};
+var SQLiteNumericNumber = class extends SQLiteColumn {
+	static [entityKind] = "SQLiteNumericNumber";
+	/** @internal */
+	codec = "numeric:number";
+	mapToDriverValue = String;
+	getSQLType() {
+		return "numeric";
+	}
+};
+var SQLiteNumericBigIntBuilder = class extends SQLiteColumnBuilder {
+	static [entityKind] = "SQLiteNumericBigIntBuilder";
+	constructor(name) {
+		super(name, "bigint int64", "SQLiteNumericBigInt");
+	}
+	/** @internal */
+	build(table) {
+		return new SQLiteNumericBigInt(table, this.config);
+	}
+};
+var SQLiteNumericBigInt = class extends SQLiteColumn {
+	static [entityKind] = "SQLiteNumericBigInt";
+	/** @internal */
+	codec = "numeric:bigint";
+	mapToDriverValue = String;
+	getSQLType() {
+		return "numeric";
+	}
+};
+function numeric(a, b) {
+	const { name, config } = getColumnNameAndConfig(a, b);
+	const mode = config?.mode;
+	return mode === "number" ? new SQLiteNumericNumberBuilder(name) : mode === "bigint" ? new SQLiteNumericBigIntBuilder(name) : new SQLiteNumericBuilder(name);
+}
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/columns/real.js
+var SQLiteRealBuilder = class extends SQLiteColumnBuilder {
+	static [entityKind] = "SQLiteRealBuilder";
+	constructor(name) {
+		super(name, "number double", "SQLiteReal");
+	}
+	/** @internal */
+	build(table) {
+		return new SQLiteReal(table, this.config);
+	}
+};
+var SQLiteReal = class extends SQLiteColumn {
+	static [entityKind] = "SQLiteReal";
+	/** @internal */
+	codec = "real";
+	getSQLType() {
+		return "real";
+	}
+};
+function real(name) {
+	return new SQLiteRealBuilder(name ?? "");
+}
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/columns/text.js
+var SQLiteTextBuilder = class extends SQLiteColumnBuilder {
+	static [entityKind] = "SQLiteTextBuilder";
+	constructor(name, config) {
+		super(name, config.enum?.length ? "string enum" : "string", "SQLiteText");
+		this.config.enumValues = config.enum;
+		this.config.length = config.length;
+	}
+	/** @internal */
+	build(table) {
+		return new SQLiteText(table, this.config);
+	}
+};
+var SQLiteText = class extends SQLiteColumn {
+	static [entityKind] = "SQLiteText";
+	/** @internal */
+	codec = "text";
+	enumValues = this.config.enumValues;
+	constructor(table, config) {
+		super(table, config);
+	}
+	getSQLType() {
+		return `text${this.config.length ? `(${this.config.length})` : ""}`;
+	}
+};
+var SQLiteTextJsonBuilder = class extends SQLiteColumnBuilder {
+	static [entityKind] = "SQLiteTextJsonBuilder";
+	constructor(name) {
+		super(name, "object json", "SQLiteTextJson");
+	}
+	/** @internal */
+	build(table) {
+		return new SQLiteTextJson(table, this.config);
+	}
+};
+var SQLiteTextJson = class extends SQLiteColumn {
+	static [entityKind] = "SQLiteTextJson";
+	/** @internal */
+	codec = "text:json";
+	getSQLType() {
+		return "text";
+	}
+	mapToDriverValue = (value) => {
+		return JSON.stringify(value);
+	};
+};
+function text(a, b = {}) {
+	const { name, config } = getColumnNameAndConfig(a, b);
+	if (config.mode === "json") return new SQLiteTextJsonBuilder(name);
+	return new SQLiteTextBuilder(name, config);
+}
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/columns/all.js
+function getSQLiteColumnBuilders() {
+	return {
+		blob,
+		customType,
+		integer,
+		numeric,
+		real,
+		text
+	};
+}
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/casing.js
+function toSnakeCase(input) {
+	return (input.replace(/['\u2019]/g, "").match(/[\d\p{Ll}\p{Lo}]+|[\p{Lu}]+(?![\p{Ll}\p{Lo}])|[\p{Lu}][\d\p{Ll}\p{Lo}]+/gu) ?? []).map((word) => word.toLowerCase()).join("_");
+}
+function toCamelCase(input) {
+	return (input.replace(/['\u2019]/g, "").match(/[\d\p{Ll}\p{Lo}]+|[\p{Lu}]+(?![\p{Ll}\p{Lo}])|[\p{Lu}][\d\p{Ll}\p{Lo}]+/gu) ?? []).reduce((acc, word, i) => {
+		return acc + (i === 0 ? word.toLowerCase() : `${word[0].toUpperCase()}${word.slice(1)}`);
+	}, "");
+}
+function getCasingFn(casing) {
+	if (casing === "snake_case") return toSnakeCase;
+	if (casing === "camelCase") return toCamelCase;
+	return (name) => name;
+}
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/table.js
+/** @internal */
+var InlineForeignKeys = Symbol.for("drizzle:SQLiteInlineForeignKeys");
+var SQLiteTable = class extends Table {
+	static [entityKind] = "SQLiteTable";
+	/** @internal */
+	static Symbol = Object.assign({}, Table.Symbol, { InlineForeignKeys });
+	/** @internal */
+	[Table.Symbol.Columns];
+	/** @internal */
+	[InlineForeignKeys] = [];
+	/** @internal */
+	[Table.Symbol.ExtraConfigBuilder] = void 0;
+};
+/** @internal */
+function sqliteTableBase(name, columns, extraConfig, schema, casing, baseName = name) {
+	const casingFn = getCasingFn(casing);
+	const rawTable = new SQLiteTable(name, schema, baseName);
+	const parsedColumns = typeof columns === "function" ? columns(getSQLiteColumnBuilders()) : columns;
+	const builtColumns = Object.fromEntries(Object.entries(parsedColumns).map(([name, colBuilderBase]) => {
+		const colBuilder = colBuilderBase;
+		colBuilder.setName(name, casingFn);
+		const column = colBuilder.build(rawTable).postBuild();
+		rawTable[InlineForeignKeys].push(...colBuilder.buildForeignKeys(column, rawTable));
+		return [name, column];
+	}));
+	const table = Object.assign(rawTable, builtColumns);
+	table[Table.Symbol.Columns] = builtColumns;
+	table[Table.Symbol.ExtraConfigColumns] = builtColumns;
+	if (extraConfig) table[SQLiteTable.Symbol.ExtraConfigBuilder] = extraConfig;
+	return table;
+}
+/** @internal */
+function sqliteTableWithCasing(casing) {
+	return (name, columns, extraConfig) => sqliteTableBase(name, columns, extraConfig, void 0, casing);
+}
+var sqliteTable = sqliteTableWithCasing(void 0);
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/dialect.js
+var escapeSQLiteName = memoizeEscape((name) => `"${name.replace(/"/g, "\"\"")}"`);
+var rqbChunks = {
+	json: new StringChunk("json"),
+	object: new StringChunk("_object("),
+	groupArray: new StringChunk("_group_array(json_object("),
+	groupArrayClose: new StringChunk("))"),
+	relationFrom: new StringChunk(" as \"r\" from ("),
+	relationClose: new StringChunk(") as \"t\") as ")
+};
+var SQLiteDialect = class {
+	static [entityKind] = "SQLiteDialect";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	codecs;
+	mapperGenerators;
+	constructor(config) {
+		this.codecs = new CodecsCollection(resolveSQLiteTypeAlias, config?.codecs);
+		this.mapperGenerators = config?.useJitMappers ? {
+			rows: makeJitQueryMapper,
+			relationalRows: makeJitRqbMapper
+		} : {
+			rows: makeDefaultQueryMapper,
+			relationalRows: makeDefaultRqbMapper
+		};
+	}
+	escapeName(name) {
+		return escapeSQLiteName(name);
+	}
+	escapeParam(_num) {
+		return "?";
+	}
+	escapeString(str) {
+		return `'${str.replace(/'/g, "''")}'`;
+	}
+	buildWithCTE(queries) {
+		if (!queries?.length) return void 0;
+		const queriesLen = queries.length;
+		const withSqlChunks = new Array(queriesLen + 1);
+		let writeIdx = 0;
+		withSqlChunks[writeIdx++] = commonStringChunks["with "];
+		for (let i = 0; i < queriesLen; ++i) {
+			const w = queries[i];
+			withSqlChunks[writeIdx++] = i < queriesLen - 1 ? sql`${sql.identifier(w._.alias)} as (${w._.sql}), ` : sql`${sql.identifier(w._.alias)} as (${w._.sql}) `;
+		}
+		return new SQL(withSqlChunks);
+	}
+	buildDeleteQuery({ table, where, returning, withList, limit, orderBy }) {
+		const withSql = this.buildWithCTE(withList);
+		const returningSql = returning ? sql` returning ${this.buildSelection(returning, {
+			isSingleTable: true,
+			table
+		})}` : void 0;
+		const whereSql = where ? sql` where ${where}` : void 0;
+		const orderBySql = this.buildOrderBy(orderBy);
+		const limitSql = this.buildLimit(limit);
+		return sql`${withSql}delete from ${table}${whereSql}${returningSql}${orderBySql}${limitSql}`;
+	}
+	buildUpdateSet(table, set) {
+		const tableColumns = table[Table.Symbol.Columns];
+		const columnNames = Object.keys(tableColumns).filter((colName) => set[colName] !== void 0 || tableColumns[colName]?.onUpdateFn !== void 0);
+		const setLength = columnNames.length;
+		const setArr = new Array(setLength);
+		for (let i = 0; i < columnNames.length; ++i) {
+			const colName = columnNames[i];
+			const col = tableColumns[colName];
+			let value;
+			if (set[colName] !== void 0) value = set[colName];
+			else {
+				const updateRes = col.onUpdateFn?.();
+				value = is(updateRes, SQL) ? updateRes : sql.param(updateRes, col);
+			}
+			setArr[i] = i < setLength - 1 ? sql`${sql.identifier(col.name)} = ${value}, ` : sql`${sql.identifier(col.name)} = ${value}`;
+		}
+		return new SQL(setArr);
+	}
+	buildUpdateQuery({ table, set, where, returning, withList, joins, from, limit, orderBy }) {
+		const withSql = this.buildWithCTE(withList);
+		const setSql = this.buildUpdateSet(table, set);
+		const fromSql = from && new SQL([commonStringChunks[" from "], this.buildFromTable(from)]);
+		const joinsSql = this.buildJoins(joins);
+		const returningSql = returning ? sql` returning ${this.buildSelection(returning, {
+			isSingleTable: true,
+			table
+		})}` : void 0;
+		const whereSql = where ? sql` where ${where}` : void 0;
+		const orderBySql = this.buildOrderBy(orderBy);
+		const limitSql = this.buildLimit(limit);
+		return sql`${withSql}update ${table} set ${setSql}${fromSql}${joinsSql}${whereSql}${returningSql}${orderBySql}${limitSql}`;
+	}
+	/**
+	* Builds selection SQL with provided fields/expressions
+	*
+	* Examples:
+	*
+	* `select <selection> from`
+	*
+	* `insert ... returning <selection>`
+	*
+	* If `isSingleTable` is true, then columns won't be prefixed with table name
+	*/
+	buildSelection(fields, { isSingleTable = false, table } = {}) {
+		const { length: columnsLen } = fields;
+		const chunks = [];
+		const tableKind = chunkKindOf(table);
+		const tableName = table ? isChunk(table, tableKind, chunkKinds.sql) || isChunk(table, tableKind, chunkKinds.subquery) ? void 0 : table[Table.Symbol.IsAlias] || table[Table.Symbol.Schema] === void 0 ? table[Table.Symbol.Name] : `${table[Table.Symbol.Schema]}.${table[Table.Symbol.Name]}` : void 0;
+		for (let i = 0; i < columnsLen; ++i) {
+			const { field, fieldType } = fields[i];
+			switch (fieldType) {
+				case "Column": {
+					let name;
+					if (isSingleTable) name = field.isAlias ? sql.identifier(getOriginalColumnFromAlias(field).name) : sql.identifier(field.name);
+					else name = field.isAlias ? getOriginalColumnFromAlias(field) : field;
+					chunks.push(field.isAlias ? sql`${name} as ${field}` : name);
+					break;
+				}
+				case "SQL.Aliased":
+					if (field.isSelectionField) {
+						const query = !isSingleTable && field.origin !== void 0 ? sql`${sql.identifier(field.origin)}.${sql.identifier(field.fieldAlias)}` : sql.identifier(field.fieldAlias);
+						chunks.push(query);
+					} else {
+						if (isSingleTable && tableName !== void 0) {
+							const { queryChunks } = field.sql;
+							const newChunks = new Array(queryChunks.length);
+							let abort = false;
+							for (let i = 0; i < queryChunks.length; ++i) {
+								const c = queryChunks[i];
+								if (is(c, Column)) {
+									const { table } = c;
+									if ((table[Table.Symbol.IsAlias] || table[Table.Symbol.Schema] === void 0 ? table[Table.Symbol.Name] : `${table[Table.Symbol.Schema]}.${table[Table.Symbol.Name]}`) !== tableName) {
+										abort = true;
+										break;
+									}
+									newChunks[i] = sql.identifier(c.name);
+								} else newChunks[i] = c;
+							}
+							if (abort) chunks.push(field.sql);
+							else {
+								const newSql = new SQL(newChunks);
+								if (field.sql.shouldInlineParams) newSql.inlineParams();
+								chunks.push(newSql);
+							}
+						} else chunks.push(field.sql);
+						chunks.push(sql` as ${sql.identifier(field.fieldAlias)}`);
+					}
+					break;
+				case "SQL":
+					if (isSingleTable && tableName !== void 0) {
+						const { queryChunks } = field;
+						const newChunks = new Array(queryChunks.length);
+						let abort = false;
+						for (let i = 0; i < queryChunks.length; ++i) {
+							const c = queryChunks[i];
+							if (is(c, Column)) {
+								const { table } = c;
+								if ((table[Table.Symbol.IsAlias] || table[Table.Symbol.Schema] === void 0 ? table[Table.Symbol.Name] : `${table[Table.Symbol.Schema]}.${table[Table.Symbol.Name]}`) !== tableName) {
+									abort = true;
+									break;
+								}
+								newChunks[i] = sql.identifier(c.name);
+							} else newChunks[i] = c;
+						}
+						if (abort) chunks.push(field);
+						else {
+							const newSql = new SQL(newChunks);
+							if (field.shouldInlineParams) newSql.inlineParams();
+							chunks.push(newSql);
+						}
+					} else chunks.push(field);
+					break;
+				case "Subquery": if (!field._.isWith) {
+					const inner = sql`(${field._.sql})`;
+					chunks.push(sql`${inner} ${sql.identifier(field._.alias)}`);
+				} else chunks.push(field);
+			}
+			if (i < columnsLen - 1) chunks.push(commonStringChunks[", "]);
+		}
+		return new SQL(chunks);
+	}
+	buildJoins(joins) {
+		if (!joins || joins.length === 0) return;
+		const joinsArray = [];
+		if (joins) for (const [index, joinMeta] of joins.entries()) {
+			if (index === 0) joinsArray.push(commonStringChunks[" "]);
+			const table = joinMeta.table;
+			const onSql = joinMeta.on ? sql` on ${joinMeta.on}` : void 0;
+			if (is(table, SQLiteTable)) joinsArray.push(sql`${new StringChunk(joinMeta.joinType)} join ${table[Table.Symbol.IsAlias] ? aliasedTableSQL(table) : table}${onSql}`);
+			else joinsArray.push(sql`${new StringChunk(joinMeta.joinType)} join ${table}${onSql}`);
+			if (index < joins.length - 1) joinsArray.push(commonStringChunks[" "]);
+		}
+		return new SQL(joinsArray);
+	}
+	buildLimit(limit) {
+		return limit === void 0 ? void 0 : sql` limit ${limit}`;
+	}
+	buildOrderBy(orderBy) {
+		const orderByList = [];
+		if (orderBy) for (const [index, orderByValue] of orderBy.entries()) {
+			orderByList.push(orderByValue);
+			if (index < orderBy.length - 1) orderByList.push(commonStringChunks[", "]);
+		}
+		return orderByList.length > 0 ? sql` order by ${sql.join(orderByList)}` : void 0;
+	}
+	buildFromTable(table) {
+		if (is(table, Table) && table[Table.Symbol.IsAlias]) return aliasedTableSQL(table);
+		if (is(table, View) && table[ViewBaseConfig].isAlias) {
+			let fullName = sql`${sql.identifier(table[ViewBaseConfig].originalName)}`;
+			if (table[ViewBaseConfig].schema) fullName = sql`${sql.identifier(table[ViewBaseConfig].schema)}.${fullName}`;
+			return sql`${fullName} ${sql.identifier(table[ViewBaseConfig].name)}`;
+		}
+		return table;
+	}
+	buildSelectQuery({ withList, fields, fieldsFlat, where, having, table, joins, orderBy, groupBy, limit, offset, distinct, setOperators }) {
+		const fieldsList = fieldsFlat ?? orderSelectedFields(fields, void 0, this.codecs);
+		const tableKind = chunkKindOf(table);
+		const ownTableName = isChunk(table, tableKind, chunkKinds.subquery) ? table._.alias : isChunk(table, tableKind, chunkKinds.view) ? table[ViewBaseConfig].name : isChunk(table, tableKind, chunkKinds.sql) ? void 0 : getTableName(table);
+		for (const f of fieldsList) if (is(f.field, Column) && getTableName(f.field.table) !== ownTableName && !((table) => joins?.some(({ alias }) => alias === (table[Table.Symbol.IsAlias] ? getTableName(table) : table[Table.Symbol.BaseName])))(f.field.table)) {
+			const tableName = getTableName(f.field.table);
+			throw new Error(`Your "${f.path.join("->")}" field references a column "${tableName}"."${f.field.name}", but the table "${tableName}" is not part of the query! Did you forget to join it?`);
+		}
+		const isSingleTable = !joins || joins.length === 0;
+		const withSql = this.buildWithCTE(withList);
+		const distinctSql = distinct ? sql` distinct` : void 0;
+		const selection = this.buildSelection(fieldsList, {
+			isSingleTable,
+			table
+		});
+		const tableSql = this.buildFromTable(table);
+		const joinsSql = this.buildJoins(joins);
+		const whereSql = where ? sql` where ${where}` : void 0;
+		const havingSql = having ? sql` having ${having}` : void 0;
+		const groupByList = [];
+		if (groupBy) for (const [index, groupByValue] of groupBy.entries()) {
+			groupByList.push(groupByValue);
+			if (index < groupBy.length - 1) groupByList.push(commonStringChunks[", "]);
+		}
+		const groupBySql = groupByList.length > 0 ? sql` group by ${sql.join(groupByList)}` : void 0;
+		const orderBySql = this.buildOrderBy(orderBy);
+		const limitSql = this.buildLimit(limit);
+		const offsetSql = offset === void 0 ? void 0 : sql` offset ${offset}`;
+		const finalQuery = sql`${withSql}select${distinctSql} ${selection} from ${tableSql}${joinsSql}${whereSql}${groupBySql}${havingSql}${orderBySql}${limitSql}${offsetSql}`;
+		if (setOperators.length > 0) return this.buildSetOperations(finalQuery, fieldsList, setOperators);
+		return finalQuery;
+	}
+	buildSetOperations(leftSelect, outputSelection, setOperators) {
+		const operandTypes = [];
+		for (let i = 0; i < setOperators.length; ++i) {
+			const setOperator = setOperators[i];
+			leftSelect = this.buildSetOperationQuery({
+				leftSelect,
+				setOperator
+			});
+			const rightSelection = orderSelectedFields(setOperator.rightSelect.getSelectedFields());
+			for (let j = 0; j < outputSelection.length; ++j) {
+				const l = outputSelection[j];
+				const lPath = l.path.join(".");
+				const r = rightSelection.find((e) => e.path.join(".") === lPath);
+				const lc = l.codecOverride ?? l.column?.codec;
+				const rc = r.codecOverride ?? r.column?.codec;
+				if (i === 0 && lc) (operandTypes[j] = /* @__PURE__ */ new Set()).add(l.column?.codec ?? lc);
+				if (rc) (operandTypes[j] ??= /* @__PURE__ */ new Set()).add(r.column?.codec ?? rc);
+				l.codecOverride = lc && rc ? resolveUnionType(lc, rc) : lc;
+			}
+		}
+		for (let i = 0; i < outputSelection.length; ++i) {
+			const out = outputSelection[i];
+			if (!out.codecOverride) continue;
+			const types = operandTypes[i];
+			if (types?.has("blob:bigint") && types.has("numeric:bigint")) {
+				const fromBlob = this.codecs.get(out.column, "normalize", "blob:bigint");
+				const fromNumeric = this.codecs.get(out.column, "normalize", "numeric:bigint");
+				if (fromBlob && fromNumeric) {
+					out.codec = (value) => typeof value === "object" ? fromBlob(value) : fromNumeric(value);
+					continue;
+				}
+			}
+			out.codec = this.codecs.get(out.column, "normalize", out.codecOverride);
+		}
+		return leftSelect;
+	}
+	buildSetOperationQuery({ leftSelect, setOperator: { type, isAll, rightSelect, limit, orderBy, offset } }) {
+		const leftChunk = sql`${leftSelect.getSQL()} `;
+		const rightChunk = sql`${rightSelect.getSQL()}`;
+		let orderBySql;
+		if (orderBy && orderBy.length > 0) {
+			const orderByValues = [];
+			for (const singleOrderBy of orderBy) if (is(singleOrderBy, SQLiteColumn)) orderByValues.push(sql.identifier(singleOrderBy.name));
+			else if (is(singleOrderBy, SQL)) orderByValues.push(sql`${unqualifyColumns(singleOrderBy)}`);
+			else orderByValues.push(sql`${singleOrderBy}`);
+			orderBySql = sql` order by ${sql.join(orderByValues, commonStringChunks[", "])}`;
+		}
+		const limitSql = limit === void 0 ? void 0 : sql` limit ${limit}`;
+		const operatorChunk = new StringChunk(`${type} ${isAll ? "all " : ""}`);
+		const offsetSql = offset === void 0 ? void 0 : sql` offset ${offset}`;
+		return sql`${leftChunk}${operatorChunk}${rightChunk}${orderBySql}${limitSql}${offsetSql}`;
+	}
+	buildInsertQuery({ table, values: valuesOrSelect, onConflict, returning, withList, select, columnList }) {
+		const columns = table[Table.Symbol.Columns];
+		const colEntries = columnList ? columnList.map((name) => [name, columns[name]]) : Object.entries(columns);
+		const colEntriesFiltered = select && !is(valuesOrSelect, SQL) ? Object.keys(valuesOrSelect.getSelectedFields()).map((key) => [key, columns[key]]) : colEntries.filter(([_, col]) => !col.shouldDisableInsert());
+		const insertOrderArr = new Array(colEntriesFiltered.length * 2 + 1);
+		let writeIdx = 0;
+		insertOrderArr[writeIdx++] = commonStringChunks["("];
+		for (let i = 0; i < colEntriesFiltered.length; ++i) {
+			const [, { name }] = colEntriesFiltered[i];
+			insertOrderArr[writeIdx++] = sql.identifier(name);
+			if (i < colEntriesFiltered.length - 1) insertOrderArr[writeIdx++] = commonStringChunks[", "];
+		}
+		insertOrderArr[writeIdx++] = commonStringChunks[")"];
+		const insertOrder = new SQL(insertOrderArr);
+		let valuesSqlList;
+		if (select) valuesSqlList = [valuesOrSelect.getSQL()];
+		else {
+			const values = valuesOrSelect;
+			const cells = new Array(values.length * colEntriesFiltered.length);
+			let writeIdx = 0;
+			for (let valueIndex = 0; valueIndex < values.length; ++valueIndex) {
+				const value = values[valueIndex];
+				for (let i = 0; i < colEntriesFiltered.length; ++i) {
+					const [fieldName, col] = colEntriesFiltered[i];
+					const colValue = value[fieldName];
+					if (colValue === void 0) {
+						if (col.defaultFn !== void 0) cells[writeIdx++] = col.defaultFn();
+						else if (col.default !== null && col.default !== void 0) cells[writeIdx++] = col.default;
+						else if (col.onUpdateFn !== void 0) cells[writeIdx++] = col.onUpdateFn();
+						else cells[writeIdx++] = commonStringChunks["null"];
+					} else cells[writeIdx++] = colValue;
+				}
+			}
+			valuesSqlList = [commonStringChunks["values "], new ValueRows(cells, colEntriesFiltered.map(([, col]) => col))];
+		}
+		const withSql = this.buildWithCTE(withList);
+		const valuesSql = new SQL(valuesSqlList);
+		const returningSql = returning ? sql` returning ${this.buildSelection(returning, {
+			isSingleTable: true,
+			table
+		})}` : void 0;
+		const onConflictSql = onConflict?.length ? sql.join(onConflict) : void 0;
+		return sql`${withSql}insert into ${table} ${insertOrder} ${valuesSql}${onConflictSql}${returningSql}`;
+	}
+	sqlToQuery(sql, invokeSource) {
+		return sql.toQuery({
+			escapeName: this.escapeName,
+			escapeParam: this.escapeParam,
+			escapeString: this.escapeString,
+			codecs: this.codecs,
+			invokeSource
+		});
+	}
+	buildRelationalQuery(config) {
+		const chunks = [];
+		const selection = this.collectRelationalQuery(config, chunks);
+		return {
+			sql: new SQL(chunks),
+			selection
+		};
+	}
+	collectRelationalQuery({ schema, table, tableConfig, queryConfig: config, relationWhere, mode, nested, errorPath, depth, through, jsonb, withSubqueries }, collectTo) {
+		const selection = [];
+		const isSingle = mode === "first";
+		const params = config === true ? void 0 : config;
+		const currentPath = errorPath ?? "";
+		const currentDepth = depth ?? 0;
+		const collector = withSubqueries ?? { subqueries: /* @__PURE__ */ new Map() };
+		if (!currentDepth) {
+			collectSubquery(collector, table);
+			table = aliasedTable(table, `d${currentDepth}`);
+		}
+		const tableRef = table[Qualifier];
+		const limit = isSingle ? 1 : params?.limit;
+		const offset = params?.offset;
+		const { sql: where } = relationalQueryWhereToSQL(table, params, tableConfig.relations, schema, collector, relationWhere);
+		const order = params?.orderBy ? relationsOrderToSQL(table, params.orderBy, tableConfig.relations, schema, collector) : void 0;
+		const withParam = params ? params.with : void 0;
+		const withKeys = [];
+		if (withParam) {
+			for (const key of Object.keys(withParam)) if (withParam[key]) withKeys.push(key);
+		}
+		const withIdx = currentDepth ? -1 : collectTo.length;
+		if (!currentDepth) collectTo.push(void 0);
+		collectTo.push(commonStringChunks["select "]);
+		let selected = buildRqbColumns(tableRef, tableConfig.table[TableColumns], selection, !!nested, tableConfig.name, this.codecs, collectTo, params?.columns) ? 1 : 0;
+		if (params?.extras) {
+			const mark = collectTo.length;
+			if (selected) collectTo.push(commonStringChunks[", "]);
+			const extras = relationExtrasToSQL(table, params.extras, this.codecs, !!nested, collectTo);
+			selection.push(...extras.selection);
+			if (extras.sql) ++selected;
+			else collectTo.length = mark;
+		}
+		if (!selected && !withKeys.length) throw new DrizzleError({ message: `No fields selected for table "${tableConfig.name}"${currentPath ? ` ("${currentPath}")` : ""}` });
+		for (const k of withKeys) {
+			const join = withParam[k];
+			const relation = tableConfig.relations[k];
+			if (!relation) throw new DrizzleError({ message: `Unknown relation "${tableConfig.name}" -> "${k}"` });
+			const isSingle = relation.relationType === "one";
+			collectSubquery(collector, relation.targetTable);
+			collectSubquery(collector, relation.throughTable);
+			const targetTable = aliasedTable(relation.targetTable, `d${currentDepth + 1}`);
+			const throughTable = relation.throughTable ? aliasedTable(relation.throughTable, `tr${currentDepth}`) : void 0;
+			const { filter, joinCondition } = relationToSQL(relation, table, targetTable, throughTable);
+			if (selected++) collectTo.push(commonStringChunks[", "]);
+			const jsonIdx = collectTo.length;
+			collectTo.push(void 0, rqbChunks.relationFrom);
+			const innerSelection = this.collectRelationalQuery({
+				table: targetTable,
+				mode: isSingle ? "first" : "many",
+				schema,
+				queryConfig: join,
+				tableConfig: schema[relation.targetTableName],
+				relationWhere: filter,
+				nested: true,
+				errorPath: `${currentPath.length ? `${currentPath}.` : ""}${k}`,
+				depth: currentDepth + 1,
+				withSubqueries: collector,
+				through: throughTable ? {
+					table: throughTable,
+					condition: joinCondition
+				} : void 0,
+				jsonb
+			}, collectTo);
+			collectTo.push(rqbChunks.relationClose, sql.identifier(k));
+			const jsonChunks = [
+				commonStringChunks["(select "],
+				nested ? jsonb : rqbChunks.json,
+				isSingle ? rqbChunks.object : rqbChunks.groupArray
+			];
+			for (let i = 0; i < innerSelection.length; ++i) {
+				const s = innerSelection[i];
+				if (i) jsonChunks.push(commonStringChunks[", "]);
+				jsonChunks.push(new StringChunk(this.escapeString(s.key)), commonStringChunks[", "]);
+				if (s.selection) jsonChunks.push(jsonb, commonStringChunks["("], sql.identifier(s.key), commonStringChunks[")"]);
+				else jsonChunks.push(sql.identifier(s.key));
+			}
+			jsonChunks.push(isSingle ? commonStringChunks[")"] : rqbChunks.groupArrayClose);
+			collectTo[jsonIdx] = new SQL(jsonChunks);
+			selection.push({
+				field: targetTable,
+				fieldType: "Nested",
+				key: k,
+				selection: innerSelection,
+				isArray: !isSingle,
+				isOptional: (relation.optional ?? false) || join !== true && !!join.where
+			});
+		}
+		collectTo.push(commonStringChunks[" from "]);
+		getTableAsAliasSQL(table, collectTo);
+		if (through) {
+			collectTo.push(commonStringChunks[" inner join "]);
+			getTableAsAliasSQL(through.table, collectTo);
+			collectTo.push(commonStringChunks[" on "], ...through.condition);
+		}
+		if (where) collectTo.push(commonStringChunks[" where "], ...where);
+		if (order) collectTo.push(commonStringChunks[" order by "], ...order);
+		if (limit !== void 0) collectTo.push(commonStringChunks[" limit "], limit);
+		if (offset !== void 0) collectTo.push(commonStringChunks[" offset "], offset);
+		if (withIdx !== -1) collectTo[withIdx] = this.buildWithCTE([...collector.subqueries.values()]);
+		return selection;
+	}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/query-builders/query-builder.js
+var QueryBuilder = class {
+	static [entityKind] = "SQLiteQueryBuilder";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	dialect;
+	dialectConfig;
+	constructor(dialect) {
+		this.dialect = is(dialect, SQLiteDialect) ? dialect : void 0;
+		this.dialectConfig = is(dialect, SQLiteDialect) ? void 0 : dialect;
+	}
+	$with = (alias, selection) => {
+		const queryBuilder = this;
+		const as = (qb) => {
+			if (typeof qb === "function") qb = qb(queryBuilder);
+			const sql = qb.getSQL();
+			return new Proxy(new WithSubquery(sql, selection ?? ("getSelectedFields" in qb ? qb.getSelectedFields() ?? {} : {}), alias, true), new SelectionProxyHandler({
+				alias,
+				sqlAliasedBehavior: "alias",
+				sqlBehavior: "error"
+			}));
+		};
+		return { as };
+	};
+	with(...queries) {
+		const self = this;
+		function select(fields) {
+			return new SQLiteSelectBuilder({
+				fields: fields ?? void 0,
+				session: void 0,
+				dialect: self.getDialect(),
+				withList: queries
+			});
+		}
+		function selectDistinct(fields) {
+			return new SQLiteSelectBuilder({
+				fields: fields ?? void 0,
+				session: void 0,
+				dialect: self.getDialect(),
+				withList: queries,
+				distinct: true
+			});
+		}
+		return {
+			select,
+			selectDistinct
+		};
+	}
+	select(fields) {
+		return new SQLiteSelectBuilder({
+			fields: fields ?? void 0,
+			session: void 0,
+			dialect: this.getDialect()
+		});
+	}
+	selectDistinct(fields) {
+		return new SQLiteSelectBuilder({
+			fields: fields ?? void 0,
+			session: void 0,
+			dialect: this.getDialect(),
+			distinct: true
+		});
+	}
+	getDialect() {
+		if (!this.dialect) this.dialect = new SQLiteDialect(this.dialectConfig);
+		return this.dialect;
+	}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/query-builders/insert.js
+var SQLiteInsertBuilder = class {
+	table;
+	session;
+	dialect;
+	withList;
+	columnList;
+	builder;
+	static [entityKind] = "SQLiteInsertBuilder";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	constructor(table, session, dialect, withList, columnList, builder = SQLiteInsertBase) {
+		this.table = table;
+		this.session = session;
+		this.dialect = dialect;
+		this.withList = withList;
+		this.columnList = columnList;
+		this.builder = builder;
+	}
+	values(values) {
+		values = Array.isArray(values) ? values : [values];
+		if (values.length === 0) throw new Error("values() must be called with at least one value");
+		return new this.builder(this.table, values, this.session, this.dialect, this.withList, false, this.columnList);
+	}
+	select(selectQuery) {
+		const select = typeof selectQuery === "function" ? selectQuery(new QueryBuilder()) : selectQuery;
+		if (!is(select, SQL)) {
+			const insertCols = Object.keys(this.table[Table.Symbol.Columns]);
+			const selected = Object.keys(select._.selectedFields);
+			for (const col of selected) if (!insertCols.includes(col)) throw new Error(`Insert select error: column "${col}" does not exist in table "${this.table[Table.Symbol.Name]}"`);
+		}
+		return new this.builder(this.table, select, this.session, this.dialect, this.withList, true, this.columnList);
+	}
+};
+var SQLiteInsertBase = class {
+	session;
+	dialect;
+	static [entityKind] = "SQLiteInsert";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	/** @internal */
+	config;
+	constructor(table, values, session, dialect, withList, select, columnList) {
+		this.session = session;
+		this.dialect = dialect;
+		this.config = {
+			table,
+			values,
+			withList,
+			select,
+			columnList
+		};
+	}
+	returning(fields = this.config.table[SQLiteTable.Symbol.Columns]) {
+		this.config.returning = orderSelectedFields(fields, void 0, this.dialect.codecs);
+		return this;
+	}
+	/**
+	* Adds an `on conflict do nothing` clause to the query.
+	*
+	* Calling this method simply avoids inserting a row as it's alternative action.
+	*
+	* See docs: {@link https://orm.drizzle.team/docs/insert#on-conflict-do-nothing}
+	*
+	* @param config The `target` and `where` clauses.
+	*
+	* @example
+	* ```ts
+	* // Insert one row and cancel the insert if there's a conflict
+	* await db.insert(cars)
+	*   .values({ id: 1, brand: 'BMW' })
+	*   .onConflictDoNothing();
+	*
+	* // Explicitly specify conflict target
+	* await db.insert(cars)
+	*   .values({ id: 1, brand: 'BMW' })
+	*   .onConflictDoNothing({ target: cars.id });
+	* ```
+	*/
+	onConflictDoNothing(config = {}) {
+		if (!this.config.onConflict) this.config.onConflict = [];
+		if (config.target === void 0) this.config.onConflict.push(sql` on conflict do nothing`);
+		else {
+			const targetSql = Array.isArray(config.target) ? sql`${config.target}` : sql`${[config.target]}`;
+			const whereSql = config.where ? sql` where ${config.where}` : sql``;
+			this.config.onConflict.push(sql` on conflict ${targetSql}${whereSql} do nothing`);
+		}
+		return this;
+	}
+	onConflictDoUpdate(config) {
+		if (config.where && (config.targetWhere || config.setWhere)) throw new Error("You cannot use both \"where\" and \"targetWhere\"/\"setWhere\" at the same time - \"where\" is deprecated, use \"targetWhere\" or \"setWhere\" instead.");
+		if (!this.config.onConflict) this.config.onConflict = [];
+		const whereSql = config.where ? sql` where ${config.where}` : void 0;
+		const targetWhereSql = config.targetWhere ? sql` where ${config.targetWhere}` : void 0;
+		const setWhereSql = config.setWhere ? sql` where ${config.setWhere}` : void 0;
+		const targetSql = Array.isArray(config.target) ? sql`${config.target}` : sql`${[config.target]}`;
+		const setSql = this.dialect.buildUpdateSet(this.config.table, mapUpdateSet(this.config.table, config.set));
+		this.config.onConflict.push(sql` on conflict ${targetSql}${targetWhereSql} do update set ${setSql}${whereSql}${setWhereSql}`);
+		return this;
+	}
+	getSQL() {
+		return this.dialect.buildInsertQuery(this.config);
+	}
+	toSQL() {
+		return this.dialect.sqlToQuery(this.getSQL());
+	}
+	$dynamic() {
+		return this;
+	}
+	/**
+	* Prepares the query on the session, for every runtime. The runtime's builder narrows the return type.
+	*
+	* @internal
+	*/
+	_prepare(prepare = false) {
+		return this.session.prepareQuery(this.dialect.sqlToQuery(this.getSQL()), "arrays", prepare, this.config.returning ? "all" : "run", this.config.returning ? this.dialect.mapperGenerators.rows(this.config.returning, void 0) : void 0);
+	}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/query-builders/query.js
+var RelationalQueryBuilder = class {
+	mode;
+	schema;
+	table;
+	tableConfig;
+	dialect;
+	session;
+	forbidJsonb;
+	builder;
+	static [entityKind] = "SQLiteRelationalQueryBuilderV2";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	constructor(mode, schema, table, tableConfig, dialect, session, forbidJsonb, builder = SQLiteRelationalQuery) {
+		this.mode = mode;
+		this.schema = schema;
+		this.table = table;
+		this.tableConfig = tableConfig;
+		this.dialect = dialect;
+		this.session = session;
+		this.forbidJsonb = forbidJsonb;
+		this.builder = builder;
+	}
+	findMany(config) {
+		return new this.builder(this.mode, this.schema, this.table, this.tableConfig, this.dialect, this.session, config ?? true, "many", this.forbidJsonb);
+	}
+	findFirst(config) {
+		return new this.builder(this.mode, this.schema, this.table, this.tableConfig, this.dialect, this.session, config ?? true, "first", this.forbidJsonb);
+	}
+};
+var SQLiteRelationalQuery = class {
+	schema;
+	tableConfig;
+	dialect;
+	session;
+	config;
+	forbidJsonb;
+	static [entityKind] = "SQLiteRelationalQueryV2";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	/** @internal */
+	mapper;
+	/** @internal */
+	mode;
+	/** @internal */
+	table;
+	/** @internal */
+	resultKind;
+	constructor(resultKind, schema, table, tableConfig, dialect, session, config, mode, forbidJsonb) {
+		this.schema = schema;
+		this.tableConfig = tableConfig;
+		this.dialect = dialect;
+		this.session = session;
+		this.config = config;
+		this.forbidJsonb = forbidJsonb;
+		this.resultKind = resultKind;
+		this.mode = mode;
+		this.table = table;
+	}
+	getSQL() {
+		return this._getQuery().sql;
+	}
+	/** @internal */
+	_getQuery() {
+		const jsonb = this.forbidJsonb ? sql`json` : sql`jsonb`;
+		return this.dialect.buildRelationalQuery({
+			schema: this.schema,
+			table: this.table,
+			tableConfig: this.tableConfig,
+			queryConfig: this.config,
+			mode: this.mode,
+			jsonb
+		});
+	}
+	_toSQL() {
+		const query = this._getQuery();
+		return {
+			query,
+			builtQuery: this.dialect.sqlToQuery(query.sql)
+		};
+	}
+	toSQL() {
+		return this._toSQL().builtQuery;
+	}
+	/**
+	* Prepares the query on the session, for every runtime. The runtime's builder narrows the return type.
+	*
+	* @internal
+	*/
+	_prepare(prepare = false) {
+		const { query, builtQuery } = this._toSQL();
+		const mapper = this.mapper ??= this.dialect.mapperGenerators.relationalRows({
+			isFirst: this.mode === "first",
+			parseJson: true,
+			parseJsonIfString: false,
+			rootJsonMappers: false,
+			selection: query.selection,
+			arrayModeRoot: true
+		});
+		return this.session.prepareQuery(builtQuery, "arrays", prepare, "all", mapper);
+	}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/query-builders/update.js
+var SQLiteUpdateBuilder = class {
+	table;
+	session;
+	dialect;
+	withList;
+	builder;
+	static [entityKind] = "SQLiteUpdateBuilder";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	constructor(table, session, dialect, withList, builder = SQLiteUpdateBase) {
+		this.table = table;
+		this.session = session;
+		this.dialect = dialect;
+		this.withList = withList;
+		this.builder = builder;
+	}
+	set(values) {
+		return new this.builder(this.table, mapUpdateSet(this.table, values), this.session, this.dialect, this.withList);
+	}
+};
+var SQLiteUpdateBase = class {
+	session;
+	dialect;
+	static [entityKind] = "SQLiteUpdate";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	/** @internal */
+	config;
+	constructor(table, set, session, dialect, withList) {
+		this.session = session;
+		this.dialect = dialect;
+		this.config = {
+			set,
+			table,
+			withList,
+			joins: []
+		};
+	}
+	from(source) {
+		this.config.from = source;
+		return this;
+	}
+	createJoin(joinType) {
+		return ((table, on) => {
+			const tableName = getTableLikeName(table);
+			if (typeof tableName === "string" && this.config.joins.some((join) => join.alias === tableName)) throw new Error(`Alias "${tableName}" is already used in this query`);
+			if (typeof on === "function") {
+				const from = this.config.from ? is(table, SQLiteTable) ? table[Table.Symbol.Columns] : is(table, Subquery) ? table._.selectedFields : is(table, SQLiteViewBase) ? table[ViewBaseConfig].selectedFields : void 0 : void 0;
+				on = on(new Proxy(this.config.table[Table.Symbol.Columns], new SelectionProxyHandler({
+					sqlAliasedBehavior: "sql",
+					sqlBehavior: "sql"
+				})), from && new Proxy(from, new SelectionProxyHandler({
+					sqlAliasedBehavior: "sql",
+					sqlBehavior: "sql"
+				})));
+			}
+			this.config.joins.push({
+				on,
+				table,
+				joinType,
+				alias: tableName
+			});
+			return this;
+		});
+	}
+	leftJoin = this.createJoin("left");
+	rightJoin = this.createJoin("right");
+	innerJoin = this.createJoin("inner");
+	fullJoin = this.createJoin("full");
+	/**
+	* Adds a 'where' clause to the query.
+	*
+	* Calling this method will update only those rows that fulfill a specified condition.
+	*
+	* See docs: {@link https://orm.drizzle.team/docs/update}
+	*
+	* @param where the 'where' clause.
+	*
+	* @example
+	* You can use conditional operators and `sql function` to filter the rows to be updated.
+	*
+	* ```ts
+	* // Update all cars with green color
+	* db.update(cars).set({ color: 'red' })
+	*   .where(eq(cars.color, 'green'));
+	* // or
+	* db.update(cars).set({ color: 'red' })
+	*   .where(sql`${cars.color} = 'green'`)
+	* ```
+	*
+	* You can logically combine conditional operators with `and()` and `or()` operators:
+	*
+	* ```ts
+	* // Update all BMW cars with a green color
+	* db.update(cars).set({ color: 'red' })
+	*   .where(and(eq(cars.color, 'green'), eq(cars.brand, 'BMW')));
+	*
+	* // Update all cars with the green or blue color
+	* db.update(cars).set({ color: 'red' })
+	*   .where(or(eq(cars.color, 'green'), eq(cars.color, 'blue')));
+	* ```
+	*/
+	where(where) {
+		this.config.where = where;
+		return this;
+	}
+	orderBy(...columns) {
+		if (typeof columns[0] === "function") {
+			const orderBy = columns[0](new Proxy(this.config.table[Table.Symbol.Columns], new SelectionProxyHandler({
+				sqlAliasedBehavior: "alias",
+				sqlBehavior: "sql"
+			})));
+			const orderByArray = Array.isArray(orderBy) ? orderBy : [orderBy];
+			this.config.orderBy = orderByArray;
+		} else {
+			const orderByArray = columns;
+			this.config.orderBy = orderByArray;
+		}
+		return this;
+	}
+	limit(limit) {
+		this.config.limit = limit;
+		return this;
+	}
+	returning(fields = this.config.table[SQLiteTable.Symbol.Columns]) {
+		this.config.returning = orderSelectedFields(fields, void 0, this.dialect.codecs);
+		return this;
+	}
+	getSQL() {
+		return this.dialect.buildUpdateQuery(this.config);
+	}
+	toSQL() {
+		return this.dialect.sqlToQuery(this.getSQL());
+	}
+	$dynamic() {
+		return this;
+	}
+	/**
+	* Prepares the query on the session, for every runtime. The runtime's builder narrows the return type.
+	*
+	* @internal
+	*/
+	_prepare(prepare = false) {
+		return this.session.prepareQuery(this.dialect.sqlToQuery(this.getSQL()), "arrays", prepare, this.config.returning ? "all" : "run", this.config.returning ? this.dialect.mapperGenerators.rows(this.config.returning, void 0) : void 0);
+	}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/db.js
+/**
+* A database of every runtime. it's methods are written once, over the runtime's {@link SQLiteDatabaseBuilders}: each
+* runtime's database narrows their types to it's own builders (`SQLiteAsyncDatabase`, `SQLiteEffectDatabase`)
+*/
+var SQLiteDatabase = class {
+	builders;
+	dialect;
+	session;
+	forbidJsonb;
+	static [entityKind] = "SQLiteBaseDatabase";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	query;
+	constructor(builders, resultKind, dialect, session, relations, forbidJsonb) {
+		this.builders = builders;
+		this.dialect = dialect;
+		this.session = session;
+		this.forbidJsonb = forbidJsonb;
+		this._ = {
+			relations,
+			session
+		};
+		const query = {};
+		for (const [tableName, relation] of Object.entries(relations)) query[tableName] = new RelationalQueryBuilder(resultKind, relations, relations[relation.name].table, relation, dialect, session, forbidJsonb, builders.relationalQuery);
+		this.query = query;
+	}
+	/**
+	* Creates a subquery that defines a temporary named result set as a CTE.
+	*
+	* It is useful for breaking down complex queries into simpler parts and for reusing the result set in subsequent parts of the query.
+	*
+	* See docs: {@link https://orm.drizzle.team/docs/select#with-clause}
+	*
+	* @param alias The alias for the subquery.
+	*
+	* Failure to provide an alias will result in a DrizzleTypeError, preventing the subquery from being referenced in other queries.
+	*
+	* @example
+	*
+	* ```ts
+	* // Create a subquery with alias 'sq' and use it in the select query
+	* const sq = db.$with('sq').as(db.select().from(users).where(eq(users.id, 42)));
+	*
+	* const result = await db.with(sq).select().from(sq);
+	* ```
+	*
+	* To select arbitrary SQL values as fields in a CTE and reference them in other CTEs or in the main query, you need to add aliases to them:
+	*
+	* ```ts
+	* // Select an arbitrary SQL value as a field in a CTE and reference it in the main query
+	* const sq = db.$with('sq').as(db.select({
+	*   name: sql<string>`upper(${users.name})`.as('name'),
+	* })
+	* .from(users));
+	*
+	* const result = await db.with(sq).select({ name: sq.name }).from(sq);
+	* ```
+	*/
+	$with = (alias, selection) => {
+		const as = (qb) => {
+			if (typeof qb === "function") qb = qb(new QueryBuilder(this.dialect));
+			const sql = qb.getSQL();
+			return new Proxy(new WithSubquery(sql, selection ?? ("getSelectedFields" in qb ? qb.getSelectedFields() ?? {} : {}), alias, true), new SelectionProxyHandler({
+				alias,
+				sqlAliasedBehavior: "alias",
+				sqlBehavior: "error"
+			}));
+		};
+		return { as };
+	};
+	$count(source, filters) {
+		return new this.builders.count({
+			source,
+			filters,
+			session: this.session,
+			dialect: this.dialect
+		});
+	}
+	with(...queries) {
+		return {
+			select: (fields) => this.buildSelect(fields, void 0, queries),
+			selectDistinct: (fields) => this.buildSelect(fields, true, queries),
+			update: (table) => this.buildUpdate(table, queries),
+			insert: (table, ...columns) => this.buildInsert(table, columns, queries),
+			delete: (table) => this.buildDelete(table, queries)
+		};
+	}
+	select(fields) {
+		return this.buildSelect(fields, void 0, void 0);
+	}
+	selectDistinct(fields) {
+		return this.buildSelect(fields, true, void 0);
+	}
+	update(table) {
+		return this.buildUpdate(table, void 0);
+	}
+	insert(into, ...columns) {
+		return this.buildInsert(into, columns, void 0);
+	}
+	delete(from) {
+		return this.buildDelete(from, void 0);
+	}
+	run(query) {
+		return this.rawQuery(query, "raw", "run");
+	}
+	all(query, mode) {
+		return this.rawQuery(query, mode ?? "objects", "all");
+	}
+	get(query, mode) {
+		return this.rawQuery(query, mode ?? "objects", "get");
+	}
+	values(query) {
+		return this.rawQuery(query, "arrays", "values");
+	}
+	/**
+	* @internal
+	* What a raw query (`run`, `all`, `get`, `values`) gives: the runtime's raw builder, which runs the prepared query
+	* with it's `method` when awaited or yielded. Sync drivers' databases override it to run the query right away
+	*/
+	wrapRaw(prepared, sequel, builtQuery, _method) {
+		return new this.builders.raw(prepared, sequel, builtQuery);
+	}
+	rawQuery(query, mode, method) {
+		const sequel = typeof query === "string" ? sql.raw(query) : query.getSQL();
+		const builtQuery = this.dialect.sqlToQuery(sequel);
+		const prepared = this.session.prepareQuery(builtQuery, mode, false, method);
+		return this.wrapRaw(prepared, sequel, builtQuery, method);
+	}
+	buildSelect(fields, distinct, withList) {
+		return new SQLiteSelectBuilder({
+			fields: fields ?? void 0,
+			session: this.session,
+			dialect: this.dialect,
+			withList,
+			distinct
+		}, this.builders.select);
+	}
+	buildUpdate(table, withList) {
+		return new SQLiteUpdateBuilder(table, this.session, this.dialect, withList, this.builders.update);
+	}
+	buildInsert(into, columns, withList) {
+		return new SQLiteInsertBuilder(into, this.session, this.dialect, withList, columns.length ? columns : void 0, this.builders.insert);
+	}
+	buildDelete(from, withList) {
+		return new this.builders.delete(from, this.session, this.dialect, withList);
+	}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/query-promise.js
+var QueryPromise = class {
+	static [entityKind] = "QueryPromise";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	[Symbol.toStringTag] = "QueryPromise";
+	catch(onRejected) {
+		return this.then(void 0, onRejected);
+	}
+	finally(onFinally) {
+		return this.then((value) => {
+			onFinally?.();
+			return value;
+		}, (reason) => {
+			onFinally?.();
+			throw reason;
+		});
+	}
+	then(onFulfilled, onRejected) {
+		return this.execute().then(onFulfilled, onRejected);
+	}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/query-builders/count.js
+var SQLiteCountBuilder = class SQLiteCountBuilder extends SQL {
+	countConfig;
+	static [entityKind] = "SQLiteCountBuilder";
+	dialect;
+	session;
+	static buildCount(source, filters, parens) {
+		const where = sql` where ${filters}`.if(filters);
+		const query = sql`select count(*) from ${source}${where}`;
+		return parens ? sql`(${query})` : query;
+	}
+	constructor(countConfig) {
+		super(SQLiteCountBuilder.buildCount(countConfig.source, countConfig.filters, true).queryChunks);
+		this.countConfig = countConfig;
+		this.dialect = countConfig.dialect;
+		this.session = countConfig.session;
+		this.mapWith((e) => {
+			if (typeof e === "number") return e;
+			return Number(e ?? 0);
+		});
+	}
+	executableSql;
+	build() {
+		if (!this.executableSql) {
+			const { source, filters } = this.countConfig;
+			this.executableSql = SQLiteCountBuilder.buildCount(source, filters);
+		}
+		return this.dialect.sqlToQuery(this.executableSql);
+	}
+	/** @internal */
+	_prepare() {
+		return this.session.prepareQuery(this.build(), "arrays", false, "all", (rows) => {
+			const v = rows[0]?.[0];
+			if (typeof v === "number") return v;
+			return v ? Number(v) : 0;
+		});
+	}
+	/** Runs the count: the runtime's builder narrows the return type */
+	execute(placeholderValues) {
+		return this._prepare().execute(placeholderValues);
+	}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/async/count.js
+var SQLiteAsyncCountBuilder = class extends SQLiteCountBuilder {
+	static [entityKind] = "SQLiteAsyncCountBuilder";
+	/** @internal The count as the driver gives it: a Promise from async drivers, an `ExecuteResultSync` from sync ones */
+	executeRaw(placeholderValues) {
+		return this._prepare().execute(placeholderValues);
+	}
+	async execute(placeholderValues) {
+		return await this.executeRaw(placeholderValues);
+	}
+};
+applyMixins(SQLiteAsyncCountBuilder, [QueryPromise]);
+var SQLiteSyncCountBuilder = class extends SQLiteAsyncCountBuilder {
+	static [entityKind] = "SQLiteSyncCountBuilder";
+	sync(placeholderValues) {
+		return this.executeRaw(placeholderValues).sync();
+	}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/query-builders/runnable.js
+/**
+* @internal
+* `prepare`, `run`, `all`, `get`, `values` and `execute` of every runtime's builders, mixed into them (`applyMixins`):
+* the common builders also serve the session-less `QueryBuilder`, so they can't have these themselves. They return
+* what the session's runtime runs (a value, a Promise or an Effect); each runtime's builder declares their types
+*/
+var SQLiteRunnableQuery = class {
+	static [entityKind] = "SQLiteRunnableQuery";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	prepare() {
+		return this._prepare(true);
+	}
+	run(placeholderValues) {
+		return this._prepare().run(placeholderValues);
+	}
+	all(placeholderValues) {
+		return this._prepare().all(placeholderValues);
+	}
+	get(placeholderValues) {
+		return this._prepare().get(placeholderValues);
+	}
+	values(placeholderValues) {
+		return this._prepare().values(placeholderValues);
+	}
+	execute(placeholderValues) {
+		return this._prepare().execute(placeholderValues);
+	}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/async/runnable.js
+/**
+* @internal
+* `execute` of the async runtime's builders, mixed in after `SQLiteRunnableQuery`: it always resolves as a Promise,
+* also for sync drivers, whose prepared queries run as `ExecuteResultSync`
+*/
+var SQLiteAsyncRunnableQuery = class {
+	static [entityKind] = "SQLiteAsyncRunnableQuery";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	async execute(placeholderValues) {
+		return this._prepare().execute(placeholderValues);
+	}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/async/query.js
+var SQLiteAsyncRelationalQuery = class extends SQLiteRelationalQuery {
+	static [entityKind] = "SQLiteAsyncRelationalQueryV2";
+};
+var SQLiteSyncRelationalQuery = class extends SQLiteAsyncRelationalQuery {
+	static [entityKind] = "SQLiteSyncRelationalQueryV2";
+	sync(placeholderValues) {
+		return this._prepare().execute(placeholderValues).sync();
+	}
+};
+applyMixins(SQLiteAsyncRelationalQuery, [
+	QueryPromise,
+	SQLiteRunnableQuery,
+	SQLiteAsyncRunnableQuery
+]);
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/query-builders/delete.js
+var SQLiteDeleteBase = class {
+	table;
+	session;
+	dialect;
+	static [entityKind] = "SQLiteDelete";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	/** @internal */
+	config;
+	constructor(table, session, dialect, withList) {
+		this.table = table;
+		this.session = session;
+		this.dialect = dialect;
+		this.config = {
+			table,
+			withList
+		};
+	}
+	/**
+	* Adds a `where` clause to the query.
+	*
+	* Calling this method will delete only those rows that fulfill a specified condition.
+	*
+	* See docs: {@link https://orm.drizzle.team/docs/delete}
+	*
+	* @param where the `where` clause.
+	*
+	* @example
+	* You can use conditional operators and `sql function` to filter the rows to be deleted.
+	*
+	* ```ts
+	* // Delete all cars with green color
+	* db.delete(cars).where(eq(cars.color, 'green'));
+	* // or
+	* db.delete(cars).where(sql`${cars.color} = 'green'`)
+	* ```
+	*
+	* You can logically combine conditional operators with `and()` and `or()` operators:
+	*
+	* ```ts
+	* // Delete all BMW cars with a green color
+	* db.delete(cars).where(and(eq(cars.color, 'green'), eq(cars.brand, 'BMW')));
+	*
+	* // Delete all cars with the green or blue color
+	* db.delete(cars).where(or(eq(cars.color, 'green'), eq(cars.color, 'blue')));
+	* ```
+	*/
+	where(where) {
+		this.config.where = where;
+		return this;
+	}
+	orderBy(...columns) {
+		if (typeof columns[0] === "function") {
+			const orderBy = columns[0](new Proxy(this.config.table[Table.Symbol.Columns], new SelectionProxyHandler({
+				sqlAliasedBehavior: "alias",
+				sqlBehavior: "sql"
+			})));
+			const orderByArray = Array.isArray(orderBy) ? orderBy : [orderBy];
+			this.config.orderBy = orderByArray;
+		} else {
+			const orderByArray = columns;
+			this.config.orderBy = orderByArray;
+		}
+		return this;
+	}
+	limit(limit) {
+		this.config.limit = limit;
+		return this;
+	}
+	returning(fields = this.table[SQLiteTable.Symbol.Columns]) {
+		this.config.returning = orderSelectedFields(fields, void 0, this.dialect.codecs);
+		return this;
+	}
+	getSQL() {
+		return this.dialect.buildDeleteQuery(this.config);
+	}
+	toSQL() {
+		return this.dialect.sqlToQuery(this.getSQL());
+	}
+	$dynamic() {
+		return this;
+	}
+	/**
+	* Prepares the query on the session, for every runtime. The runtime's builder narrows the return type.
+	*
+	* @internal
+	*/
+	_prepare(prepare = false) {
+		return this.session.prepareQuery(this.dialect.sqlToQuery(this.getSQL()), "arrays", prepare, this.config.returning ? "all" : "run", this.config.returning ? this.dialect.mapperGenerators.rows(this.config.returning, void 0) : void 0);
+	}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/async/delete.js
+var SQLiteAsyncDeleteBase = class extends SQLiteDeleteBase {
+	static [entityKind] = "SQLiteAsyncDelete";
+};
+applyMixins(SQLiteAsyncDeleteBase, [
+	QueryPromise,
+	SQLiteRunnableQuery,
+	SQLiteAsyncRunnableQuery
+]);
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/async/insert.js
+var SQLiteAsyncInsertBase = class extends SQLiteInsertBase {
+	static [entityKind] = "SQLiteAsyncInsert";
+};
+applyMixins(SQLiteAsyncInsertBase, [
+	QueryPromise,
+	SQLiteRunnableQuery,
+	SQLiteAsyncRunnableQuery
+]);
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/query-builders/raw.js
+var SQLiteRaw = class {
+	prepared;
+	sql;
+	query;
+	static [entityKind] = "SQLiteRaw";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	constructor(prepared, sql, query) {
+		this.prepared = prepared;
+		this.sql = sql;
+		this.query = query;
+	}
+	getSQL() {
+		return this.sql;
+	}
+	getQuery() {
+		return this.query;
+	}
+	/** @internal */
+	_prepare() {
+		return this.prepared;
+	}
+	/** Runs the query: the runtime's builder narrows the return type */
+	execute(placeholderValues) {
+		return this.prepared.execute(placeholderValues);
+	}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/async/raw.js
+var SQLiteAsyncRaw = class extends SQLiteRaw {
+	static [entityKind] = "SQLiteAsyncRaw";
+	execute(placeholderValues) {
+		return this.prepared.execute(placeholderValues);
+	}
+};
+applyMixins(SQLiteAsyncRaw, [QueryPromise]);
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/async/select.js
+var SQLiteAsyncSelectBase = class extends SQLiteSelectBase {
+	static [entityKind] = "SQLiteAsyncSelect";
+};
+applyMixins(SQLiteAsyncSelectBase, [
+	QueryPromise,
+	SQLiteRunnableQuery,
+	SQLiteAsyncRunnableQuery
+]);
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/async/update.js
+var SQLiteAsyncUpdateBase = class extends SQLiteUpdateBase {
+	static [entityKind] = "SQLiteAsyncUpdate";
+};
+applyMixins(SQLiteAsyncUpdateBase, [
+	QueryPromise,
+	SQLiteRunnableQuery,
+	SQLiteAsyncRunnableQuery
+]);
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/async/db.js
+var sqliteAsyncBuilders = {
+	select: SQLiteAsyncSelectBase,
+	insert: SQLiteAsyncInsertBase,
+	update: SQLiteAsyncUpdateBase,
+	delete: SQLiteAsyncDeleteBase,
+	count: SQLiteAsyncCountBuilder,
+	raw: SQLiteAsyncRaw,
+	relationalQuery: SQLiteAsyncRelationalQuery
+};
+/** Sync drivers' builders: their counts and relational queries also run with `.sync()` */
+var sqliteSyncBuilders = {
+	...sqliteAsyncBuilders,
+	count: SQLiteSyncCountBuilder,
+	relationalQuery: SQLiteSyncRelationalQuery
+};
+var SQLiteAsyncDatabase = class extends SQLiteDatabase {
+	resultKind;
+	static [entityKind] = "BaseSQLiteDatabase";
+	constructor(resultKind, dialect, session, relations, forbidJsonb) {
+		super(resultKind === "sync" ? sqliteSyncBuilders : sqliteAsyncBuilders, resultKind, dialect, session, relations, forbidJsonb);
+		this.resultKind = resultKind;
+		this._.resultKind = resultKind;
+	}
+	/** @internal Sync drivers run raw queries right away */
+	wrapRaw(prepared, sequel, builtQuery, method) {
+		return this.resultKind === "async" ? super.wrapRaw(prepared, sequel, builtQuery, method) : prepared[method]();
+	}
+	transaction(transaction, config) {
+		return this.session.transaction(transaction, config);
+	}
+};
+/** Runtime-agnostic query execution flow */
+function executePreparedQuery(runtime, query, logger, paramsInErrors, placeholderValues, run, mapRows) {
+	return runtime.suspend(() => {
+		const sql = query._sql ? query._sql.join(" ") : query.sql;
+		const params = query.params.length === 0 ? query.params : fillPlaceholders(query.params, placeholderValues ?? {});
+		const onError = (e) => runtime.queryError(sql, paramsInErrors ? params : void 0, e);
+		const span = runtime.span;
+		if (!span) return runtime.chain(runtime.detach(() => logger.logQuery(sql, params)), () => {
+			const rows = runtime.attempt(() => run(params), onError);
+			return mapRows ? runtime.chain(rows, mapRows) : rows;
+		});
+		const attributes = {
+			"drizzle.query.text": sql,
+			"drizzle.query.params": JSON.stringify(params)
+		};
+		return span("drizzle.execute", attributes, () => runtime.chain(runtime.detach(() => logger.logQuery(sql, params)), () => {
+			const rows = span("drizzle.driver.execute", attributes, () => runtime.attempt(() => run(params), onError));
+			if (!mapRows) return rows;
+			return runtime.chain(rows, (rows) => span("drizzle.mapResponse", void 0, () => runtime.suspend(() => mapRows(rows))));
+		}));
+	});
+}
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/runtime/async.js
+var isThenable = (value) => value !== null && typeof value === "object" && typeof value.then === "function";
+var asyncQueryRuntime = {
+	suspend(body) {
+		try {
+			return body();
+		} catch (e) {
+			return Promise.reject(e);
+		}
+	},
+	chain: (first, next) => isThenable(first) ? first.then(next) : next(first),
+	detach: (work) => {
+		work();
+	},
+	attempt(run, onError) {
+		let query;
+		try {
+			query = run();
+		} catch (e) {
+			return Promise.reject(onError(e));
+		}
+		return query.then(void 0, (e) => {
+			throw onError(e);
+		});
+	},
+	queryError: (query, params, cause) => new DrizzleQueryError(query, params, cause)
+};
+({ ...asyncQueryRuntime });
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/runtime/sync.js
+var syncQueryRuntime = {
+	suspend: (body) => body(),
+	chain: (first, next) => next(first),
+	detach: (work) => work(),
+	attempt(run, onError) {
+		try {
+			return run();
+		} catch (e) {
+			throw onError(e);
+		}
+	},
+	queryError: (query, params, cause) => new DrizzleQueryError(query, params, cause)
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/session.js
+/**
+* A prepared query of every runtime. `run`, `all`, `get`, `values` are written once, over the runtime's
+* {@link QueryRuntime}: sync drivers' prepared queries return values, async ones Promises, Effect ones Effects
+*/
+var SQLitePreparedQuery = class {
+	executors;
+	query;
+	mode;
+	logger;
+	paramsInErrors;
+	static [entityKind] = "SQLiteBasePreparedQuery";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	/** @internal */
+	mapper;
+	/** @internal */
+	executeMethod;
+	constructor(executeMethod, executors, query, mapper, mode, logger, paramsInErrors) {
+		this.executors = executors;
+		this.query = query;
+		this.mode = mode;
+		this.logger = logger;
+		this.paramsInErrors = paramsInErrors;
+		this.mapper = mapper;
+		this.executeMethod = executeMethod;
+	}
+	getQuery() {
+		return this.query;
+	}
+	run(placeholderValues) {
+		const { executors } = this;
+		return executePreparedQuery(this.runtime, this.query, this.logger, this.paramsInErrors, placeholderValues, (params) => executors.run(params), void 0);
+	}
+	all(placeholderValues) {
+		const { executors } = this;
+		return executePreparedQuery(this.runtime, this.query, this.logger, this.paramsInErrors, placeholderValues, (params) => executors.all(params), this.mapper);
+	}
+	get(placeholderValues) {
+		const { executors, mapper } = this;
+		return executePreparedQuery(this.runtime, this.query, this.logger, this.paramsInErrors, placeholderValues, (params) => executors.get(params), (row) => row ? mapper ? mapper([row])[0] : row : void 0);
+	}
+	values(placeholderValues) {
+		const { executors } = this;
+		return executePreparedQuery(this.runtime, this.query, this.logger, this.paramsInErrors, placeholderValues, (params) => executors.all(params), void 0);
+	}
+	execute(placeholderValues) {
+		return this[this.executeMethod](placeholderValues);
+	}
+};
+var SQLiteSession = class {
+	dialect;
+	static [entityKind] = "SQLiteSession";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	constructor(dialect) {
+		this.dialect = dialect;
+	}
+	run(query) {
+		return this.prepareQuery(this.dialect.sqlToQuery(query), "raw", false, "run").run();
+	}
+	objects(query) {
+		return this.prepareQuery(this.dialect.sqlToQuery(query), "objects", false, "all").all();
+	}
+	object(query) {
+		return this.prepareQuery(this.dialect.sqlToQuery(query), "objects", false, "get").get();
+	}
+	arrays(query) {
+		return this.prepareQuery(this.dialect.sqlToQuery(query), "arrays", false, "all").all();
+	}
+	array(query) {
+		return this.prepareQuery(this.dialect.sqlToQuery(query), "arrays", false, "get").get();
+	}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/async/session.js
+var ExecuteResultSync = class extends QueryPromise {
+	resultCb;
+	static [entityKind] = "ExecuteResultSync";
+	constructor(resultCb) {
+		super();
+		this.resultCb = resultCb;
+	}
+	async execute() {
+		return this.resultCb();
+	}
+	sync() {
+		return this.resultCb();
+	}
+};
+var SQLiteAsyncPreparedQuery = class extends SQLitePreparedQuery {
+	resultKind;
+	static [entityKind] = "SQLiteAsyncPreparedQuery";
+	/** @internal Sync drivers' queries run as plain values, async drivers' as Promises */
+	get runtime() {
+		return this.resultKind === "sync" ? syncQueryRuntime : asyncQueryRuntime;
+	}
+	constructor(resultKind, executeMethod = "all", executors, query, mapper, mode, logger, paramsInErrors) {
+		super(executeMethod, executors, query, mapper, mode, logger, paramsInErrors);
+		this.resultKind = resultKind;
+	}
+	execute(placeholderValues) {
+		if (this.resultKind === "async") return this[this.executeMethod](placeholderValues);
+		return new ExecuteResultSync(() => this[this.executeMethod](placeholderValues));
+	}
+};
+var SQLiteAsyncSession = class extends SQLiteSession {
+	resultKind;
+	static [entityKind] = "SQLiteAsyncSession";
+	/** @internal Sync drivers' queries run as plain values, async drivers' as Promises */
+	get runtime() {
+		return this.resultKind === "sync" ? syncQueryRuntime : asyncQueryRuntime;
+	}
+	constructor(dialect, resultKind) {
+		super(dialect);
+		this.resultKind = resultKind;
+	}
+};
+var SQLiteAsyncTransaction = class extends SQLiteAsyncDatabase {
+	nestedIndex;
+	static [entityKind] = "SQLiteAsyncTransaction";
+	constructor(resultType, dialect, session, relations, nestedIndex = 0, forbidJsonb) {
+		super(resultType, dialect, session, relations, forbidJsonb);
+		this.nestedIndex = nestedIndex;
+	}
+	rollback() {
+		throw new TransactionRollbackError();
+	}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/node-sqlite/session.js
+var NodeSQLiteSession = class extends SQLiteAsyncSession {
+	client;
+	relations;
+	options;
+	static [entityKind] = "SQLJsSession";
+	logger;
+	constructor(client, dialect, relations, options = {}) {
+		super(dialect, "sync");
+		this.client = client;
+		this.relations = relations;
+		this.options = options;
+		this.logger = options.logger ?? new NoopLogger();
+	}
+	prepareQuery(query, mode, _prepare, executeMethod, mapper) {
+		let stmt;
+		try {
+			stmt = this.client.prepare(query.sql);
+			if (mapper) stmt.setReadBigInts(true);
+		} catch (e) {
+			throw new DrizzleQueryError(query.sql, this.options.paramsInErrors ? query.params : void 0, e);
+		}
+		return new SQLiteAsyncPreparedQuery("sync", executeMethod, {
+			all: (params) => {
+				stmt.setReturnArrays(mode === "arrays");
+				const res = stmt.all(...params);
+				if (mode === "objects") return res.map((row) => ({ ...row }));
+				return res;
+			},
+			get: (params) => {
+				stmt.setReturnArrays(mode === "arrays");
+				const res = stmt.get(...params);
+				if (res && mode === "objects") return { ...res };
+				return res;
+			},
+			run: (params) => {
+				stmt.setReturnArrays(false);
+				return stmt.run(...params);
+			}
+		}, query, mapper, mode, this.logger, this.options.paramsInErrors);
+	}
+	transaction(transaction, config = {}) {
+		if (config?.behavior === "concurrent") throw new Error("Concurrent transactions are not supported by driver");
+		const tx = new NodeSQLiteTransaction("sync", this.dialect, this, this.relations);
+		this.run(sql.raw(`begin${config.behavior ? ` ${config.behavior}` : ""}`));
+		try {
+			const result = transaction(tx);
+			this.run(sql`commit`);
+			return result;
+		} catch (err) {
+			try {
+				this.run(sql`rollback`);
+			} catch {}
+			throw err;
+		}
+	}
+};
+var NodeSQLiteTransaction = class NodeSQLiteTransaction extends SQLiteAsyncTransaction {
+	static [entityKind] = "SQLJsTransaction";
+	transaction(transaction) {
+		const savepointName = `sp${this.nestedIndex + 1}`;
+		const tx = new NodeSQLiteTransaction("sync", this.dialect, this.session, this._.relations, this.nestedIndex + 1);
+		tx.run(sql.raw(`savepoint ${savepointName}`));
+		try {
+			const result = transaction(tx);
+			tx.run(sql.raw(`release savepoint ${savepointName}`));
+			return result;
+		} catch (err) {
+			try {
+				tx.run(sql.raw(`rollback to savepoint ${savepointName}`));
+			} catch {}
+			throw err;
+		}
+	}
+};
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/node-sqlite/driver.js
+var NodeSQLiteDatabase = class extends SQLiteAsyncDatabase {
+	static [entityKind] = "NodeSQLiteDatabase";
+};
+function construct(client, config = {}) {
+	const dialect = new SQLiteDialect({
+		codecs: config.codecs ?? nodeSQLiteCodecs,
+		useJitMappers: jitCompatCheck(config.jit)
+	});
+	let logger;
+	if (config.logger === true) logger = new DefaultLogger();
+	else if (config.logger !== false) logger = config.logger;
+	const relations = config.relations ?? {};
+	const db = new NodeSQLiteDatabase("sync", dialect, new NodeSQLiteSession(client, dialect, relations, {
+		logger,
+		paramsInErrors: config.paramsInErrors
+	}), relations);
+	db.$client = client;
+	return db;
+}
+function drizzle(...params) {
+	if (params[0] === void 0 || typeof params[0] === "string") return construct(params[0] === void 0 ? new DatabaseSync(":memory:") : new DatabaseSync(params[0]), params[1]);
+	const { connection, client, ...config } = params[0];
+	if (client) return construct(client, config);
+	if (typeof connection === "object") {
+		const { path, ...options } = connection;
+		return construct(new DatabaseSync(path ?? ":memory:", options), config);
+	}
+	return construct(new DatabaseSync(connection ?? ":memory:"), config);
+}
+(function(_drizzle) {
+	function mock(config) {
+		return construct({}, config);
+	}
+	_drizzle.mock = mock;
+})(drizzle || (drizzle = {}));
+// server/repositories/errors.ts
+/** Base domain error for all server repository and migration failures. */
+var DomainError = class extends Error {
+	code;
+	constructor(code, message, options) {
+		super(message, options);
+		this.name = new.target.name;
+		this.code = code;
+	}
+};
+var MigrationError = class extends DomainError {
+	version;
+	constructor(message, version, options) {
+		super("MIGRATION_ERROR", message, options);
+		this.version = version;
+	}
+};
+var ValidationError = class extends DomainError {
+	constructor(message, options) {
+		super("VALIDATION_ERROR", message, options);
+	}
+};
+var NotFoundError = class extends DomainError {
+	entityType;
+	entityId;
+	constructor(entityType, entityId) {
+		super("NOT_FOUND", `${entityType} "${entityId}" was not found.`);
+		this.entityType = entityType;
+		this.entityId = entityId;
+	}
+};
+var ReportImmutableError = class extends DomainError {
+	taskId;
+	constructor(taskId) {
+		super("REPORT_IMMUTABLE", `Report for Task #${taskId} already exists and is immutable.`);
+		this.taskId = taskId;
+	}
+};
+var QuestionBlockerError = class extends DomainError {
+	blockingMode;
+	questionIds;
+	constructor(blockingMode, questionIds, message) {
+		super("QUESTION_BLOCKER", message);
+		this.blockingMode = blockingMode;
+		this.questionIds = questionIds;
+	}
+};
+// server/db/migrations/index.ts
+/** Ordered forward-only SQLite migrations. Never reorder or edit an applied migration. */
+var MIGRATIONS = [{
+	version: 1,
+	name: "initial_schema",
+	sql: `
+CREATE TABLE IF NOT EXISTS session_groups (
+	id TEXT PRIMARY KEY,
+	name TEXT NOT NULL,
+	description TEXT,
+	notes TEXT,
+	created_at TEXT NOT NULL,
+	updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+	id TEXT PRIMARY KEY,
+	group_id TEXT REFERENCES session_groups(id) ON DELETE SET NULL,
+	title TEXT,
+	root_dir TEXT,
+	export_dir TEXT,
+	created_at TEXT NOT NULL,
+	updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_sessions_group_id ON sessions(group_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_root_dir ON sessions(root_dir);
+CREATE INDEX IF NOT EXISTS idx_sessions_updated_at ON sessions(updated_at);
+
+CREATE TABLE IF NOT EXISTS tasks (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	session_id TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+	slug TEXT NOT NULL,
+	title TEXT NOT NULL,
+	status TEXT NOT NULL CHECK (status IN ('planned', 'in_progress', 'done', 'cancelled', 'superseded')),
+	summary TEXT NOT NULL,
+	plan_file TEXT,
+	report_file TEXT,
+	created_at TEXT NOT NULL,
+	started_at TEXT,
+	completed_at TEXT,
+	updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_session_id ON tasks(session_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+
+CREATE TABLE IF NOT EXISTS task_steps (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	task_id INTEGER NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+	step_index INTEGER NOT NULL,
+	title TEXT NOT NULL,
+	outcome TEXT NOT NULL,
+	created_at TEXT NOT NULL,
+	started_at TEXT,
+	completed_at TEXT,
+	updated_at TEXT NOT NULL,
+	UNIQUE(task_id, step_index)
+);
+
+CREATE TABLE IF NOT EXISTS task_items (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	step_id INTEGER NOT NULL REFERENCES task_steps(id) ON DELETE CASCADE,
+	task_id INTEGER NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+	item_key TEXT NOT NULL,
+	item_index INTEGER NOT NULL,
+	text TEXT NOT NULL,
+	status TEXT NOT NULL CHECK (status IN ('pending', 'in_progress', 'done')),
+	created_at TEXT NOT NULL,
+	started_at TEXT,
+	completed_at TEXT,
+	updated_at TEXT NOT NULL,
+	UNIQUE(task_id, item_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_task_items_step_id ON task_items(step_id);
+
+CREATE TABLE IF NOT EXISTS plans (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	task_id INTEGER NOT NULL UNIQUE REFERENCES tasks(id) ON DELETE CASCADE,
+	session_id TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+	slug TEXT NOT NULL,
+	title TEXT NOT NULL,
+	target_repo TEXT NOT NULL,
+	target_branch TEXT NOT NULL,
+	target_commit TEXT NOT NULL,
+	follows TEXT,
+	overview TEXT NOT NULL,
+	language TEXT NOT NULL DEFAULT 'en',
+	review_status TEXT,
+	review_comment TEXT,
+	generated_plan_path TEXT,
+	approved_via TEXT,
+	body_json TEXT NOT NULL,
+	created_at TEXT NOT NULL,
+	reviewed_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_plans_session_id ON plans(session_id);
+
+CREATE TABLE IF NOT EXISTS reports (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	task_id INTEGER NOT NULL UNIQUE REFERENCES tasks(id) ON DELETE CASCADE,
+	session_id TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+	slug TEXT NOT NULL,
+	title TEXT NOT NULL,
+	mode TEXT NOT NULL CHECK (mode IN ('implementation', 'audit')),
+	outcome TEXT NOT NULL,
+	target_repo TEXT NOT NULL,
+	target_branch TEXT NOT NULL,
+	target_commit TEXT NOT NULL,
+	plan_ref TEXT,
+	summary TEXT NOT NULL,
+	language TEXT NOT NULL DEFAULT 'en',
+	body_json TEXT NOT NULL,
+	created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_reports_session_id ON reports(session_id);
+
+CREATE TABLE IF NOT EXISTS handoffs (
+	id TEXT PRIMARY KEY,
+	session_id TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+	task_id INTEGER REFERENCES tasks(id) ON DELETE SET NULL,
+	kind TEXT NOT NULL CHECK (kind IN ('plan_approval', 'mid_session_pause', 'completion', 'subagent_scout', 'custom')),
+	title TEXT NOT NULL,
+	summary TEXT NOT NULL,
+	working_now TEXT,
+	verify_command TEXT,
+	entry_point TEXT,
+	next_step TEXT,
+	artifact_links_json TEXT NOT NULL DEFAULT '[]',
+	structured_data_json TEXT,
+	created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_handoffs_session_created ON handoffs(session_id, created_at);
+
+CREATE TABLE IF NOT EXISTS question_sets (
+	id TEXT PRIMARY KEY,
+	session_id TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+	task_id INTEGER REFERENCES tasks(id) ON DELETE SET NULL,
+	step_number INTEGER,
+	title TEXT NOT NULL,
+	description TEXT,
+	submit_label TEXT NOT NULL DEFAULT 'Submit Answers',
+	blocking_mode TEXT NOT NULL DEFAULT 'immediate' CHECK (blocking_mode IN ('immediate', 'before_step_finish', 'anytime')),
+	sections_json TEXT NOT NULL DEFAULT '[]',
+	status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'partial', 'submitted')),
+	created_at TEXT NOT NULL,
+	submitted_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_question_sets_session_status ON question_sets(session_id, status);
+
+CREATE TABLE IF NOT EXISTS questions (
+	pk INTEGER PRIMARY KEY AUTOINCREMENT,
+	question_set_id TEXT NOT NULL REFERENCES question_sets(id) ON DELETE CASCADE,
+	question_key TEXT NOT NULL,
+	position INTEGER NOT NULL,
+	section_id TEXT,
+	prompt TEXT NOT NULL,
+	hint TEXT,
+	context_refs_json TEXT NOT NULL DEFAULT '[]',
+	kind TEXT NOT NULL CHECK (kind IN ('single_select', 'multi_select', 'text', 'textarea', 'boolean')),
+	required INTEGER NOT NULL DEFAULT 1,
+	options_json TEXT,
+	allow_other INTEGER NOT NULL DEFAULT 0,
+	placeholder TEXT,
+	default_value_json TEXT,
+	blocking_mode TEXT CHECK (blocking_mode IN ('immediate', 'before_step_finish', 'anytime')),
+	task_id INTEGER REFERENCES tasks(id) ON DELETE SET NULL,
+	step_number INTEGER,
+	answer_json TEXT,
+	other_text TEXT,
+	is_submitted INTEGER NOT NULL DEFAULT 0,
+	answered_at TEXT,
+	UNIQUE(question_set_id, question_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_questions_set_id ON questions(question_set_id);
+
+CREATE TABLE IF NOT EXISTS tool_calls (
+	id TEXT PRIMARY KEY,
+	session_id TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+	tool_name TEXT NOT NULL,
+	status TEXT NOT NULL CHECK (status IN ('ok', 'error')),
+	summary TEXT NOT NULL,
+	args_summary TEXT,
+	created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_tool_calls_session_created ON tool_calls(session_id, created_at);
+
+CREATE TABLE IF NOT EXISTS timeline_events (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	session_id TEXT REFERENCES sessions(id) ON DELETE CASCADE,
+	group_id TEXT REFERENCES session_groups(id) ON DELETE SET NULL,
+	event_type TEXT NOT NULL,
+	actor TEXT NOT NULL DEFAULT 'agent' CHECK (actor IN ('agent', 'user', 'system')),
+	title TEXT NOT NULL,
+	summary TEXT,
+	metadata_json TEXT,
+	created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_timeline_events_session_created ON timeline_events(session_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_timeline_events_group_created ON timeline_events(group_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_timeline_events_created ON timeline_events(created_at);
+
+CREATE TABLE IF NOT EXISTS timeline_links (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	event_id INTEGER NOT NULL REFERENCES timeline_events(id) ON DELETE CASCADE,
+	entity_type TEXT NOT NULL CHECK (entity_type IN ('session', 'session_group', 'task', 'task_step', 'task_item', 'plan', 'report', 'handoff', 'question_set', 'note')),
+	entity_id TEXT NOT NULL,
+	role TEXT NOT NULL DEFAULT 'subject' CHECK (role IN ('subject', 'parent', 'related')),
+	label TEXT,
+	UNIQUE(event_id, entity_type, entity_id, role)
+);
+
+CREATE INDEX IF NOT EXISTS idx_timeline_links_event_id ON timeline_links(event_id);
+CREATE INDEX IF NOT EXISTS idx_timeline_links_entity ON timeline_links(entity_type, entity_id);
+
+CREATE TABLE IF NOT EXISTS ui_settings (
+	id INTEGER PRIMARY KEY CHECK (id = 1),
+	display_type TEXT NOT NULL DEFAULT 'minimized' CHECK (display_type IN ('minimized', 'compact', 'full')),
+	step_display_type TEXT NOT NULL DEFAULT 'inherit' CHECK (step_display_type IN ('inherit', 'minimized', 'compact', 'full')),
+	updated_at TEXT NOT NULL
+);
+`
+}];
+// server/db/migrator.ts
+var CREATE_MIGRATIONS_TABLE_SQL = `
+CREATE TABLE IF NOT EXISTS schema_migrations (
+	version INTEGER PRIMARY KEY,
+	name TEXT NOT NULL,
+	checksum TEXT NOT NULL,
+	applied_at TEXT NOT NULL
+);`;
+/** Compute deterministic SHA-256 hex checksum of migration SQL. */
+function computeMigrationChecksum(sql) {
+	return crypto$1.createHash("sha256").update(sql.trim(), "utf8").digest("hex");
+}
+function validateMigrationDefinitions(migrations) {
+	let prevVersion = 0;
+	for (const migration of migrations) {
+		if (!Number.isInteger(migration.version) || migration.version <= prevVersion) throw new MigrationError(`Migration versions must be strictly ascending integers (found ${migration.version} after ${prevVersion}).`, migration.version);
+		if (!migration.name.trim()) throw new MigrationError(`Migration v${migration.version} has an empty name.`, migration.version);
+		prevVersion = migration.version;
+	}
+}
+function readUserVersion(db) {
+	const row = db.prepare("PRAGMA user_version").get();
+	return typeof row?.user_version === "number" ? row.user_version : 0;
+}
+function isMigrationRow(value) {
+	if (!value || typeof value !== "object") return false;
+	const row = value;
+	return (typeof row.version === "number" || typeof row.version === "bigint") && typeof row.name === "string" && typeof row.checksum === "string" && typeof row.applied_at === "string";
+}
+function readAppliedMigrations(db) {
+	db.exec(CREATE_MIGRATIONS_TABLE_SQL);
+	return db.prepare("SELECT version, name, checksum, applied_at FROM schema_migrations ORDER BY version ASC").all().map((row) => {
+		if (!isMigrationRow(row)) throw new MigrationError("Malformed row returned from schema_migrations.");
+		return {
+			version: Number(row.version),
+			name: row.name,
+			checksum: row.checksum,
+			appliedAt: row.applied_at
+		};
+	});
+}
+function createPreMigrationBackup(db, dbPath, currentVersion) {
+	try {
+		db.exec("PRAGMA wal_checkpoint(TRUNCATE)");
+	} catch {}
+	const backupPath = `${dbPath}.v${currentVersion}-${(/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-")}.bak`;
+	fs.copyFileSync(dbPath, backupPath);
+	return backupPath;
+}
+/**
+* Run forward-only SQL migrations inside explicit transactions.
+* Creates an automatic `.bak` snapshot when upgrading an existing on-disk database.
+*/
+function runMigrations(db, options = {}) {
+	const migrations = options.migrations ?? MIGRATIONS;
+	validateMigrationDefinitions(migrations);
+	const applied = readAppliedMigrations(db);
+	const latestCodeVersion = migrations[migrations.length - 1]?.version ?? 0;
+	const latestAppliedVersion = applied[applied.length - 1]?.version ?? 0;
+	const userVersion = readUserVersion(db);
+	const currentVersion = Math.max(latestAppliedVersion, userVersion);
+	if (currentVersion > latestCodeVersion) throw new MigrationError(`Database schema version v${currentVersion} is newer than max supported v${latestCodeVersion}.`, currentVersion);
+	const appliedByVersion = new Map(applied.map((item) => [item.version, item]));
+	for (const migration of migrations) {
+		const recorded = appliedByVersion.get(migration.version);
+		if (!recorded) continue;
+		const expectedChecksum = computeMigrationChecksum(migration.sql);
+		if (recorded.checksum !== expectedChecksum) throw new MigrationError(`Checksum mismatch for applied migration v${migration.version} (${migration.name}).`, migration.version);
+	}
+	const pending = migrations.filter((m) => !appliedByVersion.has(m.version));
+	if (pending.length === 0) return {
+		currentVersion,
+		appliedVersions: []
+	};
+	let backupPath;
+	if (applied.length > 0 && options.dbPath && options.dbPath !== ":memory:" && fs.existsSync(options.dbPath)) backupPath = createPreMigrationBackup(db, options.dbPath, currentVersion);
+	const insertStmt = db.prepare("INSERT INTO schema_migrations (version, name, checksum, applied_at) VALUES (?, ?, ?, ?)");
+	const appliedVersions = [];
+	for (const migration of pending) {
+		const checksum = computeMigrationChecksum(migration.sql);
+		const appliedAt = (/* @__PURE__ */ new Date()).toISOString();
+		db.exec("BEGIN IMMEDIATE");
+		try {
+			db.exec(migration.sql);
+			insertStmt.run(migration.version, migration.name, checksum, appliedAt);
+			db.exec(`PRAGMA user_version = ${migration.version}`);
+			db.exec("COMMIT");
+			appliedVersions.push(migration.version);
+		} catch (err) {
+			try {
+				db.exec("ROLLBACK");
+			} catch {}
+			throw new MigrationError(`Failed to apply migration v${migration.version} (${migration.name}): ${err instanceof Error ? err.message : String(err)}`, migration.version, { cause: err });
+		}
+	}
+	return {
+		currentVersion: pending[pending.length - 1]?.version ?? currentVersion,
+		appliedVersions,
+		backupPath
+	};
+}
+// server/db/client.ts
+var SQLITE_FILENAME = "new-worker.sqlite";
+/**
+* Open the embedded SQLite database via `node:sqlite` + Drizzle ORM, apply runtime
+* pragmas (`WAL`, `foreign_keys = ON`, `busy_timeout = 5000`), and execute pending
+* forward-only migrations.
+*/
+function openDatabase(dataDirOrMemory, options = {}) {
+	const isMemory = dataDirOrMemory === ":memory:";
+	const resolvedDir = isMemory ? ":memory:" : path.resolve(dataDirOrMemory);
+	const dbPath = isMemory ? ":memory:" : path.join(resolvedDir, SQLITE_FILENAME);
+	if (!isMemory) fs.mkdirSync(resolvedDir, { recursive: true });
+	const sqlite = new DatabaseSync(dbPath);
+	try {
+		if (!isMemory) {
+			sqlite.exec("PRAGMA journal_mode = WAL;");
+			sqlite.exec("PRAGMA synchronous = NORMAL;");
+		}
+		sqlite.exec("PRAGMA foreign_keys = ON;");
+		sqlite.exec("PRAGMA busy_timeout = 5000;");
+		const migrationResult = runMigrations(sqlite, {
+			dbPath,
+			migrations: options.migrations
+		});
+		return {
+			dataDir: resolvedDir,
+			dbPath,
+			sqlite,
+			db: drizzle({ client: sqlite }),
+			migrationResult,
+			close: () => {
+				sqlite.close();
+			}
+		};
+	} catch (err) {
+		sqlite.close();
+		throw err;
+	}
+}
+// node_modules/.pnpm/@modelcontextprotocol+ext-apps@2.0.4_@modelcontextprotocol+client@2.4.0_@modelcontextpr_fb5c80dda1a266aabc30a0f021c945eb/node_modules/@modelcontextprotocol/ext-apps/dist/src/server/index.js
+var D = "ui/resourceUri";
+var L = "text/html;profile=mcp-app";
+function j(B, Q, F, V) {
+	let q = F._meta, J = q.ui, Z = q[D], $ = q;
+	if (J?.resourceUri && !Z) $ = {
+		...q,
+		[D]: J.resourceUri
+	};
+	else if (Z && !J?.resourceUri) $ = {
+		...q,
+		ui: {
+			...J,
+			resourceUri: Z
+		}
+	};
+	return B.registerTool(Q, {
+		...F,
+		_meta: $
+	}, V);
+}
+function G(B, Q, F, V, q) {
+	return B.registerResource(Q, F, {
+		mimeType: L,
+		...V
+	}, q);
+}
+// src/shared/contracts.ts
 var SessionIdSchema = string().regex(/^[a-zA-Z0-9._-]{1,80}$/, "sessionId must match [a-zA-Z0-9._-]{1,80}");
-var TaskNumberSchema = string().regex(/^\d{2,}$/, "taskNumber must be a zero-padded numeric string such as 01");
+var GroupIdSchema = string().regex(/^[a-zA-Z0-9._-]{1,80}$/, "groupId must match [a-zA-Z0-9._-]{1,80}");
+var TaskIdSchema = number$1().int().positive();
 var SlugSchema = string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "slug must be lowercase kebab-case ASCII");
 var LanguageSchema = _enum(["en", "ko"]);
 var FileRefSchema = object({
@@ -23260,7 +30153,8 @@ var TaskItemStatusSchema = _enum([
 	"done"
 ]);
 var TaskItemSchema = object({
-	id: string().min(1),
+	id: number$1().int().positive().optional(),
+	itemKey: string().min(1),
 	text: string().min(1),
 	status: TaskItemStatusSchema,
 	createdAt: string().optional(),
@@ -23269,6 +30163,8 @@ var TaskItemSchema = object({
 	updatedAt: string().optional()
 });
 var TaskStepSchema = object({
+	id: number$1().int().positive().optional(),
+	stepIndex: number$1().int().nonnegative().optional(),
 	title: string().min(1),
 	outcome: string().min(1),
 	items: array(TaskItemSchema).min(1),
@@ -23285,15 +30181,16 @@ var TaskLifecycleStatusSchema = _enum([
 	"superseded"
 ]);
 var TaskRecordSchema = object({
-	taskNumber: TaskNumberSchema,
+	taskId: TaskIdSchema,
+	sessionId: SessionIdSchema,
 	slug: SlugSchema,
 	title: string().min(1),
 	status: TaskLifecycleStatusSchema,
 	summary: string().min(1),
-	steps: array(TaskStepSchema).min(1),
+	steps: array(TaskStepSchema),
 	planFile: string().optional(),
 	reportFile: string().optional(),
-	createdAt: string().optional(),
+	createdAt: string().min(1),
 	startedAt: string().optional(),
 	completedAt: string().optional(),
 	updatedAt: string().min(1)
@@ -23333,18 +30230,66 @@ var PlanFileEntrySchema = object({
 	]),
 	reason: string().min(1)
 });
+var PlanScopeSchema = object({
+	inScope: array(string().min(1)).min(1),
+	outOfScope: array(string().min(1)).min(1)
+});
+var PlanCalibrationSchema = object({
+	cadence: string(),
+	familiarity: string(),
+	structureStance: string()
+});
+var PlanTestingSchema = object({
+	validationCommands: array(string().min(1)).min(1),
+	keyScenarios: array(string().min(1)).min(1),
+	edgeCases: array(string().min(1)).optional(),
+	testChanges: array(string().min(1)).min(1)
+});
+/** Lenient hydration schema for serialized `plans.body_json` rows in SQLite. */
+var PlanBodyJsonSchema = object({
+	expectedOutcomes: array(string()).default([]),
+	scope: object({
+		inScope: array(string()).default([]),
+		outOfScope: array(string()).default([])
+	}).default({
+		inScope: [],
+		outOfScope: []
+	}),
+	openQuestions: array(string()).optional(),
+	userStories: array(string()).optional(),
+	functionalRequirements: array(string()).optional(),
+	nonFunctionalRequirements: array(string()).optional(),
+	currentImplementation: array(string()).default([]),
+	keyDecisions: array(string()).default([]),
+	proposedChanges: array(string()).default([]),
+	dataModels: string().optional(),
+	components: array(PlanComponentRowSchema).optional(),
+	fileStructure: array(PlanFileEntrySchema).default([]),
+	architectureDiagram: string().optional(),
+	risks: array(PlanRiskRowSchema).optional(),
+	alternatives: string().optional(),
+	calibration: PlanCalibrationSchema.optional(),
+	testing: object({
+		validationCommands: array(string()).default([]),
+		keyScenarios: array(string()).default([]),
+		edgeCases: array(string()).optional(),
+		testChanges: array(string()).default([])
+	}).default({
+		validationCommands: [],
+		keyScenarios: [],
+		testChanges: []
+	})
+});
 var PlanRecordSchema = object({
-	taskNumber: TaskNumberSchema,
+	taskId: TaskIdSchema,
+	sessionId: SessionIdSchema,
 	slug: SlugSchema,
 	title: string().min(1),
 	target: TargetRepoSchema,
 	follows: string().optional(),
 	overview: string().min(1),
 	expectedOutcomes: array(string().min(1)).min(1),
-	scope: object({
-		inScope: array(string().min(1)).min(1),
-		outOfScope: array(string().min(1)).min(1)
-	}),
+	scope: PlanScopeSchema,
 	openQuestions: array(string().min(1)).optional(),
 	userStories: array(string().min(1)).optional(),
 	functionalRequirements: array(string().min(1)).optional(),
@@ -23358,17 +30303,8 @@ var PlanRecordSchema = object({
 	architectureDiagram: string().optional(),
 	risks: array(PlanRiskRowSchema).optional(),
 	alternatives: string().optional(),
-	calibration: object({
-		cadence: string(),
-		familiarity: string(),
-		structureStance: string()
-	}).optional(),
-	testing: object({
-		validationCommands: array(string().min(1)).min(1),
-		keyScenarios: array(string().min(1)).min(1),
-		edgeCases: array(string().min(1)).optional(),
-		testChanges: array(string().min(1)).min(1)
-	}),
+	calibration: PlanCalibrationSchema.optional(),
+	testing: PlanTestingSchema,
 	language: LanguageSchema.default("en"),
 	reviewStatus: PlanReviewStatusSchema.optional(),
 	reviewComment: string().optional(),
@@ -23440,8 +30376,23 @@ var AuditVerificationRowSchema = object({
 	]),
 	observed: string().min(1)
 });
+/** Lenient hydration schema for serialized `reports.body_json` rows in SQLite. */
+var ReportBodyJsonSchema = object({
+	actionsCompleted: array(string()).default([]),
+	filesChanged: array(ReportFileChangeSchema).default([]),
+	diffStat: string().optional(),
+	planDeviations: array(string()).default([]),
+	verification: array(ReportVerificationRowSchema).default([]),
+	tryCommand: string().optional(),
+	unverifiedLimitations: string().optional(),
+	operationalNotes: array(string()).default([]),
+	verificationMatrix: array(AuditVerificationRowSchema).default([]),
+	findings: array(AuditFindingSchema).default([]),
+	followUps: array(ReportFollowUpSchema).default([])
+});
 var ReportRecordSchema = object({
-	taskNumber: TaskNumberSchema,
+	taskId: TaskIdSchema,
+	sessionId: SessionIdSchema,
 	slug: SlugSchema,
 	title: string().min(1),
 	mode: ReportModeSchema,
@@ -23472,7 +30423,8 @@ var HandoffKindSchema = _enum([
 ]);
 var HandoffRecordSchema = object({
 	id: string().min(1),
-	taskNumber: TaskNumberSchema.optional(),
+	sessionId: SessionIdSchema,
+	taskId: TaskIdSchema.optional(),
 	kind: HandoffKindSchema,
 	title: string().min(1),
 	summary: string().min(1),
@@ -23518,27 +30470,28 @@ var QuestionItemSchema = object({
 	options: array(QuestionOptionSchema).optional(),
 	allowOther: boolean().default(false),
 	placeholder: string().optional(),
-	defaultValue: union([
+	defaultValue: union$1([
 		string(),
 		array(string()),
 		boolean()
 	]).optional(),
 	blockingMode: QuestionBlockingModeSchema.optional(),
-	taskNumber: TaskNumberSchema.optional(),
+	taskId: TaskIdSchema.optional(),
 	stepNumber: number$1().int().positive().optional()
 });
-var QuestionAnswerValueSchema = union([
+var QuestionAnswerValueSchema = union$1([
 	string(),
 	array(string()),
 	boolean()
 ]);
 var QuestionSetRecordSchema = object({
 	id: string().min(1),
+	sessionId: SessionIdSchema,
 	title: string().min(1),
 	description: string().optional(),
 	submitLabel: string().default("Submit Answers"),
 	blockingMode: QuestionBlockingModeSchema.default("immediate"),
-	taskNumber: TaskNumberSchema.optional(),
+	taskId: TaskIdSchema.optional(),
 	stepNumber: number$1().int().positive().optional(),
 	sections: array(QuestionSectionSchema).default([]),
 	questions: array(QuestionItemSchema).min(1),
@@ -23557,55 +30510,104 @@ var QuestionSetRecordSchema = object({
 function resolveQuestionPolicy(questionSet, question) {
 	return {
 		blockingMode: question.blockingMode ?? questionSet.blockingMode ?? "immediate",
-		taskNumber: question.taskNumber ?? questionSet.taskNumber,
+		taskId: question.taskId ?? questionSet.taskId,
 		stepNumber: question.stepNumber ?? questionSet.stepNumber
 	};
 }
+var TimelineEntityTypeSchema = _enum([
+	"session",
+	"session_group",
+	"task",
+	"task_step",
+	"task_item",
+	"plan",
+	"report",
+	"handoff",
+	"question_set",
+	"note"
+]);
+var TimelineLinkRoleSchema = _enum([
+	"subject",
+	"parent",
+	"related"
+]);
+var TimelineActorSchema = _enum([
+	"agent",
+	"user",
+	"system"
+]);
+var TimelineLinkSchema = object({
+	id: number$1().int().positive().optional(),
+	entityType: TimelineEntityTypeSchema,
+	entityId: string().min(1),
+	role: TimelineLinkRoleSchema.default("subject"),
+	label: string().optional()
+});
+var TimelineEventSchema = object({
+	id: number$1().int().positive(),
+	sessionId: SessionIdSchema.nullable(),
+	groupId: GroupIdSchema.nullable(),
+	eventType: string().min(1),
+	actor: TimelineActorSchema,
+	title: string().min(1),
+	summary: string().optional(),
+	metadata: record(string(), unknown()).optional(),
+	links: array(TimelineLinkSchema).default([]),
+	createdAt: string().min(1)
+});
 var ToolCallRecordSchema = object({
 	id: string().min(1),
+	sessionId: SessionIdSchema,
 	toolName: string().min(1),
 	timestamp: string().min(1),
 	status: _enum(["ok", "error"]),
 	summary: string().min(1),
 	argsSummary: string().optional()
 });
-var SessionDataSchema = object({
-	schemaVersion: number$1().int().positive().default(1),
+var SessionGroupSchema = object({
+	id: GroupIdSchema,
+	name: string().min(1),
+	description: string().optional(),
+	notes: string().optional(),
+	createdAt: string().min(1),
+	updatedAt: string().min(1)
+});
+var SessionGroupSummarySchema = SessionGroupSchema.extend({
+	sessionCount: number$1().int().nonnegative(),
+	taskCount: number$1().int().nonnegative(),
+	pendingQuestionCount: number$1().int().nonnegative()
+});
+var SessionRecordSchema = object({
 	sessionId: SessionIdSchema,
-	workspacePath: string().optional(),
+	groupId: GroupIdSchema.nullable(),
+	title: string().optional(),
+	rootDir: string().optional(),
 	exportDir: string().optional(),
 	createdAt: string().min(1),
-	updatedAt: string().min(1),
-	tasks: array(TaskRecordSchema).default([]),
-	plans: array(PlanRecordSchema).default([]),
-	reports: array(ReportRecordSchema).default([]),
-	handoffs: array(HandoffRecordSchema).default([]),
-	questionSets: array(QuestionSetRecordSchema).default([]),
-	toolCalls: array(ToolCallRecordSchema).default([])
+	updatedAt: string().min(1)
 });
 var SessionSummarySchema = object({
 	sessionId: SessionIdSchema,
-	workspacePath: string().optional(),
+	groupId: GroupIdSchema.nullable(),
+	title: string().optional(),
+	rootDir: string().optional(),
 	updatedAt: string().min(1),
 	taskCount: number$1().int().nonnegative(),
 	pendingQuestionCount: number$1().int().nonnegative()
 });
-var SessionIndexFileSchema = object({
-	schemaVersion: number$1().int().positive().default(1),
-	sessions: array(SessionSummarySchema)
-});
-var WorkspaceTabSchema = _enum([
+var DashboardTabSchema = _enum([
 	"tasks",
 	"plans",
 	"reports",
 	"handoffs",
 	"questions",
+	"timeline",
 	"calls"
 ]);
-var AppViewModeSchema = _enum([
-	"dashboard",
-	"tasks",
-	"task_step",
+var DashboardScopeSchema = _enum(["session", "group"]);
+var WidgetRouteSchema = _enum([
+	"task",
+	"task-step",
 	"plan",
 	"report",
 	"handoff",
@@ -23623,50 +30625,71 @@ var StepDisplayOverrideSchema = _enum([
 	"full"
 ]);
 var UiSettingsSchema = object({
-	schemaVersion: number$1().int().positive().default(1),
 	displayType: WidgetDisplayModeSchema.default("minimized"),
-	stepDisplayType: StepDisplayOverrideSchema.default("inherit")
+	stepDisplayType: StepDisplayOverrideSchema.default("inherit"),
+	updatedAt: string().optional()
 });
 var DEFAULT_UI_SETTINGS = {
-	schemaVersion: 1,
 	displayType: "minimized",
 	stepDisplayType: "inherit"
 };
 var TaskStepSnapshotSchema = object({
-	taskNumber: TaskNumberSchema,
+	taskId: TaskIdSchema,
 	taskTitle: string().min(1),
 	stepIndex: number$1().int().nonnegative(),
 	totalSteps: number$1().int().positive(),
 	step: TaskStepSchema,
-	itemId: string().min(1).optional(),
+	itemKey: string().min(1).optional(),
 	capturedAt: string().optional()
 });
 object({
-	mode: AppViewModeSchema,
+	kind: literal("dashboard"),
+	scope: DashboardScopeSchema,
 	sessionId: SessionIdSchema.nullable(),
-	activeTab: WorkspaceTabSchema,
+	groupId: GroupIdSchema.nullable(),
+	activeTab: DashboardTabSchema,
 	activeItemId: string().optional(),
-	activeStepIndex: number$1().int().nonnegative().optional(),
-	activeTaskItemId: string().optional(),
+	revision: string(),
+	settings: UiSettingsSchema,
+	session: SessionRecordSchema.nullable(),
+	group: SessionGroupSchema.nullable(),
+	sessions: array(SessionSummarySchema),
+	groups: array(SessionGroupSummarySchema),
+	tasks: array(TaskRecordSchema),
+	plans: array(PlanRecordSchema),
+	reports: array(ReportRecordSchema),
+	handoffs: array(HandoffRecordSchema),
+	questionSets: array(QuestionSetRecordSchema),
+	timeline: array(TimelineEventSchema),
+	toolCalls: array(ToolCallRecordSchema)
+});
+object({
+	kind: literal("widget"),
+	widget: WidgetRouteSchema,
+	sessionId: SessionIdSchema,
+	rootDir: string().optional(),
+	sessionTitle: string().optional(),
+	settings: UiSettingsSchema,
+	task: TaskRecordSchema.optional(),
 	stepSnapshot: TaskStepSnapshotSchema.optional(),
-	revision: string().optional(),
-	settings: UiSettingsSchema.optional(),
-	session: SessionDataSchema.nullable(),
-	sessions: array(SessionSummarySchema).optional()
+	plan: PlanRecordSchema.optional(),
+	report: ReportRecordSchema.optional(),
+	handoff: HandoffRecordSchema.optional(),
+	questionSet: QuestionSetRecordSchema.optional(),
+	questionSets: array(QuestionSetRecordSchema).optional()
 });
 // src/shared/format.ts
-/** Allocate the next zero-padded two-digit task ID (`max(NN) + 1`, starting at `"01"`). */
-function allocateNextTaskNumber(existingNumbers) {
-	let maxNum = 0;
-	for (const raw of existingNumbers) {
-		const parsed = Number.parseInt(raw, 10);
-		if (Number.isFinite(parsed) && parsed > maxNum) maxNum = parsed;
-	}
-	return String(maxNum + 1).padStart(2, "0");
+/** Format a global integer task ID for UI display (`#1`). */
+function formatTaskId(taskId) {
+	return `#${taskId}`;
 }
-/** Build the canonical Markdown filename for a task plan or report. */
-function formatTaskFilename(taskNumber, slug, role) {
-	return `${taskNumber}-${slug}.${role}.md`;
+/** Zero-pad a global integer task ID to at least 3 digits for exported filenames (`001`). */
+function padTaskId(taskId, minWidth = 3) {
+	return String(taskId).padStart(minWidth, "0");
+}
+/** Build the canonical Markdown filename for an exported task plan or report (`001-slug.plan.md`). */
+function formatTaskFilename(taskId, slug, role) {
+	return `${padTaskId(taskId)}-${slug}.${role}.md`;
 }
 /** Format a human-readable line range suffix (`path:10-20`). */
 function formatFileLocation(path, lineStart, lineEnd) {
@@ -23691,11 +30714,11 @@ function formatAnswerValue(question, value, otherText) {
 	return opt ? opt.label : value || "(empty)";
 }
 /** Format a human-readable label for a question's blocking policy. */
-function formatBlockingModeLabel(blockingMode, taskNumber, stepNumber) {
+function formatBlockingModeLabel(blockingMode, taskId, stepNumber) {
 	switch (blockingMode) {
 		case "immediate": return "Must answer now";
 		case "before_step_finish":
-			if (taskNumber && stepNumber) return `Before Task ${taskNumber} Step ${stepNumber}`;
+			if (taskId && stepNumber) return `Before Task #${taskId} Step ${stepNumber}`;
 			if (stepNumber) return `Before Step ${stepNumber}`;
 			return "Before step finish";
 		case "anytime": return "Answer anytime";
@@ -23719,7 +30742,7 @@ function formatPlainTextQuestions(questionSet) {
 	questionSet.questions.forEach((q, idx) => {
 		const reqTag = q.required ? "required" : "optional";
 		const policy = resolveQuestionPolicy(questionSet, q);
-		const policyTag = formatBlockingModeLabel(policy.blockingMode, policy.taskNumber, policy.stepNumber);
+		const policyTag = formatBlockingModeLabel(policy.blockingMode, policy.taskId, policy.stepNumber);
 		lines.push(`${idx + 1}. [${q.id}] ${q.prompt} (${q.kind}, ${reqTag}, ${policyTag})`);
 		if (q.hint) lines.push(`   Hint: ${q.hint}`);
 		if (q.options && q.options.length > 0) q.options.forEach((opt, optIdx) => {
@@ -23729,6 +30752,1209 @@ function formatPlainTextQuestions(questionSet) {
 		if (q.allowOther) lines.push("   *) Other (free text)");
 	});
 	return lines.join("\n");
+}
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/indexes.js
+var IndexBuilderOn = class {
+	name;
+	unique;
+	static [entityKind] = "SQLiteIndexBuilderOn";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	constructor(name, unique) {
+		this.name = name;
+		this.unique = unique;
+	}
+	on(...columns) {
+		return new IndexBuilder(this.name, columns, this.unique);
+	}
+};
+var IndexBuilder = class {
+	static [entityKind] = "SQLiteIndexBuilder";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	/** @internal */
+	config;
+	constructor(name, columns, unique) {
+		this.config = {
+			name,
+			columns,
+			unique,
+			where: void 0
+		};
+	}
+	/**
+	* Condition for partial index.
+	*/
+	where(condition) {
+		this.config.where = condition;
+		return this;
+	}
+	/** @internal */
+	build(table) {
+		return new Index(this.config, table);
+	}
+};
+var Index = class {
+	static [entityKind] = "SQLiteIndex";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	config;
+	isNameExplicit;
+	constructor(config, table) {
+		this.config = {
+			...config,
+			table
+		};
+		this.isNameExplicit = !!config.name;
+	}
+};
+function index(name) {
+	return new IndexBuilderOn(name, false);
+}
+function uniqueIndex(name) {
+	return new IndexBuilderOn(name, true);
+}
+// node_modules/.pnpm/drizzle-orm@1.0.0-rc.6_zod@4.6.7/node_modules/drizzle-orm/sqlite-core/checks.js
+var CheckBuilder = class {
+	name;
+	value;
+	static [entityKind] = "SQLiteCheckBuilder";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	brand;
+	constructor(name, value) {
+		this.name = name;
+		this.value = value;
+	}
+	build(table) {
+		return new Check(table, this);
+	}
+};
+var Check = class {
+	table;
+	static [entityKind] = "SQLiteCheck";
+	static [Symbol.hasInstance](value) {
+		return is(value, this);
+	}
+	name;
+	value;
+	constructor(table, builder) {
+		this.table = table;
+		this.name = builder.name;
+		this.value = builder.value;
+	}
+};
+function check(name, value) {
+	return new CheckBuilder(name, value);
+}
+sqliteTable("schema_migrations", {
+	version: integer("version").primaryKey(),
+	name: text("name").notNull(),
+	checksum: text("checksum").notNull(),
+	appliedAt: text("applied_at").notNull()
+});
+var sessionGroups = sqliteTable("session_groups", {
+	id: text("id").primaryKey(),
+	name: text("name").notNull(),
+	description: text("description"),
+	notes: text("notes"),
+	createdAt: text("created_at").notNull(),
+	updatedAt: text("updated_at").notNull()
+});
+var sessions = sqliteTable("sessions", {
+	id: text("id").primaryKey(),
+	groupId: text("group_id").references(() => sessionGroups.id, { onDelete: "set null" }),
+	title: text("title"),
+	rootDir: text("root_dir"),
+	exportDir: text("export_dir"),
+	createdAt: text("created_at").notNull(),
+	updatedAt: text("updated_at").notNull()
+}, (t) => [
+	index("idx_sessions_group_id").on(t.groupId),
+	index("idx_sessions_root_dir").on(t.rootDir),
+	index("idx_sessions_updated_at").on(t.updatedAt)
+]);
+var tasks = sqliteTable("tasks", {
+	id: integer("id").primaryKey({ autoIncrement: true }),
+	sessionId: text("session_id").notNull().references(() => sessions.id, { onDelete: "cascade" }),
+	slug: text("slug").notNull(),
+	title: text("title").notNull(),
+	status: text("status", { enum: [
+		"planned",
+		"in_progress",
+		"done",
+		"cancelled",
+		"superseded"
+	] }).notNull(),
+	summary: text("summary").notNull(),
+	planFile: text("plan_file"),
+	reportFile: text("report_file"),
+	createdAt: text("created_at").notNull(),
+	startedAt: text("started_at"),
+	completedAt: text("completed_at"),
+	updatedAt: text("updated_at").notNull()
+}, (t) => [index("idx_tasks_session_id").on(t.sessionId), index("idx_tasks_status").on(t.status)]);
+var taskSteps = sqliteTable("task_steps", {
+	id: integer("id").primaryKey({ autoIncrement: true }),
+	taskId: integer("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
+	stepIndex: integer("step_index").notNull(),
+	title: text("title").notNull(),
+	outcome: text("outcome").notNull(),
+	createdAt: text("created_at").notNull(),
+	startedAt: text("started_at"),
+	completedAt: text("completed_at"),
+	updatedAt: text("updated_at").notNull()
+}, (t) => [uniqueIndex("uq_task_steps_task_step").on(t.taskId, t.stepIndex)]);
+var taskItems = sqliteTable("task_items", {
+	id: integer("id").primaryKey({ autoIncrement: true }),
+	stepId: integer("step_id").notNull().references(() => taskSteps.id, { onDelete: "cascade" }),
+	taskId: integer("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
+	itemKey: text("item_key").notNull(),
+	itemIndex: integer("item_index").notNull(),
+	text: text("text").notNull(),
+	status: text("status", { enum: [
+		"pending",
+		"in_progress",
+		"done"
+	] }).notNull(),
+	createdAt: text("created_at").notNull(),
+	startedAt: text("started_at"),
+	completedAt: text("completed_at"),
+	updatedAt: text("updated_at").notNull()
+}, (t) => [uniqueIndex("uq_task_items_task_key").on(t.taskId, t.itemKey), index("idx_task_items_step_id").on(t.stepId)]);
+var plans = sqliteTable("plans", {
+	id: integer("id").primaryKey({ autoIncrement: true }),
+	taskId: integer("task_id").notNull().unique().references(() => tasks.id, { onDelete: "cascade" }),
+	sessionId: text("session_id").notNull().references(() => sessions.id, { onDelete: "cascade" }),
+	slug: text("slug").notNull(),
+	title: text("title").notNull(),
+	targetRepo: text("target_repo").notNull(),
+	targetBranch: text("target_branch").notNull(),
+	targetCommit: text("target_commit").notNull(),
+	follows: text("follows"),
+	overview: text("overview").notNull(),
+	language: text("language", { enum: ["en", "ko"] }).notNull().default("en"),
+	reviewStatus: text("review_status", { enum: [
+		"draft",
+		"pending_review",
+		"approved",
+		"changes_requested"
+	] }),
+	reviewComment: text("review_comment"),
+	generatedPlanPath: text("generated_plan_path"),
+	approvedVia: text("approved_via", { enum: [
+		"ui",
+		"harness_artifact",
+		"chat"
+	] }),
+	bodyJson: text("body_json").notNull(),
+	createdAt: text("created_at").notNull(),
+	reviewedAt: text("reviewed_at")
+}, (t) => [index("idx_plans_session_id").on(t.sessionId)]);
+var reports = sqliteTable("reports", {
+	id: integer("id").primaryKey({ autoIncrement: true }),
+	taskId: integer("task_id").notNull().unique().references(() => tasks.id, { onDelete: "cascade" }),
+	sessionId: text("session_id").notNull().references(() => sessions.id, { onDelete: "cascade" }),
+	slug: text("slug").notNull(),
+	title: text("title").notNull(),
+	mode: text("mode", { enum: ["implementation", "audit"] }).notNull(),
+	outcome: text("outcome").notNull(),
+	targetRepo: text("target_repo").notNull(),
+	targetBranch: text("target_branch").notNull(),
+	targetCommit: text("target_commit").notNull(),
+	planRef: text("plan_ref"),
+	summary: text("summary").notNull(),
+	language: text("language", { enum: ["en", "ko"] }).notNull().default("en"),
+	bodyJson: text("body_json").notNull(),
+	createdAt: text("created_at").notNull()
+}, (t) => [index("idx_reports_session_id").on(t.sessionId)]);
+var handoffs = sqliteTable("handoffs", {
+	id: text("id").primaryKey(),
+	sessionId: text("session_id").notNull().references(() => sessions.id, { onDelete: "cascade" }),
+	taskId: integer("task_id").references(() => tasks.id, { onDelete: "set null" }),
+	kind: text("kind", { enum: [
+		"plan_approval",
+		"mid_session_pause",
+		"completion",
+		"subagent_scout",
+		"custom"
+	] }).notNull(),
+	title: text("title").notNull(),
+	summary: text("summary").notNull(),
+	workingNow: text("working_now"),
+	verifyCommand: text("verify_command"),
+	entryPoint: text("entry_point"),
+	nextStep: text("next_step"),
+	artifactLinksJson: text("artifact_links_json").notNull().default("[]"),
+	structuredDataJson: text("structured_data_json"),
+	createdAt: text("created_at").notNull()
+}, (t) => [index("idx_handoffs_session_created").on(t.sessionId, t.createdAt)]);
+var questionSets = sqliteTable("question_sets", {
+	id: text("id").primaryKey(),
+	sessionId: text("session_id").notNull().references(() => sessions.id, { onDelete: "cascade" }),
+	taskId: integer("task_id").references(() => tasks.id, { onDelete: "set null" }),
+	stepNumber: integer("step_number"),
+	title: text("title").notNull(),
+	description: text("description"),
+	submitLabel: text("submit_label").notNull().default("Submit Answers"),
+	blockingMode: text("blocking_mode", { enum: [
+		"immediate",
+		"before_step_finish",
+		"anytime"
+	] }).notNull().default("immediate"),
+	sectionsJson: text("sections_json").notNull().default("[]"),
+	status: text("status", { enum: [
+		"pending",
+		"partial",
+		"submitted"
+	] }).notNull().default("pending"),
+	createdAt: text("created_at").notNull(),
+	submittedAt: text("submitted_at")
+}, (t) => [index("idx_question_sets_session_status").on(t.sessionId, t.status)]);
+var questions = sqliteTable("questions", {
+	pk: integer("pk").primaryKey({ autoIncrement: true }),
+	questionSetId: text("question_set_id").notNull().references(() => questionSets.id, { onDelete: "cascade" }),
+	questionKey: text("question_key").notNull(),
+	position: integer("position").notNull(),
+	sectionId: text("section_id"),
+	prompt: text("prompt").notNull(),
+	hint: text("hint"),
+	contextRefsJson: text("context_refs_json").notNull().default("[]"),
+	kind: text("kind", { enum: [
+		"single_select",
+		"multi_select",
+		"text",
+		"textarea",
+		"boolean"
+	] }).notNull(),
+	required: integer("required", { mode: "boolean" }).notNull().default(true),
+	optionsJson: text("options_json"),
+	allowOther: integer("allow_other", { mode: "boolean" }).notNull().default(false),
+	placeholder: text("placeholder"),
+	defaultValueJson: text("default_value_json"),
+	blockingMode: text("blocking_mode", { enum: [
+		"immediate",
+		"before_step_finish",
+		"anytime"
+	] }),
+	taskId: integer("task_id").references(() => tasks.id, { onDelete: "set null" }),
+	stepNumber: integer("step_number"),
+	answerJson: text("answer_json"),
+	otherText: text("other_text"),
+	isSubmitted: integer("is_submitted", { mode: "boolean" }).notNull().default(false),
+	answeredAt: text("answered_at")
+}, (t) => [uniqueIndex("uq_questions_set_key").on(t.questionSetId, t.questionKey), index("idx_questions_set_id").on(t.questionSetId)]);
+var toolCalls = sqliteTable("tool_calls", {
+	id: text("id").primaryKey(),
+	sessionId: text("session_id").notNull().references(() => sessions.id, { onDelete: "cascade" }),
+	toolName: text("tool_name").notNull(),
+	status: text("status", { enum: ["ok", "error"] }).notNull(),
+	summary: text("summary").notNull(),
+	argsSummary: text("args_summary"),
+	createdAt: text("created_at").notNull()
+}, (t) => [index("idx_tool_calls_session_created").on(t.sessionId, t.createdAt)]);
+var timelineEvents = sqliteTable("timeline_events", {
+	id: integer("id").primaryKey({ autoIncrement: true }),
+	sessionId: text("session_id").references(() => sessions.id, { onDelete: "cascade" }),
+	groupId: text("group_id").references(() => sessionGroups.id, { onDelete: "set null" }),
+	eventType: text("event_type").notNull(),
+	actor: text("actor", { enum: [
+		"agent",
+		"user",
+		"system"
+	] }).notNull().default("agent"),
+	title: text("title").notNull(),
+	summary: text("summary"),
+	metadataJson: text("metadata_json"),
+	createdAt: text("created_at").notNull()
+}, (t) => [
+	index("idx_timeline_events_session_created").on(t.sessionId, t.createdAt),
+	index("idx_timeline_events_group_created").on(t.groupId, t.createdAt),
+	index("idx_timeline_events_created").on(t.createdAt)
+]);
+var timelineLinks = sqliteTable("timeline_links", {
+	id: integer("id").primaryKey({ autoIncrement: true }),
+	eventId: integer("event_id").notNull().references(() => timelineEvents.id, { onDelete: "cascade" }),
+	entityType: text("entity_type", { enum: [
+		"session",
+		"session_group",
+		"task",
+		"task_step",
+		"task_item",
+		"plan",
+		"report",
+		"handoff",
+		"question_set",
+		"note"
+	] }).notNull(),
+	entityId: text("entity_id").notNull(),
+	role: text("role", { enum: [
+		"subject",
+		"parent",
+		"related"
+	] }).notNull().default("subject"),
+	label: text("label")
+}, (t) => [
+	uniqueIndex("uq_timeline_links_unique").on(t.eventId, t.entityType, t.entityId, t.role),
+	index("idx_timeline_links_event_id").on(t.eventId),
+	index("idx_timeline_links_entity").on(t.entityType, t.entityId)
+]);
+var uiSettings = sqliteTable("ui_settings", {
+	id: integer("id").primaryKey(),
+	displayType: text("display_type", { enum: [
+		"minimized",
+		"compact",
+		"full"
+	] }).notNull().default("minimized"),
+	stepDisplayType: text("step_display_type", { enum: [
+		"inherit",
+		"minimized",
+		"compact",
+		"full"
+	] }).notNull().default("inherit"),
+	updatedAt: text("updated_at").notNull()
+}, (t) => [check("chk_ui_settings_singleton", sql`${t.id} = 1`)]);
+// server/repositories/json.ts
+/**
+* Decode JSON column payloads using a Zod schema, falling back to `fallback` so
+* corrupted or partial historical rows never break read queries.
+*/
+function parseJsonWithSchema(raw, schema, fallback) {
+	if (!raw) return fallback;
+	try {
+		const parsed = JSON.parse(raw);
+		const result = schema.safeParse(parsed);
+		return result.success ? result.data : fallback;
+	} catch {
+		return fallback;
+	}
+}
+/**
+* Decode an arbitrary JSON object column (such as event metadata or handoff
+* `structuredData`), returning `undefined` when missing, malformed, or non-object.
+*/
+function parseJsonObject(raw) {
+	if (!raw) return;
+	try {
+		const parsed = JSON.parse(raw);
+		if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+			const result = record(string(), unknown()).safeParse(parsed);
+			return result.success ? result.data : void 0;
+		}
+	} catch {}
+}
+// server/repositories/timeline.ts
+/**
+* Record a timeline event and its deduplicated polymorphic links inside an active DB
+* executor (standalone DB or synchronous transaction).
+*/
+function recordTimelineEvent(db, input) {
+	const createdAt = input.createdAt ?? (/* @__PURE__ */ new Date()).toISOString();
+	let resolvedGroupId = input.groupId ?? null;
+	if (!resolvedGroupId && input.sessionId) resolvedGroupId = db.select({ groupId: sessions.groupId }).from(sessions).where(eq(sessions.id, input.sessionId)).get()?.groupId ?? null;
+	const inserted = db.insert(timelineEvents).values({
+		sessionId: input.sessionId ?? null,
+		groupId: resolvedGroupId,
+		eventType: input.eventType,
+		actor: input.actor ?? "agent",
+		title: input.title,
+		summary: input.summary ?? null,
+		metadataJson: input.metadata ? JSON.stringify(input.metadata) : null,
+		createdAt
+	}).returning().get();
+	const dedupedLinks = /* @__PURE__ */ new Map();
+	for (const rawLink of input.links ?? []) {
+		const role = rawLink.role ?? "subject";
+		const key = `${rawLink.entityType}:${rawLink.entityId}:${role}`;
+		if (!dedupedLinks.has(key)) dedupedLinks.set(key, {
+			entityType: rawLink.entityType,
+			entityId: rawLink.entityId,
+			role,
+			label: rawLink.label
+		});
+	}
+	const storedLinks = [];
+	if (dedupedLinks.size > 0) {
+		const values = Array.from(dedupedLinks.values()).map((link) => ({
+			eventId: inserted.id,
+			entityType: link.entityType,
+			entityId: link.entityId,
+			role: link.role,
+			label: link.label ?? null
+		}));
+		const rows = db.insert(timelineLinks).values(values).returning().all();
+		for (const row of rows) storedLinks.push({
+			id: row.id,
+			entityType: row.entityType,
+			entityId: row.entityId,
+			role: row.role,
+			label: row.label ?? void 0
+		});
+	}
+	return {
+		id: inserted.id,
+		sessionId: inserted.sessionId,
+		groupId: inserted.groupId,
+		eventType: inserted.eventType,
+		actor: inserted.actor,
+		title: inserted.title,
+		summary: inserted.summary ?? void 0,
+		metadata: input.metadata,
+		links: storedLinks,
+		createdAt: inserted.createdAt
+	};
+}
+/** Query timeline events with polymorphic entity/group/session filters and cursor pagination. */
+function queryTimelineEvents(db, filter = {}) {
+	const conditions = [];
+	if (filter.sessionId) conditions.push(eq(timelineEvents.sessionId, filter.sessionId));
+	if (filter.groupId) {
+		const groupSessionIds = db.select({ id: sessions.id }).from(sessions).where(eq(sessions.groupId, filter.groupId)).all().map((row) => row.id);
+		if (groupSessionIds.length > 0) conditions.push(or(eq(timelineEvents.groupId, filter.groupId), inArray(timelineEvents.sessionId, groupSessionIds)));
+		else conditions.push(eq(timelineEvents.groupId, filter.groupId));
+	}
+	if (filter.eventTypes && filter.eventTypes.length > 0) conditions.push(inArray(timelineEvents.eventType, filter.eventTypes));
+	if (filter.beforeId !== void 0) conditions.push(lt(timelineEvents.id, filter.beforeId));
+	if (filter.entityType && filter.entityId) {
+		const matchedIds = db.select({ eventId: timelineLinks.eventId }).from(timelineLinks).where(and(eq(timelineLinks.entityType, filter.entityType), eq(timelineLinks.entityId, filter.entityId))).all().map((r) => r.eventId);
+		if (matchedIds.length === 0) return [];
+		conditions.push(inArray(timelineEvents.id, matchedIds));
+	} else if (filter.entityTypes && filter.entityTypes.length > 0) {
+		const matchedIds = db.select({ eventId: timelineLinks.eventId }).from(timelineLinks).where(inArray(timelineLinks.entityType, filter.entityTypes)).all().map((r) => r.eventId);
+		if (matchedIds.length === 0) return [];
+		conditions.push(inArray(timelineEvents.id, matchedIds));
+	} else if (filter.entityType) {
+		const matchedIds = db.select({ eventId: timelineLinks.eventId }).from(timelineLinks).where(eq(timelineLinks.entityType, filter.entityType)).all().map((r) => r.eventId);
+		if (matchedIds.length === 0) return [];
+		conditions.push(inArray(timelineEvents.id, matchedIds));
+	}
+	const limit = Math.min(Math.max(filter.limit ?? 100, 1), 500);
+	const rows = db.select().from(timelineEvents).where(conditions.length > 0 ? and(...conditions) : void 0).orderBy(desc(timelineEvents.id)).limit(limit).all();
+	if (rows.length === 0) return [];
+	const eventIds = rows.map((r) => r.id);
+	const linkRows = db.select().from(timelineLinks).where(inArray(timelineLinks.eventId, eventIds)).all();
+	const linksByEvent = /* @__PURE__ */ new Map();
+	for (const linkRow of linkRows) {
+		const bucket = linksByEvent.get(linkRow.eventId) ?? [];
+		bucket.push({
+			id: linkRow.id,
+			entityType: linkRow.entityType,
+			entityId: linkRow.entityId,
+			role: linkRow.role,
+			label: linkRow.label ?? void 0
+		});
+		linksByEvent.set(linkRow.eventId, bucket);
+	}
+	return rows.map((row) => ({
+		id: row.id,
+		sessionId: row.sessionId,
+		groupId: row.groupId,
+		eventType: row.eventType,
+		actor: row.actor,
+		title: row.title,
+		summary: row.summary ?? void 0,
+		metadata: parseJsonObject(row.metadataJson),
+		links: linksByEvent.get(row.id) ?? [],
+		createdAt: row.createdAt
+	}));
+}
+// server/repositories/sessions.ts
+/** Validate an absolute local directory path without null bytes. */
+function validateAbsoluteDir(dirPath, fieldName) {
+	if (!dirPath || dirPath.includes("\0") || !path.isAbsolute(dirPath)) throw new ValidationError(`${fieldName} must be an absolute path without null bytes.`);
+	return path.resolve(dirPath);
+}
+function mapSessionRow(row) {
+	return {
+		sessionId: row.id,
+		groupId: row.groupId ?? null,
+		title: row.title ?? void 0,
+		rootDir: row.rootDir ?? void 0,
+		exportDir: row.exportDir ?? void 0,
+		createdAt: row.createdAt,
+		updatedAt: row.updatedAt
+	};
+}
+function mapGroupRow(row) {
+	return {
+		id: row.id,
+		name: row.name,
+		description: row.description ?? void 0,
+		notes: row.notes ?? void 0,
+		createdAt: row.createdAt,
+		updatedAt: row.updatedAt
+	};
+}
+/**
+* Ensure a session row exists inside an active transaction, updating any provided
+* metadata (`title`, `rootDir`, `exportDir`, `groupId`) and recording a creation event.
+*/
+function ensureSessionTx(tx, sessionId, meta, now = (/* @__PURE__ */ new Date()).toISOString()) {
+	const parsedId = SessionIdSchema.safeParse(sessionId);
+	if (!parsedId.success) throw new ValidationError(parsedId.error.issues[0]?.message ?? "Invalid sessionId.");
+	const cleanRootDir = meta?.rootDir !== void 0 ? meta.rootDir.trim() ? validateAbsoluteDir(meta.rootDir.trim(), "rootDir") : null : void 0;
+	const cleanExportDir = meta?.exportDir !== void 0 ? meta.exportDir.trim() ? validateAbsoluteDir(meta.exportDir.trim(), "exportDir") : null : void 0;
+	const cleanTitle = meta?.title !== void 0 ? meta.title.trim() || null : void 0;
+	if (meta?.groupId) {
+		if (!tx.select({ id: sessionGroups.id }).from(sessionGroups).where(eq(sessionGroups.id, meta.groupId)).get()) throw new NotFoundError("SessionGroup", meta.groupId);
+	}
+	const existing = tx.select().from(sessions).where(eq(sessions.id, sessionId)).get();
+	if (!existing) {
+		const inserted = tx.insert(sessions).values({
+			id: sessionId,
+			groupId: meta?.groupId ?? null,
+			title: cleanTitle ?? null,
+			rootDir: cleanRootDir ?? null,
+			exportDir: cleanExportDir ?? null,
+			createdAt: now,
+			updatedAt: now
+		}).returning().get();
+		recordTimelineEvent(tx, {
+			sessionId,
+			groupId: inserted.groupId,
+			eventType: "session_created",
+			actor: "agent",
+			title: cleanTitle ? `Started session "${cleanTitle}"` : `Started session ${sessionId}`,
+			links: [{
+				entityType: "session",
+				entityId: sessionId,
+				role: "subject",
+				label: cleanTitle ?? sessionId
+			}, ...inserted.groupId ? [{
+				entityType: "session_group",
+				entityId: inserted.groupId,
+				role: "parent"
+			}] : []],
+			createdAt: now
+		});
+		return mapSessionRow(inserted);
+	}
+	const nextGroupId = meta?.groupId !== void 0 ? meta.groupId : existing.groupId;
+	const nextTitle = cleanTitle !== void 0 ? cleanTitle : existing.title;
+	const nextRootDir = cleanRootDir !== void 0 ? cleanRootDir : existing.rootDir;
+	const nextExportDir = cleanExportDir !== void 0 ? cleanExportDir : existing.exportDir;
+	return mapSessionRow(tx.update(sessions).set({
+		groupId: nextGroupId,
+		title: nextTitle,
+		rootDir: nextRootDir,
+		exportDir: nextExportDir,
+		updatedAt: now
+	}).where(eq(sessions.id, sessionId)).returning().get());
+}
+/** Create or update session metadata (`title`, `rootDir`, `exportDir`, `groupId`). */
+function upsertSession(db, sessionId, meta) {
+	return db.transaction((tx) => {
+		const now = (/* @__PURE__ */ new Date()).toISOString();
+		const prev = tx.select().from(sessions).where(eq(sessions.id, sessionId)).get();
+		const session = ensureSessionTx(tx, sessionId, meta, now);
+		if (prev && meta?.groupId !== void 0 && meta.groupId !== prev.groupId) recordTimelineEvent(tx, {
+			sessionId,
+			groupId: session.groupId,
+			eventType: "session_group_assigned",
+			actor: "user",
+			title: session.groupId ? `Assigned session to group "${session.groupId}"` : "Removed session from group",
+			links: [{
+				entityType: "session",
+				entityId: sessionId,
+				role: "subject",
+				label: session.title ?? sessionId
+			}, ...session.groupId ? [{
+				entityType: "session_group",
+				entityId: session.groupId,
+				role: "related"
+			}] : []],
+			createdAt: now
+		});
+		return session;
+	});
+}
+/** Read a single session record strictly read-only. */
+function getSession(db, sessionId) {
+	const row = db.select().from(sessions).where(eq(sessions.id, sessionId)).get();
+	return row ? mapSessionRow(row) : null;
+}
+/** Read the most recently updated session strictly read-only. */
+function getLatestSession(db) {
+	const row = db.select().from(sessions).orderBy(desc(sessions.updatedAt)).limit(1).get();
+	return row ? mapSessionRow(row) : null;
+}
+/** List session summaries with optional group and `rootDir` filters (strictly read-only). */
+function listSessions(db, filter) {
+	const conditions = [];
+	if (filter?.groupId) conditions.push(eq(sessions.groupId, filter.groupId));
+	if (filter?.rootDir) conditions.push(eq(sessions.rootDir, filter.rootDir));
+	const rows = db.select().from(sessions).where(conditions.length > 0 ? and(...conditions) : void 0).orderBy(desc(sessions.updatedAt)).all();
+	if (rows.length === 0) return [];
+	const sessionIds = rows.map((r) => r.id);
+	const taskRows = db.select({ sessionId: tasks.sessionId }).from(tasks).where(inArray(tasks.sessionId, sessionIds)).all();
+	const pendingQuestionRows = db.select({ sessionId: questionSets.sessionId }).from(questionSets).where(and(inArray(questionSets.sessionId, sessionIds), ne(questionSets.status, "submitted"))).all();
+	const taskCounts = /* @__PURE__ */ new Map();
+	for (const r of taskRows) taskCounts.set(r.sessionId, (taskCounts.get(r.sessionId) ?? 0) + 1);
+	const pendingCounts = /* @__PURE__ */ new Map();
+	for (const r of pendingQuestionRows) pendingCounts.set(r.sessionId, (pendingCounts.get(r.sessionId) ?? 0) + 1);
+	return rows.map((row) => ({
+		sessionId: row.id,
+		groupId: row.groupId ?? null,
+		title: row.title ?? void 0,
+		rootDir: row.rootDir ?? void 0,
+		updatedAt: row.updatedAt,
+		taskCount: taskCounts.get(row.id) ?? 0,
+		pendingQuestionCount: pendingCounts.get(row.id) ?? 0
+	}));
+}
+/** Create or update a session group with metadata and notes. */
+function upsertSessionGroup(db, input) {
+	const name = input.name.trim();
+	if (!name) throw new ValidationError("Group name cannot be empty.");
+	const id = input.id?.trim() || `grp-${crypto$1.randomUUID().slice(0, 8)}`;
+	const parsedId = GroupIdSchema.safeParse(id);
+	if (!parsedId.success) throw new ValidationError(parsedId.error.issues[0]?.message ?? "Invalid groupId.");
+	return db.transaction((tx) => {
+		const now = (/* @__PURE__ */ new Date()).toISOString();
+		const existing = tx.select().from(sessionGroups).where(eq(sessionGroups.id, id)).get();
+		if (!existing) {
+			const inserted = tx.insert(sessionGroups).values({
+				id,
+				name,
+				description: input.description?.trim() || null,
+				notes: input.notes?.trim() || null,
+				createdAt: now,
+				updatedAt: now
+			}).returning().get();
+			recordTimelineEvent(tx, {
+				groupId: id,
+				eventType: "group_created",
+				actor: "agent",
+				title: `Created group "${name}"`,
+				summary: inserted.description ?? void 0,
+				links: [{
+					entityType: "session_group",
+					entityId: id,
+					role: "subject",
+					label: name
+				}],
+				createdAt: now
+			});
+			return mapGroupRow(inserted);
+		}
+		return mapGroupRow(tx.update(sessionGroups).set({
+			name,
+			description: input.description !== void 0 ? input.description.trim() || null : existing.description,
+			notes: input.notes !== void 0 ? input.notes.trim() || null : existing.notes,
+			updatedAt: now
+		}).where(eq(sessionGroups.id, id)).returning().get());
+	});
+}
+/** Delete a session group (member sessions stay intact with `groupId: null`). */
+function deleteSessionGroup(db, groupId) {
+	db.transaction((tx) => {
+		if (!tx.select().from(sessionGroups).where(eq(sessionGroups.id, groupId)).get()) throw new NotFoundError("SessionGroup", groupId);
+		tx.delete(sessionGroups).where(eq(sessionGroups.id, groupId)).run();
+	});
+}
+/** Assign a session to a group or pass `null` to detach it. */
+function assignSessionGroup(db, sessionId, groupId) {
+	return db.transaction((tx) => {
+		const now = (/* @__PURE__ */ new Date()).toISOString();
+		if (!tx.select().from(sessions).where(eq(sessions.id, sessionId)).get()) throw new NotFoundError("Session", sessionId);
+		let groupName;
+		if (groupId !== null) {
+			const group = tx.select().from(sessionGroups).where(eq(sessionGroups.id, groupId)).get();
+			if (!group) throw new NotFoundError("SessionGroup", groupId);
+			groupName = group.name;
+		}
+		const updated = tx.update(sessions).set({
+			groupId,
+			updatedAt: now
+		}).where(eq(sessions.id, sessionId)).returning().get();
+		recordTimelineEvent(tx, {
+			sessionId,
+			groupId,
+			eventType: "session_group_assigned",
+			actor: "agent",
+			title: groupName ? `Assigned session to "${groupName}"` : "Detached session from group",
+			links: [{
+				entityType: "session",
+				entityId: sessionId,
+				role: "subject",
+				label: updated.title ?? sessionId
+			}, ...groupId ? [{
+				entityType: "session_group",
+				entityId: groupId,
+				role: "related",
+				label: groupName
+			}] : []],
+			createdAt: now
+		});
+		return mapSessionRow(updated);
+	});
+}
+/** Look up a single 1:N session group by ID, returning `null` if not found. */
+function getSessionGroup(db, groupId) {
+	const row = db.select().from(sessionGroups).where(eq(sessionGroups.id, groupId)).get();
+	return row ? mapGroupRow(row) : null;
+}
+/** List all session groups with session, task, and pending question counts. */
+function listSessionGroups(db) {
+	const groupRows = db.select().from(sessionGroups).orderBy(desc(sessionGroups.updatedAt)).all();
+	if (groupRows.length === 0) return [];
+	const sessionRows = db.select().from(sessions).all();
+	const groupBySession = /* @__PURE__ */ new Map();
+	const sessionCounts = /* @__PURE__ */ new Map();
+	for (const s of sessionRows) if (s.groupId) {
+		groupBySession.set(s.id, s.groupId);
+		sessionCounts.set(s.groupId, (sessionCounts.get(s.groupId) ?? 0) + 1);
+	}
+	const taskCounts = /* @__PURE__ */ new Map();
+	for (const t of db.select({ sessionId: tasks.sessionId }).from(tasks).all()) {
+		const gId = groupBySession.get(t.sessionId);
+		if (gId) taskCounts.set(gId, (taskCounts.get(gId) ?? 0) + 1);
+	}
+	const pendingCounts = /* @__PURE__ */ new Map();
+	const openQuestions = db.select({ sessionId: questionSets.sessionId }).from(questionSets).where(ne(questionSets.status, "submitted")).all();
+	for (const q of openQuestions) {
+		const gId = groupBySession.get(q.sessionId);
+		if (gId) pendingCounts.set(gId, (pendingCounts.get(gId) ?? 0) + 1);
+	}
+	return groupRows.map((row) => ({
+		...mapGroupRow(row),
+		sessionCount: sessionCounts.get(row.id) ?? 0,
+		taskCount: taskCounts.get(row.id) ?? 0,
+		pendingQuestionCount: pendingCounts.get(row.id) ?? 0
+	}));
+}
+// server/repositories/questions.ts
+var ContextRefsArraySchema = array(FileRefSchema);
+var QuestionOptionsArraySchema = array(QuestionOptionSchema);
+var QuestionSectionsArraySchema = array(QuestionSectionSchema);
+function loadEditableQuestionSetTx(tx, sessionId, questionSetId) {
+	const setRow = tx.select().from(questionSets).where(and(eq(questionSets.id, questionSetId), eq(questionSets.sessionId, sessionId))).get();
+	if (!setRow) throw new NotFoundError("QuestionSet", questionSetId);
+	if (setRow.status === "submitted") throw new ValidationError("Question set has already been submitted.");
+	return {
+		setRow,
+		qRows: tx.select().from(questions).where(eq(questions.questionSetId, questionSetId)).orderBy(asc(questions.position)).all()
+	};
+}
+/**
+* Determine whether a question holds a meaningful user response (treating empty arrays
+* and whitespace-only `"other"` fallback strings as unanswered).
+*
+* @param question - Question schema definition specifying `kind` and options.
+* @param value - Current answer payload stored for the question.
+* @param otherText - Free-text companion input when the `"__other__"` sentinel is selected.
+* @returns `true` when the answer satisfies completion rules.
+*/
+function isNonEmptyAnswer(question, value, otherText) {
+	if (value === void 0) return false;
+	if (typeof value === "boolean") return true;
+	if (Array.isArray(value)) {
+		if (value.length === 0) return false;
+		if (value.includes("__other__") && question.required) return Boolean(otherText?.trim()) || value.some((v) => v !== "__other__");
+		return true;
+	}
+	const trimmed = value.trim();
+	if (!trimmed) return false;
+	if (trimmed === "__other__") return Boolean(otherText?.trim());
+	return true;
+}
+function mapQuestionSets(setRows, questionRows) {
+	const itemsBySet = /* @__PURE__ */ new Map();
+	for (const qRow of questionRows) {
+		const bucket = itemsBySet.get(qRow.questionSetId) ?? [];
+		bucket.push(qRow);
+		itemsBySet.set(qRow.questionSetId, bucket);
+	}
+	return setRows.map((setRow) => {
+		const rows = (itemsBySet.get(setRow.id) ?? []).sort((a, b) => a.position - b.position);
+		const answers = {};
+		const otherTexts = {};
+		const answeredQuestionIds = [];
+		const items = rows.map((qRow) => {
+			if (qRow.answerJson !== null) {
+				const parsedAnswer = parseJsonWithSchema(qRow.answerJson, QuestionAnswerValueSchema, void 0);
+				if (parsedAnswer !== void 0) answers[qRow.questionKey] = parsedAnswer;
+			}
+			if (qRow.otherText !== null) otherTexts[qRow.questionKey] = qRow.otherText;
+			if (qRow.isSubmitted) answeredQuestionIds.push(qRow.questionKey);
+			return {
+				id: qRow.questionKey,
+				sectionId: qRow.sectionId ?? void 0,
+				prompt: qRow.prompt,
+				hint: qRow.hint ?? void 0,
+				contextRefs: parseJsonWithSchema(qRow.contextRefsJson, ContextRefsArraySchema, []),
+				kind: qRow.kind,
+				required: qRow.required,
+				options: qRow.optionsJson ? parseJsonWithSchema(qRow.optionsJson, QuestionOptionsArraySchema, []) : void 0,
+				allowOther: qRow.allowOther,
+				placeholder: qRow.placeholder ?? void 0,
+				defaultValue: qRow.defaultValueJson ? parseJsonWithSchema(qRow.defaultValueJson, QuestionAnswerValueSchema, void 0) : void 0,
+				blockingMode: qRow.blockingMode ?? void 0,
+				taskId: qRow.taskId ?? void 0,
+				stepNumber: qRow.stepNumber ?? void 0
+			};
+		});
+		return {
+			id: setRow.id,
+			sessionId: setRow.sessionId,
+			title: setRow.title,
+			description: setRow.description ?? void 0,
+			submitLabel: setRow.submitLabel,
+			blockingMode: setRow.blockingMode,
+			taskId: setRow.taskId ?? void 0,
+			stepNumber: setRow.stepNumber ?? void 0,
+			sections: parseJsonWithSchema(setRow.sectionsJson, QuestionSectionsArraySchema, []),
+			questions: items,
+			status: setRow.status,
+			answeredQuestionIds,
+			answers,
+			otherTexts,
+			createdAt: setRow.createdAt,
+			submittedAt: setRow.submittedAt ?? void 0
+		};
+	});
+}
+/** Read question sets for a session or group (strictly read-only). */
+function listQuestionSets(db, filter) {
+	const conditions = [];
+	if (filter?.sessionId) conditions.push(eq(questionSets.sessionId, filter.sessionId));
+	if (filter?.groupId) {
+		const sessionIds = db.select({ id: sessions.id }).from(sessions).where(eq(sessions.groupId, filter.groupId)).all().map((r) => r.id);
+		if (sessionIds.length === 0) return [];
+		conditions.push(inArray(questionSets.sessionId, sessionIds));
+	}
+	if (filter?.taskId !== void 0) conditions.push(eq(questionSets.taskId, filter.taskId));
+	if (filter?.status) conditions.push(eq(questionSets.status, filter.status));
+	const setRows = db.select().from(questionSets).where(conditions.length > 0 ? and(...conditions) : void 0).orderBy(desc(questionSets.createdAt)).all();
+	if (setRows.length === 0) return [];
+	const setIds = setRows.map((s) => s.id);
+	return mapQuestionSets(setRows, db.select().from(questions).where(inArray(questions.questionSetId, setIds)).orderBy(asc(questions.position)).all());
+}
+/** Return unresolved questions across the provided question sets. */
+function getUnresolvedQuestions(questionSetList) {
+	const unresolved = [];
+	for (const qs of questionSetList) {
+		if (qs.status === "submitted") continue;
+		const answeredSet = new Set(qs.answeredQuestionIds);
+		for (const q of qs.questions) if (!answeredSet.has(q.id)) unresolved.push({
+			questionSet: qs,
+			question: q,
+			policy: resolveQuestionPolicy(qs, q)
+		});
+	}
+	return unresolved;
+}
+/** Guard against task mutations while any `immediate` question remains unanswered. */
+function assertNoImmediateQuestionBlocker(db, sessionId, taskId) {
+	const blocking = getUnresolvedQuestions(listQuestionSets(db, { sessionId })).filter((entry) => entry.policy.blockingMode === "immediate" && (entry.policy.taskId === void 0 || taskId === void 0 || entry.policy.taskId === taskId));
+	if (blocking.length === 0) return;
+	const ids = blocking.map((b) => b.question.id);
+	throw new QuestionBlockerError("immediate", ids, `Blocked by unresolved immediate question(s): ${ids.join(", ")}. Read answers or wait for user submission before mutating tasks.`);
+}
+/** Guard against finishing a task step while a `before_step_finish` question targets that step. */
+function assertStepQuestionsSatisfied(db, sessionId, taskId, stepNumber) {
+	const blocking = getUnresolvedQuestions(listQuestionSets(db, { sessionId })).filter((entry) => {
+		if (entry.policy.blockingMode !== "before_step_finish") return false;
+		const matchesTask = entry.policy.taskId === void 0 || entry.policy.taskId === taskId;
+		const matchesStep = entry.policy.stepNumber === void 0 || entry.policy.stepNumber === stepNumber;
+		return matchesTask && matchesStep;
+	});
+	if (blocking.length === 0) return;
+	const ids = blocking.map((b) => b.question.id);
+	throw new QuestionBlockerError("before_step_finish", ids, `Cannot finish Task ${formatTaskId(taskId)} Step ${stepNumber} while deferred question(s) remain unanswered: ${ids.join(", ")}.`);
+}
+/** Create or replace a question round (`ask_questions`). */
+function createQuestionSet(db, sessionId, input, meta) {
+	return db.transaction((tx) => {
+		const now = (/* @__PURE__ */ new Date()).toISOString();
+		const session = ensureSessionTx(tx, sessionId, meta, now);
+		const setId = input.id?.trim() || `q-${crypto$1.randomUUID().slice(0, 8)}`;
+		if (input.taskId !== void 0) {
+			if (!tx.select({ id: tasks.id }).from(tasks).where(eq(tasks.id, input.taskId)).get()) throw new NotFoundError("Task", input.taskId);
+		}
+		if (tx.select().from(questionSets).where(eq(questionSets.id, setId)).get()) tx.delete(questionSets).where(eq(questionSets.id, setId)).run();
+		const defaultAnswers = {};
+		for (const q of input.questions) if (q.defaultValue !== void 0) defaultAnswers[q.id] = q.defaultValue;
+		const insertedSet = tx.insert(questionSets).values({
+			id: setId,
+			sessionId,
+			taskId: input.taskId ?? null,
+			stepNumber: input.stepNumber ?? null,
+			title: input.title,
+			description: input.description ?? null,
+			submitLabel: input.submitLabel ?? "Submit Answers",
+			blockingMode: input.blockingMode ?? "immediate",
+			sectionsJson: JSON.stringify(input.sections ?? []),
+			status: "pending",
+			createdAt: now
+		}).returning().get();
+		const insertedQuestions = input.questions.map((q, position) => tx.insert(questions).values({
+			questionSetId: setId,
+			questionKey: q.id,
+			position,
+			sectionId: q.sectionId ?? null,
+			prompt: q.prompt,
+			hint: q.hint ?? null,
+			contextRefsJson: JSON.stringify(q.contextRefs ?? []),
+			kind: q.kind,
+			required: q.required ?? true,
+			optionsJson: q.options ? JSON.stringify(q.options) : null,
+			allowOther: q.allowOther ?? false,
+			placeholder: q.placeholder ?? null,
+			defaultValueJson: defaultAnswers[q.id] !== void 0 ? JSON.stringify(defaultAnswers[q.id]) : null,
+			blockingMode: q.blockingMode ?? null,
+			taskId: q.taskId ?? null,
+			stepNumber: q.stepNumber ?? null,
+			answerJson: defaultAnswers[q.id] !== void 0 ? JSON.stringify(defaultAnswers[q.id]) : null,
+			isSubmitted: false
+		}).returning().get());
+		const [questionSet] = mapQuestionSets([insertedSet], insertedQuestions);
+		if (!questionSet) throw new ValidationError("Failed to materialize created question set.");
+		const links = [{
+			entityType: "question_set",
+			entityId: setId,
+			role: "subject",
+			label: input.title
+		}, {
+			entityType: "session",
+			entityId: sessionId,
+			role: "parent",
+			label: session.title ?? sessionId
+		}];
+		if (input.taskId !== void 0) links.push({
+			entityType: "task",
+			entityId: String(input.taskId),
+			role: "related",
+			label: `Task ${formatTaskId(input.taskId)}`
+		});
+		recordTimelineEvent(tx, {
+			sessionId,
+			groupId: session.groupId,
+			eventType: "question_set_created",
+			actor: "agent",
+			title: `Asked questions: ${input.title}`,
+			summary: `${input.questions.length} question(s) (${formatBlockingModeLabel(questionSet.blockingMode, questionSet.taskId, questionSet.stepNumber)})`,
+			links,
+			createdAt: now
+		});
+		return {
+			sessionId,
+			questionSet
+		};
+	});
+}
+/** Save partial form draft answers without finalizing submission. */
+function saveQuestionDraft(db, sessionId, questionSetId, answers, otherTexts) {
+	return db.transaction((tx) => {
+		const now = (/* @__PURE__ */ new Date()).toISOString();
+		const { setRow, qRows } = loadEditableQuestionSetTx(tx, sessionId, questionSetId);
+		for (const qRow of qRows) {
+			const hasAnswer = Object.prototype.hasOwnProperty.call(answers, qRow.questionKey);
+			const hasOther = Object.prototype.hasOwnProperty.call(otherTexts, qRow.questionKey);
+			if (!hasAnswer && !hasOther) continue;
+			tx.update(questions).set({
+				answerJson: hasAnswer ? JSON.stringify(answers[qRow.questionKey]) : qRow.answerJson,
+				otherText: hasOther ? otherTexts[qRow.questionKey] ?? null : qRow.otherText
+			}).where(eq(questions.pk, qRow.pk)).run();
+		}
+		tx.update(sessions).set({ updatedAt: now }).where(eq(sessions.id, sessionId)).run();
+		const refreshedRows = tx.select().from(questions).where(eq(questions.questionSetId, questionSetId)).orderBy(asc(questions.position)).all();
+		return mapQuestionSets([setRow], refreshedRows)[0];
+	});
+}
+/** Submit all or a scoped subset of question answers and update question set status. */
+function submitQuestionAnswers(db, sessionId, questionSetId, answers, otherTexts, options = {}) {
+	return db.transaction((tx) => {
+		const now = (/* @__PURE__ */ new Date()).toISOString();
+		const { setRow, qRows } = loadEditableQuestionSetTx(tx, sessionId, questionSetId);
+		const [currentSet] = mapQuestionSets([setRow], qRows);
+		if (!currentSet) throw new NotFoundError("QuestionSet", questionSetId);
+		const mergedAnswers = {
+			...currentSet.answers,
+			...answers
+		};
+		const mergedOther = {
+			...currentSet.otherTexts,
+			...otherTexts
+		};
+		const scope = options.scope ?? "all";
+		const explicitSet = options.questionIds ? new Set(options.questionIds) : null;
+		const existingAnswered = new Set(currentSet.answeredQuestionIds);
+		const targetIds = currentSet.questions.filter((q) => {
+			if (explicitSet && !explicitSet.has(q.id)) return false;
+			const policy = resolveQuestionPolicy(currentSet, q);
+			if (scope === "immediate") return policy.blockingMode === "immediate";
+			if (scope === "before_step_finish") return policy.blockingMode === "before_step_finish";
+			if (scope === "answered") return isNonEmptyAnswer(q, mergedAnswers[q.id], mergedOther[q.id]);
+			return true;
+		}).map((q) => q.id);
+		if (targetIds.length === 0) throw new ValidationError("No matching questions found for this submission.");
+		for (const q of currentSet.questions) {
+			if (!targetIds.includes(q.id) || !q.required) continue;
+			if (!isNonEmptyAnswer(q, mergedAnswers[q.id], mergedOther[q.id])) throw new ValidationError(`Required question "${q.prompt}" has no valid answer.`);
+		}
+		const newlyAnswered = new Set(existingAnswered);
+		for (const id of targetIds) newlyAnswered.add(id);
+		for (const qRow of qRows) {
+			const ans = mergedAnswers[qRow.questionKey];
+			const other = mergedOther[qRow.questionKey];
+			const markSubmitted = newlyAnswered.has(qRow.questionKey);
+			tx.update(questions).set({
+				answerJson: ans !== void 0 ? JSON.stringify(ans) : null,
+				otherText: other !== void 0 ? other : null,
+				isSubmitted: markSubmitted,
+				answeredAt: markSubmitted ? qRow.answeredAt ?? now : null
+			}).where(eq(questions.pk, qRow.pk)).run();
+		}
+		const allDone = currentSet.questions.every((q) => newlyAnswered.has(q.id));
+		const nextStatus = allDone ? "submitted" : "partial";
+		const updatedSetRow = tx.update(questionSets).set({
+			status: nextStatus,
+			submittedAt: allDone ? now : null
+		}).where(eq(questionSets.id, questionSetId)).returning().get();
+		const sessionRow = tx.update(sessions).set({ updatedAt: now }).where(eq(sessions.id, sessionId)).returning().get();
+		const refreshedRows = tx.select().from(questions).where(eq(questions.questionSetId, questionSetId)).orderBy(asc(questions.position)).all();
+		const [updatedSet] = mapQuestionSets([updatedSetRow], refreshedRows);
+		recordTimelineEvent(tx, {
+			sessionId,
+			groupId: sessionRow.groupId,
+			eventType: allDone ? "question_set_submitted" : "question_set_partial",
+			actor: "user",
+			title: allDone ? `Answered questions: ${updatedSet.title}` : `Partially answered: ${updatedSet.title}`,
+			summary: `${targetIds.length} answer(s) submitted (${newlyAnswered.size}/${updatedSet.questions.length})`,
+			links: [
+				{
+					entityType: "question_set",
+					entityId: questionSetId,
+					role: "subject",
+					label: updatedSet.title
+				},
+				{
+					entityType: "session",
+					entityId: sessionId,
+					role: "parent",
+					label: sessionRow.title ?? sessionId
+				},
+				...updatedSet.taskId !== void 0 ? [{
+					entityType: "task",
+					entityId: String(updatedSet.taskId),
+					role: "related",
+					label: `Task ${formatTaskId(updatedSet.taskId)}`
+				}] : []
+			],
+			createdAt: now
+		});
+		return {
+			questionSet: updatedSet,
+			submittedQuestionIds: targetIds
+		};
+	});
+}
+// server/repositories/settings.ts
+var MAX_TOOL_CALLS_PER_SESSION = 200;
+/** Read singleton UI settings (strictly read-only). */
+function getUiSettings(db) {
+	const row = db.select().from(uiSettings).where(eq(uiSettings.id, 1)).get();
+	if (!row) return { ...DEFAULT_UI_SETTINGS };
+	return {
+		displayType: row.displayType,
+		stepDisplayType: row.stepDisplayType,
+		updatedAt: row.updatedAt
+	};
+}
+/** Persist UI widget display mode settings into singleton row `id = 1`. */
+function updateUiSettings(db, patch) {
+	return db.transaction((tx) => {
+		const now = (/* @__PURE__ */ new Date()).toISOString();
+		const current = getUiSettings(tx);
+		const nextDisplay = patch.displayType ?? current.displayType;
+		const nextStepDisplay = patch.stepDisplayType ?? current.stepDisplayType;
+		if (!tx.select().from(uiSettings).where(eq(uiSettings.id, 1)).get()) {
+			const inserted = tx.insert(uiSettings).values({
+				id: 1,
+				displayType: nextDisplay,
+				stepDisplayType: nextStepDisplay,
+				updatedAt: now
+			}).returning().get();
+			return {
+				displayType: inserted.displayType,
+				stepDisplayType: inserted.stepDisplayType,
+				updatedAt: inserted.updatedAt
+			};
+		}
+		const updated = tx.update(uiSettings).set({
+			displayType: nextDisplay,
+			stepDisplayType: nextStepDisplay,
+			updatedAt: now
+		}).where(eq(uiSettings.id, 1)).returning().get();
+		return {
+			displayType: updated.displayType,
+			stepDisplayType: updated.stepDisplayType,
+			updatedAt: updated.updatedAt
+		};
+	});
+}
+/** Log a tool call against a session, keeping at most the latest 200 entries per session. */
+function recordToolCall(db, sessionId, toolName, status, summary, argsSummary) {
+	return db.transaction((tx) => {
+		const now = (/* @__PURE__ */ new Date()).toISOString();
+		ensureSessionTx(tx, sessionId, void 0, now);
+		const id = `tc-${crypto$1.randomUUID().slice(0, 8)}`;
+		const inserted = tx.insert(toolCalls).values({
+			id,
+			sessionId,
+			toolName,
+			status,
+			summary,
+			argsSummary: argsSummary ?? null,
+			createdAt: now
+		}).returning().get();
+		const overflowIds = tx.select({ id: toolCalls.id }).from(toolCalls).where(eq(toolCalls.sessionId, sessionId)).orderBy(desc(toolCalls.createdAt)).limit(1e3).offset(MAX_TOOL_CALLS_PER_SESSION).all().map((row) => row.id);
+		if (overflowIds.length > 0) tx.delete(toolCalls).where(inArray(toolCalls.id, overflowIds)).run();
+		return {
+			id: inserted.id,
+			sessionId: inserted.sessionId,
+			toolName: inserted.toolName,
+			timestamp: inserted.createdAt,
+			status: inserted.status,
+			summary: inserted.summary,
+			argsSummary: inserted.argsSummary ?? void 0
+		};
+	});
+}
+/** Clear recorded tool calls for a session without affecting timeline or artifacts. */
+function clearToolCalls(db, sessionId) {
+	db.transaction((tx) => {
+		tx.delete(toolCalls).where(eq(toolCalls.sessionId, sessionId)).run();
+		tx.update(sessions).set({ updatedAt: (/* @__PURE__ */ new Date()).toISOString() }).where(eq(sessions.id, sessionId)).run();
+	});
+}
+/** List tool calls for a session or group (strictly read-only). */
+function listToolCalls(db, filter) {
+	const conditions = [];
+	if (filter?.sessionId) conditions.push(eq(toolCalls.sessionId, filter.sessionId));
+	if (filter?.groupId) {
+		const sessionIds = db.select({ id: sessions.id }).from(sessions).where(eq(sessions.groupId, filter.groupId)).all().map((r) => r.id);
+		if (sessionIds.length === 0) return [];
+		conditions.push(inArray(toolCalls.sessionId, sessionIds));
+	}
+	return db.select().from(toolCalls).where(conditions.length > 0 ? and(...conditions) : void 0).orderBy(desc(toolCalls.createdAt)).limit(filter?.limit ?? 200).all().map((row) => ({
+		id: row.id,
+		sessionId: row.sessionId,
+		toolName: row.toolName,
+		timestamp: row.createdAt,
+		status: row.status,
+		summary: row.summary,
+		argsSummary: row.argsSummary ?? void 0
+	}));
+}
+/** Compute a deterministic revision hash for dashboard polling short-circuits. */
+function computeRevision(parts) {
+	return crypto$1.createHash("sha256").update(JSON.stringify(parts)).digest("hex").slice(0, 16);
 }
 // src/shared/markdown.ts
 function formatSessionLink(fileName, linkBase) {
@@ -23749,6 +31975,7 @@ function formatTaskStatusCell(task) {
 		case "superseded": return "Superseded";
 		case "planned": return "Planned";
 		case "in_progress": {
+			if (task.steps.length === 0) return "In Progress";
 			const totalSteps = task.steps.length;
 			const activeStepIndex = task.steps.findIndex((step) => step.items.some((item) => item.status !== "done"));
 			return `In Progress (Step ${activeStepIndex === -1 ? totalSteps : activeStepIndex + 1}/${totalSteps})`;
@@ -23763,9 +31990,9 @@ function formatTaskItemCheckbox(item) {
 	if (item.status === "in_progress") return `- [ ] **(in progress)** ${item.text}`;
 	return `- [ ] ${item.text}`;
 }
-/** Render the session's `tasks.md` hub matching `session-templates.md` Section 1. */
-function renderTasksMarkdown(session, linkBase) {
-	const sortedTasks = [...session.tasks].sort((a, b) => a.taskNumber.localeCompare(b.taskNumber));
+/** Render a session's `tasks.md` hub using global integer task IDs. */
+function renderTasksMarkdown(tasks, linkBase) {
+	const sortedTasks = [...tasks].sort((a, b) => a.taskId - b.taskId);
 	const lines = [
 		"# Session Tasks",
 		"",
@@ -23775,7 +32002,7 @@ function renderTasksMarkdown(session, linkBase) {
 	for (const task of sortedTasks) {
 		const planCell = task.planFile ? `[plan](${formatSessionLink(task.planFile, linkBase)})` : "-";
 		const reportCell = task.reportFile ? `[report](${formatSessionLink(task.reportFile, linkBase)})` : "-";
-		lines.push(`| ${task.taskNumber} | ${formatTaskStatusCell(task)} | ${task.title} | ${planCell} \\| ${reportCell} |`);
+		lines.push(`| ${formatTaskId(task.taskId)} | ${formatTaskStatusCell(task)} | ${task.title} | ${planCell} \\| ${reportCell} |`);
 	}
 	const collapsed = sortedTasks.filter(isCollapsedTask);
 	const expanded = sortedTasks.filter((task) => !isCollapsedTask(task));
@@ -23790,7 +32017,7 @@ function renderTasksMarkdown(session, linkBase) {
 			if (task.reportFile) docsParts.push(`[report](${formatSessionLink(task.reportFile, linkBase)})`);
 			const docsLine = docsParts.length > 0 ? docsParts.join(" | ") : "-";
 			lines.push("<details>");
-			lines.push(`<summary>${summaryMark} Task ${task.taskNumber} - ${task.title}</summary>`);
+			lines.push(`<summary>${summaryMark} Task ${formatTaskId(task.taskId)} - ${task.title}</summary>`);
 			lines.push("");
 			lines.push(`- **Docs**: ${docsLine}`);
 			lines.push(`- **Summary**: ${task.summary}`);
@@ -23812,7 +32039,7 @@ function renderTasksMarkdown(session, linkBase) {
 		if (task.planFile) docsParts.push(`[plan](${formatSessionLink(task.planFile, linkBase)})`);
 		if (task.reportFile) docsParts.push(`[report](${formatSessionLink(task.reportFile, linkBase)})`);
 		else docsParts.push("report (pending)");
-		lines.push(`## Task ${task.taskNumber} - ${task.title}`);
+		lines.push(`## Task ${formatTaskId(task.taskId)} - ${task.title}`);
 		lines.push("");
 		lines.push(`- **Status**: ${formatTaskStatusCell(task)}`);
 		lines.push(`- **Docs**: ${docsParts.join(" | ")}`);
@@ -23828,120 +32055,145 @@ function renderTasksMarkdown(session, linkBase) {
 	lines.push("");
 	return lines.join("\n");
 }
-/** Render an immutable `NN-<slug>.plan.md` matching `session-templates.md` Section 2. */
+/** Render an immutable `NNN-<slug>.plan.md` document. */
 function renderPlanMarkdown(plan, linkBase) {
 	const lines = [
-		`# Plan ${plan.taskNumber}: ${plan.title}`,
+		`# Plan ${padTaskId(plan.taskId)}: ${plan.title}`,
 		"",
-		`- **Task**: \`${plan.taskNumber}\` ([tasks.md](${formatSessionLink("tasks.md", linkBase)}))`,
+		`- **Task**: \`${formatTaskId(plan.taskId)}\` ([tasks.md](${formatSessionLink("tasks.md", linkBase)}))`,
 		`- **Target**: \`${plan.target.repo}\` @ \`${plan.target.branch}\` (\`${plan.target.commit}\`)`
 	];
 	if (plan.follows) lines.push(`- **Follows**: ${plan.follows}`);
-	lines.push("", "## Requirements", "", "### Overview & Goals", plan.overview, "", "Expected outcomes:", ...plan.expectedOutcomes.map((item) => `- ${item}`), "", "### Scope", "", "#### In Scope", ...plan.scope.inScope.map((item) => `- ${item}`), "", "#### Out of Scope", ...plan.scope.outOfScope.map((item) => `- ${item}`));
+	if (plan.calibration) lines.push(`- **Calibration**: Cadence \`${plan.calibration.cadence}\`, Familiarity \`${plan.calibration.familiarity}\`, Structure \`${plan.calibration.structureStance}\``);
+	lines.push("", "## Requirements", "", "### Overview & Goals", plan.overview, "", "Expected outcomes:");
+	for (const outcome of plan.expectedOutcomes) lines.push(`- ${outcome}`);
+	lines.push("", "### Scope", "", "#### In Scope");
+	for (const item of plan.scope.inScope) lines.push(`- ${item}`);
+	lines.push("", "#### Out of Scope");
+	for (const item of plan.scope.outOfScope) lines.push(`- ${item}`);
 	if (plan.openQuestions && plan.openQuestions.length > 0) {
 		lines.push("", "### Open Questions & Assumptions");
-		plan.openQuestions.forEach((item, idx) => {
-			lines.push(`${idx + 1}. ${item}`);
-		});
+		plan.openQuestions.forEach((q, idx) => lines.push(`${idx + 1}. ${q}`));
 	}
-	if (plan.userStories && plan.userStories.length > 0) lines.push("", "### User Stories", ...plan.userStories.map((item) => `- ${item}`));
+	if (plan.userStories && plan.userStories.length > 0) {
+		lines.push("", "### User Stories");
+		for (const story of plan.userStories) lines.push(`- ${story}`);
+	}
 	if (plan.functionalRequirements && plan.functionalRequirements.length > 0) {
 		lines.push("", "### Functional Requirements");
-		plan.functionalRequirements.forEach((item, idx) => {
-			lines.push(`${idx + 1}. ${item}`);
-		});
+		plan.functionalRequirements.forEach((req, idx) => lines.push(`${idx + 1}. ${req}`));
 	}
-	if (plan.nonFunctionalRequirements && plan.nonFunctionalRequirements.length > 0) lines.push("", "### Non-Functional Requirements", ...plan.nonFunctionalRequirements.map((item) => `- ${item}`));
-	lines.push("", "## Technical Design", "", "### Current Implementation", ...plan.currentImplementation.map((item) => `- ${item}`), "", "### Key Decisions");
-	plan.keyDecisions.forEach((item, idx) => {
-		lines.push(`${idx + 1}. ${item}`);
-	});
+	if (plan.nonFunctionalRequirements && plan.nonFunctionalRequirements.length > 0) {
+		lines.push("", "### Non-Functional Requirements");
+		for (const req of plan.nonFunctionalRequirements) lines.push(`- ${req}`);
+	}
+	lines.push("", "## Technical Design", "", "### Current Implementation");
+	for (const item of plan.currentImplementation) lines.push(`- ${item}`);
+	lines.push("", "### Key Decisions");
+	plan.keyDecisions.forEach((dec, idx) => lines.push(`${idx + 1}. ${dec}`));
 	lines.push("", "### Proposed Changes");
-	plan.proposedChanges.forEach((item, idx) => {
-		lines.push(`${idx + 1}. ${item}`);
-	});
-	if (plan.dataModels) lines.push("", "### Data Models / Contracts", plan.dataModels);
-	if (plan.components && plan.components.length > 0) lines.push("", "### Components", "| Component | Package / Path | Responsibility |", "|---|---|---|", ...plan.components.map((row) => `| \`${row.component}\` | \`${row.path}\` | ${row.responsibility} |`));
-	lines.push("", "### File Structure", "```text");
+	plan.proposedChanges.forEach((chg, idx) => lines.push(`${idx + 1}. ${chg}`));
+	if (plan.dataModels) lines.push("", "### Data Models / Contracts", "", plan.dataModels);
+	if (plan.components && plan.components.length > 0) {
+		lines.push("", "### Components", "", "| Component | Package / Path | Responsibility |", "|---|---|---|");
+		for (const row of plan.components) lines.push(`| \`${row.component}\` | \`${row.path}\` | ${row.responsibility} |`);
+	}
+	lines.push("", "### File Structure", "", "```text");
 	for (const entry of plan.fileStructure) lines.push(`${entry.path} (${entry.action}: ${entry.reason})`);
 	lines.push("```");
-	if (plan.architectureDiagram) lines.push("", "### Architecture Diagram", "```mermaid", plan.architectureDiagram, "```");
-	if (plan.risks && plan.risks.length > 0) lines.push("", "### Risks", "| Risk | Impact | Mitigation |", "|---|---|---|", ...plan.risks.map((row) => `| ${row.risk} | ${row.impact} | ${row.mitigation} |`));
+	if (plan.architectureDiagram) lines.push("", "### Architecture Diagram", "", "```mermaid", plan.architectureDiagram, "```");
+	if (plan.risks && plan.risks.length > 0) {
+		lines.push("", "### Risks", "", "| Risk | Impact | Mitigation |", "|---|---|---|");
+		for (const risk of plan.risks) lines.push(`| ${risk.risk} | ${risk.impact} | ${risk.mitigation} |`);
+	}
 	if (plan.alternatives) lines.push("", "## Alternatives Considered", "", plan.alternatives);
 	lines.push("", "## Testing", "", "### Validation Approach");
-	plan.testing.validationCommands.forEach((cmd, idx) => {
-		lines.push(`${idx + 1}. Run \`${cmd}\``);
-	});
-	lines.push("", "### Key Scenarios", ...plan.testing.keyScenarios.map((item) => `- ${item}`));
-	if (plan.testing.edgeCases && plan.testing.edgeCases.length > 0) lines.push("", "### Edge Cases", ...plan.testing.edgeCases.map((item) => `- ${item}`));
-	lines.push("", "### Test Changes", ...plan.testing.testChanges.map((item) => `- ${item}`), "");
+	plan.testing.validationCommands.forEach((cmd, idx) => lines.push(`${idx + 1}. \`${cmd}\``));
+	lines.push("", "### Key Scenarios");
+	for (const scenario of plan.testing.keyScenarios) lines.push(`- ${scenario}`);
+	if (plan.testing.edgeCases && plan.testing.edgeCases.length > 0) {
+		lines.push("", "### Edge Cases");
+		for (const edge of plan.testing.edgeCases) lines.push(`- ${edge}`);
+	}
+	lines.push("", "### Test Changes");
+	for (const chg of plan.testing.testChanges) lines.push(`- ${chg}`);
+	lines.push("");
 	return lines.join("\n");
 }
 function groupFindingsBySeverity(findings) {
-	return [
-		{
-			severity: "critical",
-			heading: "Critical"
-		},
-		{
-			severity: "high",
-			heading: "High"
-		},
-		{
-			severity: "medium",
-			heading: "Medium"
-		},
-		{
-			severity: "low",
-			heading: "Low"
-		}
-	].map((group) => ({
-		...group,
-		items: findings.filter((item) => item.severity === group.severity)
-	})).filter((group) => group.items.length > 0);
+	const grouped = {
+		critical: [],
+		high: [],
+		medium: [],
+		low: []
+	};
+	for (const finding of findings) grouped[finding.severity].push(finding);
+	return grouped;
 }
-/** Render an Implementation or Audit `NN-<slug>.report.md` matching `session-templates.md` Sections 3-4. */
+function appendFollowUpsSection(lines, heading, followUps, workspaceLinkBase) {
+	lines.push("", `## ${heading}`, "");
+	if (followUps.length === 0) {
+		lines.push("No follow-up items identified.");
+		return;
+	}
+	lines.push("| ID | Priority | Location | Follow-Up Action |", "|---|---|---|---|");
+	for (const item of followUps) {
+		const loc = formatWorkspaceLink(item.location, item.lineStart, item.lineEnd, workspaceLinkBase);
+		lines.push(`| \`${item.id}\` | \`${item.priority}\` | ${loc} | ${item.action} |`);
+	}
+}
+/** Render an immutable implementation or audit `NNN-<slug>.report.md` document. */
 function renderReportMarkdown(report, linkBase, workspaceLinkBase) {
 	const lines = [
-		`# Report ${report.taskNumber}: ${report.title}`,
+		`# Report ${padTaskId(report.taskId)}: ${report.title}`,
 		"",
-		`- **Task**: \`${report.taskNumber}\` ([tasks.md](${formatSessionLink("tasks.md", linkBase)}))`,
+		`- **Task**: \`${formatTaskId(report.taskId)}\` ([tasks.md](${formatSessionLink("tasks.md", linkBase)}))`,
 		`- **Outcome**: \`${report.outcome}\``,
 		`- **Target**: \`${report.target.repo}\` @ \`${report.target.branch}\` (\`${report.target.commit}\`)`
 	];
 	if (report.planRef) lines.push(`- **Plan**: [${report.planRef}](${formatSessionLink(report.planRef, linkBase)})`);
 	if (report.mode === "audit") {
 		lines.push("", "## Summary & Verdict", "", report.summary);
-		lines.push("", "## Scope & Verification Matrix", "", "| Check / Spec | Status | Observed Result |", "|---|---|---|");
-		for (const row of report.verificationMatrix) lines.push(`| \`${row.target}\` | \`${row.status}\` | ${row.observed} |`);
+		if (report.verificationMatrix.length > 0) {
+			lines.push("", "## Scope & Verification Matrix", "", "| Check / Spec | Status | Observed Result |", "|---|---|---|");
+			for (const row of report.verificationMatrix) lines.push(`| ${row.target} | \`${row.status}\` | ${row.observed} |`);
+		}
 		lines.push("", "## Findings");
-		const groups = groupFindingsBySeverity(report.findings);
-		if (groups.length === 0) lines.push("", "No findings recorded.");
-		else for (const group of groups) {
-			lines.push("", `### ${group.heading}`);
-			for (const item of group.items) {
-				const loc = formatWorkspaceLink(item.location, item.lineStart, item.lineEnd, workspaceLinkBase);
-				lines.push(`- **\`${item.id}\` - ${item.title}** (${loc}): ${item.detail}`);
+		const grouped = groupFindingsBySeverity(report.findings);
+		for (const { key, heading } of [
+			{
+				key: "critical",
+				heading: "Critical"
+			},
+			{
+				key: "high",
+				heading: "High"
+			},
+			{
+				key: "medium",
+				heading: "Medium"
+			},
+			{
+				key: "low",
+				heading: "Low"
+			}
+		]) {
+			const bucket = grouped[key];
+			if (bucket.length === 0) continue;
+			lines.push("", `### ${heading}`);
+			for (const finding of bucket) {
+				const loc = formatWorkspaceLink(finding.location, finding.lineStart, finding.lineEnd, workspaceLinkBase);
+				lines.push(`- **\`${finding.id}\` - ${finding.title}** (${loc}): ${finding.detail}`);
 			}
 		}
-		lines.push("", "## Recommended Next Tasks");
-		if (report.followUps.length === 0) lines.push("", "No recommended next tasks.");
-		else {
-			lines.push("", "| ID | Priority | Location | Follow-Up Action |", "|---|---|---|---|");
-			for (const row of report.followUps) {
-				const loc = formatWorkspaceLink(row.location, row.lineStart, row.lineEnd, workspaceLinkBase);
-				lines.push(`| \`${row.id}\` | \`${row.priority}\` | ${loc} | ${row.action} |`);
-			}
-		}
+		appendFollowUpsSection(lines, "Recommended Next Tasks", report.followUps, workspaceLinkBase);
 		lines.push("");
 		return lines.join("\n");
 	}
-	lines.push("", "## Summary & Outcome", "", report.summary);
-	lines.push("", "## Actions Completed", "");
-	if (report.actionsCompleted.length === 0) lines.push("- No actions listed.");
-	else for (const action of report.actionsCompleted) lines.push(`- ${action}`);
+	lines.push("", "## Summary & Outcome", "", report.summary, "", "## Actions Completed");
+	for (const action of report.actionsCompleted) lines.push(`- ${action}`);
 	lines.push("", "### Files Changed");
-	if (report.diffStat) lines.push(`Diff stat: \`${report.diffStat}\``);
+	if (report.diffStat) lines.push("", `Diff stat: \`${report.diffStat}\``);
 	lines.push("", "| File / Directory | Action | Summary |", "|---|---|---|");
 	for (const file of report.filesChanged) {
 		const loc = formatWorkspaceLink(file.path, file.lineStart, file.lineEnd, workspaceLinkBase);
@@ -23959,918 +32211,1454 @@ function renderReportMarkdown(report, linkBase, workspaceLinkBase) {
 		lines.push("", "## Operational Notes & Rollback");
 		for (const note of report.operationalNotes) lines.push(`- ${note}`);
 	}
-	lines.push("", "## Follow-Up & Future Work");
-	if (report.followUps.length === 0) lines.push("", "No follow-up items identified.");
-	else {
-		lines.push("", "| ID | Priority | Location | Follow-Up Action |", "|---|---|---|---|");
-		for (const row of report.followUps) {
-			const loc = formatWorkspaceLink(row.location, row.lineStart, row.lineEnd, workspaceLinkBase);
-			lines.push(`| \`${row.id}\` | \`${row.priority}\` | ${loc} | ${row.action} |`);
-		}
-	}
+	appendFollowUpsSection(lines, "Follow-Up & Future Work", report.followUps, workspaceLinkBase);
 	lines.push("");
 	return lines.join("\n");
 }
-// src/shared/migrations.ts
-function isPlainObject(value) {
-	return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-/** Migrate legacy v0 or current v1 session JSON to a validated SessionData object. */
-function migrateSessionData(raw) {
-	if (!isPlainObject(raw)) throw new Error("Invalid session JSON payload.");
-	const rawVersion = raw.schemaVersion === void 0 ? 0 : raw.schemaVersion;
-	if (typeof rawVersion !== "number" || !Number.isInteger(rawVersion) || rawVersion < 0) throw new Error("Invalid session schemaVersion.");
-	if (rawVersion > 1) throw new Error(`Unsupported session schema version ${rawVersion} (max supported: 1).`);
-	if (rawVersion === 0) {
-		const normalizedSets = (Array.isArray(raw.questionSets) ? raw.questionSets : []).map((qs) => {
-			if (!isPlainObject(qs)) return qs;
-			const questionIds = Array.isArray(qs.questions) ? qs.questions.filter(isPlainObject).map((q) => q.id).filter((id) => typeof id === "string") : [];
-			return {
-				...qs,
-				blockingMode: qs.blockingMode ?? "immediate",
-				answeredQuestionIds: Array.isArray(qs.answeredQuestionIds) ? qs.answeredQuestionIds : qs.status === "submitted" ? questionIds : []
-			};
-		});
-		return SessionDataSchema.parse({
-			...raw,
-			schemaVersion: 1,
-			questionSets: normalizedSets
-		});
-	}
-	return SessionDataSchema.parse(raw);
-}
-/** Migrate legacy bare-array v0 or versioned v1 index JSON to SessionSummary[]. */
-function migrateSessionIndex(raw) {
-	if (Array.isArray(raw)) return SessionSummarySchema.array().parse(raw);
-	if (!isPlainObject(raw)) throw new Error("Invalid session index JSON payload.");
-	const rawVersion = raw.schemaVersion === void 0 ? 0 : raw.schemaVersion;
-	if (typeof rawVersion !== "number" || !Number.isInteger(rawVersion) || rawVersion < 0) throw new Error("Invalid index schemaVersion.");
-	if (rawVersion > 1) throw new Error(`Unsupported index schema version ${rawVersion} (max supported: 1).`);
-	return SessionIndexFileSchema.parse({
-		schemaVersion: 1,
-		sessions: raw.sessions
-	}).sessions;
-}
-/** Migrate legacy or current UI settings JSON to a validated UiSettings object. */
-function migrateUiSettings(raw) {
-	if (!isPlainObject(raw)) throw new Error("Invalid UI settings JSON payload.");
-	const rawVersion = raw.schemaVersion === void 0 ? 0 : raw.schemaVersion;
-	if (typeof rawVersion !== "number" || !Number.isInteger(rawVersion) || rawVersion < 0) throw new Error("Invalid settings schemaVersion.");
-	if (rawVersion > 1) throw new Error(`Unsupported settings schema version ${rawVersion} (max supported: 1).`);
-	return UiSettingsSchema.parse({
-		...raw,
-		schemaVersion: 1
-	});
-}
-// server/store.ts
-var MAX_TOOL_CALLS = 200;
+// server/repositories/tasks.ts
+/**
+* Write UTF-8 text atomically to `targetPath` via a sibling temporary file + `rename`
+* so concurrent file readers never observe truncated Markdown exports.
+*/
 async function writeFileAtomic(targetPath, content) {
 	const dir = path.dirname(targetPath);
-	await fs.mkdir(dir, { recursive: true });
+	await fs$1.mkdir(dir, { recursive: true });
 	const tmpName = `.${path.basename(targetPath)}.${process.pid}.${crypto$1.randomUUID()}.tmp`;
 	const tmpPath = path.join(dir, tmpName);
-	await fs.writeFile(tmpPath, content, "utf8");
-	await fs.rename(tmpPath, targetPath);
+	await fs$1.writeFile(tmpPath, content, "utf8");
+	await fs$1.rename(tmpPath, targetPath);
 }
-function validateExportDir(exportDir) {
-	if (!exportDir || exportDir.includes("\0") || !path.isAbsolute(exportDir)) throw new Error("exportDir must be an absolute path without null bytes.");
-	return path.resolve(exportDir);
+/** Re-render and atomically overwrite `tasks.md` when `session.exportDir` is configured. */
+async function exportTasksMarkdownIfConfigured(db, sessionId) {
+	const session = getSession(db, sessionId);
+	if (!session?.exportDir) return;
+	const md = renderTasksMarkdown(listTasks(db, { sessionId }));
+	await writeFileAtomic(path.join(session.exportDir, "tasks.md"), md);
 }
-function isEnoent(err) {
-	return err?.code === "ENOENT";
-}
-function summarizeSession(session) {
-	return {
-		sessionId: session.sessionId,
-		workspacePath: session.workspacePath,
-		updatedAt: session.updatedAt,
-		taskCount: session.tasks.length,
-		pendingQuestionCount: session.questionSets.filter((q) => q.status !== "submitted").length
-	};
-}
-function normalizeSingleInProgress(task, activeItemId) {
-	let seenActive = false;
-	return {
-		...task,
-		steps: task.steps.map((step) => ({
-			...step,
-			items: step.items.map((item) => {
-				if (item.status !== "in_progress") return item;
-				if (activeItemId && item.id !== activeItemId) return {
-					...item,
-					status: "pending"
-				};
-				if (!activeItemId && seenActive) return {
-					...item,
-					status: "pending"
-				};
-				seenActive = true;
+function normalizeSingleInProgress(steps, preferItemKey) {
+	let activeKey = preferItemKey;
+	if (!activeKey) {
+		for (const step of steps) for (const item of step.items) if (item.status === "in_progress") activeKey = item.itemKey;
+	}
+	let seenPreferred = false;
+	return steps.map((step) => ({
+		...step,
+		items: step.items.map((item) => {
+			if (item.status !== "in_progress") return item;
+			if (activeKey && item.itemKey === activeKey && !seenPreferred) {
+				seenPreferred = true;
 				return item;
-			})
-		}))
-	};
-}
-function isNonEmptyAnswer(value, otherText) {
-	if (value === void 0) return false;
-	if (typeof value === "boolean") return true;
-	if (Array.isArray(value)) {
-		if (value.length === 0) return false;
-		if (value.includes("__other__") && (!otherText || otherText.trim().length === 0)) return false;
-		return true;
-	}
-	if (value === "__other__") return Boolean(otherText && otherText.trim().length > 0);
-	return value.trim().length > 0;
-}
-function getUnresolvedQuestions(session) {
-	const entries = [];
-	for (const qs of session.questionSets) {
-		if (qs.status === "submitted") continue;
-		const answered = new Set(qs.answeredQuestionIds);
-		for (const q of qs.questions) if (!answered.has(q.id)) entries.push({
-			questionSet: qs,
-			question: q,
-			policy: resolveQuestionPolicy(qs, q)
-		});
-	}
-	return entries;
-}
-function computeRevision(session, sessions, settings) {
-	const indexPart = sessions.map((s) => `${s.sessionId}:${s.updatedAt}:${s.taskCount}:${s.pendingQuestionCount}`).join(",");
-	return `${session?.sessionId ?? "none"}|${session?.updatedAt ?? "0"}|${settings.displayType}:${settings.stepDisplayType}|${indexPart}`;
-}
-function applyTaskTimestamps(nextTask, prevTask, nowIso) {
-	const steps = nextTask.steps.map((step, stepIdx) => {
-		const prevStep = prevTask?.steps[stepIdx] ?? prevTask?.steps.find((s) => s.title === step.title);
-		const items = step.items.map((item) => {
-			const prevItem = prevStep?.items.find((i) => i.id === item.id);
-			const createdAt = prevItem?.createdAt ?? item.createdAt ?? nowIso;
-			const startedAt = prevItem?.startedAt ?? item.startedAt ?? (item.status === "in_progress" || item.status === "done" ? nowIso : void 0);
-			const completedAt = item.status === "done" ? prevItem?.status === "done" && prevItem.completedAt ? prevItem.completedAt : item.completedAt ?? nowIso : void 0;
-			const updatedAt = !prevItem || prevItem.status !== item.status || prevItem.text !== item.text ? nowIso : prevItem.updatedAt ?? createdAt;
+			}
 			return {
 				...item,
-				createdAt,
-				startedAt,
-				completedAt,
-				updatedAt
+				status: "pending"
 			};
+		})
+	}));
+}
+function hydrateTaskRecords(taskRows, stepRows, itemRows) {
+	const itemsByStep = /* @__PURE__ */ new Map();
+	for (const row of [...itemRows].sort((a, b) => a.itemIndex - b.itemIndex)) {
+		const bucket = itemsByStep.get(row.stepId) ?? [];
+		bucket.push({
+			id: row.id,
+			itemKey: row.itemKey,
+			text: row.text,
+			status: row.status,
+			createdAt: row.createdAt,
+			startedAt: row.startedAt ?? void 0,
+			completedAt: row.completedAt ?? void 0,
+			updatedAt: row.updatedAt
 		});
-		const stepCreatedAt = prevStep?.createdAt ?? step.createdAt ?? nowIso;
-		const stepHasActivity = items.some((i) => i.status === "in_progress" || i.status === "done");
-		const stepStartedAt = prevStep?.startedAt ?? step.startedAt ?? (stepHasActivity ? nowIso : void 0);
-		const stepAllDone = items.every((i) => i.status === "done");
-		const prevStepAllDone = Boolean(prevStep && prevStep.items.every((i) => i.status === "done"));
-		const stepCompletedAt = stepAllDone ? prevStepAllDone && prevStep?.completedAt ? prevStep.completedAt : step.completedAt ?? nowIso : void 0;
-		const stepUpdatedAt = !prevStep || prevStep.title !== step.title || prevStep.outcome !== step.outcome || prevStep.items.length !== items.length || items.some((it, i) => it.updatedAt === nowIso || prevStep.items[i]?.status !== it.status) ? nowIso : prevStep.updatedAt ?? stepCreatedAt;
-		return {
+		itemsByStep.set(row.stepId, bucket);
+	}
+	const stepsByTask = /* @__PURE__ */ new Map();
+	for (const row of [...stepRows].sort((a, b) => a.stepIndex - b.stepIndex)) {
+		const bucket = stepsByTask.get(row.taskId) ?? [];
+		bucket.push({
+			id: row.id,
+			stepIndex: row.stepIndex,
+			title: row.title,
+			outcome: row.outcome,
+			items: itemsByStep.get(row.id) ?? [],
+			createdAt: row.createdAt,
+			startedAt: row.startedAt ?? void 0,
+			completedAt: row.completedAt ?? void 0,
+			updatedAt: row.updatedAt
+		});
+		stepsByTask.set(row.taskId, bucket);
+	}
+	return taskRows.map((row) => ({
+		taskId: row.id,
+		sessionId: row.sessionId,
+		slug: row.slug,
+		title: row.title,
+		status: row.status,
+		summary: row.summary,
+		steps: stepsByTask.get(row.id) ?? [],
+		planFile: row.planFile ?? void 0,
+		reportFile: row.reportFile ?? void 0,
+		createdAt: row.createdAt,
+		startedAt: row.startedAt ?? void 0,
+		completedAt: row.completedAt ?? void 0,
+		updatedAt: row.updatedAt
+	}));
+}
+/** Read a single task by global integer `taskId` (strictly read-only). */
+function getTaskById(db, taskId) {
+	const taskRow = db.select().from(tasks).where(eq(tasks.id, taskId)).get();
+	if (!taskRow) return null;
+	const stepRows = db.select().from(taskSteps).where(eq(taskSteps.taskId, taskId)).orderBy(asc(taskSteps.stepIndex)).all();
+	const itemRows = db.select().from(taskItems).where(eq(taskItems.taskId, taskId)).orderBy(asc(taskItems.itemIndex)).all();
+	return hydrateTaskRecords([taskRow], stepRows, itemRows)[0] ?? null;
+}
+/** Read the current active (or latest) task for a session (strictly read-only). */
+function getCurrentTaskForSession(db, sessionId) {
+	const rows = listTasks(db, { sessionId });
+	return rows.find((t) => t.status === "in_progress") ?? rows.find((t) => t.status === "planned") ?? rows[0] ?? null;
+}
+/** List tasks with optional session, group, status, and limit filters (strictly read-only). */
+function listTasks(db, filter) {
+	const conditions = [];
+	if (filter?.sessionId) conditions.push(eq(tasks.sessionId, filter.sessionId));
+	if (filter?.groupId) {
+		const sessionIds = db.select({ id: sessions.id }).from(sessions).where(eq(sessions.groupId, filter.groupId)).all().map((r) => r.id);
+		if (sessionIds.length === 0) return [];
+		conditions.push(inArray(tasks.sessionId, sessionIds));
+	}
+	if (filter?.status) conditions.push(eq(tasks.status, filter.status));
+	const taskRows = db.select().from(tasks).where(conditions.length > 0 ? and(...conditions) : void 0).orderBy(desc(tasks.id)).limit(filter?.limit ?? 200).all();
+	if (taskRows.length === 0) return [];
+	const taskIds = taskRows.map((t) => t.id);
+	return hydrateTaskRecords(taskRows, db.select().from(taskSteps).where(inArray(taskSteps.taskId, taskIds)).orderBy(asc(taskSteps.stepIndex)).all(), db.select().from(taskItems).where(inArray(taskItems.taskId, taskIds)).orderBy(asc(taskItems.itemIndex)).all());
+}
+function computeLifecycleDates(status, steps, prev, now) {
+	const createdAt = prev?.createdAt ?? now;
+	const hasAnyStarted = steps.some((s) => s.items.some((i) => i.status !== "pending"));
+	const isTerminal = status === "done" || status === "cancelled" || status === "superseded";
+	return {
+		createdAt,
+		startedAt: prev?.startedAt ?? (status === "in_progress" || isTerminal || hasAnyStarted ? now : null),
+		completedAt: isTerminal ? prev?.completedAt ?? now : null
+	};
+}
+/** Create or update a global task with its ordered steps and checklist items. */
+async function upsertTask(db, sessionId, input, meta) {
+	if (input.steps.length === 0) throw new ValidationError("Task must contain at least one step.");
+	const seenKeys = /* @__PURE__ */ new Set();
+	for (const step of input.steps) for (const item of step.items) {
+		if (seenKeys.has(item.itemKey)) throw new ValidationError(`Duplicate itemKey "${item.itemKey}" inside task.`);
+		seenKeys.add(item.itemKey);
+	}
+	const result = db.transaction((tx) => {
+		const now = (/* @__PURE__ */ new Date()).toISOString();
+		const session = ensureSessionTx(tx, sessionId, meta, now);
+		assertNoImmediateQuestionBlocker(tx, sessionId, input.taskId);
+		const normalizedSteps = normalizeSingleInProgress(input.steps);
+		const existing = input.taskId !== void 0 ? getTaskById(tx, input.taskId) : null;
+		if (input.taskId !== void 0 && !existing) throw new NotFoundError("Task", input.taskId);
+		if (existing && existing.sessionId !== sessionId) throw new ValidationError(`Task ${formatTaskId(existing.taskId)} belongs to session "${existing.sessionId}", not "${sessionId}".`);
+		const taskDates = computeLifecycleDates(input.status, normalizedSteps, existing ?? void 0, now);
+		let targetTaskId;
+		if (existing) {
+			tx.update(tasks).set({
+				slug: input.slug,
+				title: input.title,
+				status: input.status,
+				summary: input.summary,
+				planFile: input.planFile ?? existing.planFile ?? null,
+				reportFile: input.reportFile ?? existing.reportFile ?? null,
+				startedAt: taskDates.startedAt,
+				completedAt: taskDates.completedAt,
+				updatedAt: now
+			}).where(eq(tasks.id, existing.taskId)).run();
+			targetTaskId = existing.taskId;
+			tx.delete(taskSteps).where(eq(taskSteps.taskId, targetTaskId)).run();
+		} else targetTaskId = tx.insert(tasks).values({
+			sessionId,
+			slug: input.slug,
+			title: input.title,
+			status: input.status,
+			summary: input.summary,
+			planFile: input.planFile ?? null,
+			reportFile: input.reportFile ?? null,
+			createdAt: taskDates.createdAt,
+			startedAt: taskDates.startedAt,
+			completedAt: taskDates.completedAt,
+			updatedAt: now
+		}).returning().get().id;
+		const prevStepsByIndex = new Map((existing?.steps ?? []).map((s, idx) => [idx, s]));
+		const prevItemsByKey = /* @__PURE__ */ new Map();
+		for (const prevStep of existing?.steps ?? []) for (const prevItem of prevStep.items) prevItemsByKey.set(prevItem.itemKey, prevItem);
+		normalizedSteps.forEach((step, stepIndex) => {
+			const prevStep = prevStepsByIndex.get(stepIndex);
+			const stepStarted = step.items.some((i) => i.status !== "pending");
+			const stepDone = step.items.every((i) => i.status === "done");
+			const stepRow = tx.insert(taskSteps).values({
+				taskId: targetTaskId,
+				stepIndex,
+				title: step.title,
+				outcome: step.outcome,
+				createdAt: prevStep?.createdAt ?? now,
+				startedAt: prevStep?.startedAt ?? (stepStarted ? now : null),
+				completedAt: stepDone ? prevStep?.completedAt ?? now : null,
+				updatedAt: now
+			}).returning().get();
+			step.items.forEach((item, itemIndex) => {
+				const prevItem = prevItemsByKey.get(item.itemKey);
+				const itemDone = item.status === "done";
+				tx.insert(taskItems).values({
+					stepId: stepRow.id,
+					taskId: targetTaskId,
+					itemKey: item.itemKey,
+					itemIndex,
+					text: item.text,
+					status: item.status,
+					createdAt: prevItem?.createdAt ?? now,
+					startedAt: prevItem?.startedAt ?? (item.status !== "pending" ? now : null),
+					completedAt: itemDone ? prevItem?.completedAt ?? now : null,
+					updatedAt: now
+				}).run();
+			});
+		});
+		const saved = getTaskById(tx, targetTaskId);
+		if (!existing) recordTimelineEvent(tx, {
+			sessionId,
+			groupId: session.groupId,
+			eventType: "task_created",
+			actor: "agent",
+			title: `Created Task ${formatTaskId(targetTaskId)}: ${saved.title}`,
+			summary: saved.summary,
+			links: [{
+				entityType: "task",
+				entityId: String(targetTaskId),
+				role: "subject",
+				label: `Task ${formatTaskId(targetTaskId)}`
+			}, {
+				entityType: "session",
+				entityId: sessionId,
+				role: "parent",
+				label: session.title ?? sessionId
+			}],
+			createdAt: now
+		});
+		else if (existing.status !== saved.status) recordTimelineEvent(tx, {
+			sessionId,
+			groupId: session.groupId,
+			eventType: "task_status_changed",
+			actor: "agent",
+			title: `Task ${formatTaskId(targetTaskId)} marked ${saved.status}`,
+			summary: `${existing.status} -> ${saved.status}`,
+			links: [{
+				entityType: "task",
+				entityId: String(targetTaskId),
+				role: "subject",
+				label: `Task ${formatTaskId(targetTaskId)}`
+			}, {
+				entityType: "session",
+				entityId: sessionId,
+				role: "parent",
+				label: session.title ?? sessionId
+			}],
+			createdAt: now
+		});
+		return saved;
+	});
+	await exportTasksMarkdownIfConfigured(db, sessionId);
+	return { task: result };
+}
+/** Update a single checklist item inside a task, enforcing blocking guards and emitting step timeline events. */
+async function updateTaskItem(db, sessionId, taskId, itemKey, status, taskStatus) {
+	const result = db.transaction((tx) => {
+		const now = (/* @__PURE__ */ new Date()).toISOString();
+		const session = ensureSessionTx(tx, sessionId, void 0, now);
+		assertNoImmediateQuestionBlocker(tx, sessionId, taskId);
+		const existing = getTaskById(tx, taskId);
+		if (!existing) throw new NotFoundError("Task", taskId);
+		if (existing.sessionId !== sessionId) throw new ValidationError(`Task ${formatTaskId(taskId)} belongs to session "${existing.sessionId}", not "${sessionId}".`);
+		let targetStepIndex = -1;
+		let targetItemId;
+		existing.steps.forEach((step, idx) => {
+			const hit = step.items.find((i) => i.itemKey === itemKey);
+			if (hit) {
+				targetStepIndex = idx;
+				targetItemId = hit.id;
+			}
+		});
+		if (targetStepIndex === -1 || targetItemId === void 0) throw new NotFoundError("TaskItem", `${taskId}:${itemKey}`);
+		const normalized = normalizeSingleInProgress(existing.steps.map((step) => ({
 			...step,
-			items,
-			createdAt: stepCreatedAt,
-			startedAt: stepStartedAt,
-			completedAt: stepCompletedAt,
-			updatedAt: stepUpdatedAt
+			items: step.items.map((item) => item.itemKey === itemKey ? {
+				...item,
+				status
+			} : item)
+		})), status === "in_progress" ? itemKey : void 0);
+		if (normalized[targetStepIndex].items.every((i) => i.status === "done")) assertStepQuestionsSatisfied(tx, sessionId, taskId, targetStepIndex + 1);
+		const nextTaskStatus = taskStatus ?? (normalized.every((s) => s.items.every((i) => i.status === "done")) ? "done" : status === "in_progress" || existing.status === "planned" ? "in_progress" : existing.status);
+		const taskDates = computeLifecycleDates(nextTaskStatus, normalized, existing, now);
+		tx.update(tasks).set({
+			status: nextTaskStatus,
+			startedAt: taskDates.startedAt,
+			completedAt: taskDates.completedAt,
+			updatedAt: now
+		}).where(eq(tasks.id, taskId)).run();
+		const prevStep = existing.steps[targetStepIndex];
+		const prevStepStarted = Boolean(prevStep.startedAt);
+		const prevStepCompleted = Boolean(prevStep.completedAt);
+		normalized.forEach((step, stepIdx) => {
+			const origStep = existing.steps[stepIdx];
+			const stepStarted = step.items.some((i) => i.status !== "pending");
+			const stepDone = step.items.every((i) => i.status === "done");
+			tx.update(taskSteps).set({
+				startedAt: origStep.startedAt ?? (stepStarted ? now : null),
+				completedAt: stepDone ? origStep.completedAt ?? now : null,
+				updatedAt: now
+			}).where(eq(taskSteps.id, origStep.id)).run();
+			step.items.forEach((item) => {
+				const origItem = origStep.items.find((i) => i.itemKey === item.itemKey);
+				tx.update(taskItems).set({
+					status: item.status,
+					startedAt: origItem.startedAt ?? (item.status !== "pending" ? now : null),
+					completedAt: item.status === "done" ? origItem.completedAt ?? now : null,
+					updatedAt: now
+				}).where(eq(taskItems.id, origItem.id)).run();
+			});
+		});
+		const refreshed = getTaskById(tx, taskId);
+		const refreshedStep = refreshed.steps[targetStepIndex];
+		if (!prevStepStarted && refreshedStep.startedAt) recordTimelineEvent(tx, {
+			sessionId,
+			groupId: session.groupId,
+			eventType: "step_started",
+			actor: "agent",
+			title: `Started Task ${formatTaskId(taskId)} Step ${targetStepIndex + 1}: ${refreshedStep.title}`,
+			links: [
+				{
+					entityType: "task_step",
+					entityId: String(refreshedStep.id),
+					role: "subject",
+					label: `Step ${targetStepIndex + 1}`
+				},
+				{
+					entityType: "task",
+					entityId: String(taskId),
+					role: "parent",
+					label: `Task ${formatTaskId(taskId)}`
+				},
+				{
+					entityType: "task_item",
+					entityId: `${taskId}:${itemKey}`,
+					role: "related",
+					label: itemKey
+				},
+				{
+					entityType: "session",
+					entityId: sessionId,
+					role: "parent",
+					label: session.title ?? sessionId
+				}
+			],
+			createdAt: now
+		});
+		if (!prevStepCompleted && refreshedStep.completedAt) {
+			const itemLinks = refreshedStep.items.map((item) => ({
+				entityType: "task_item",
+				entityId: `${taskId}:${item.itemKey}`,
+				role: "related",
+				label: item.itemKey
+			}));
+			recordTimelineEvent(tx, {
+				sessionId,
+				groupId: session.groupId,
+				eventType: "step_completed",
+				actor: "agent",
+				title: `Completed Task ${formatTaskId(taskId)} Step ${targetStepIndex + 1}: ${refreshedStep.title}`,
+				summary: refreshedStep.outcome,
+				links: [
+					{
+						entityType: "task_step",
+						entityId: String(refreshedStep.id),
+						role: "subject",
+						label: `Step ${targetStepIndex + 1}`
+					},
+					{
+						entityType: "task",
+						entityId: String(taskId),
+						role: "parent",
+						label: `Task ${formatTaskId(taskId)}`
+					},
+					{
+						entityType: "session",
+						entityId: sessionId,
+						role: "parent",
+						label: session.title ?? sessionId
+					},
+					...itemLinks
+				],
+				createdAt: now
+			});
+		}
+		if (existing.status !== refreshed.status) recordTimelineEvent(tx, {
+			sessionId,
+			groupId: session.groupId,
+			eventType: "task_status_changed",
+			actor: "agent",
+			title: `Task ${formatTaskId(taskId)} marked ${refreshed.status}`,
+			summary: `${existing.status} -> ${refreshed.status}`,
+			links: [{
+				entityType: "task",
+				entityId: String(taskId),
+				role: "subject",
+				label: `Task ${formatTaskId(taskId)}`
+			}, {
+				entityType: "session",
+				entityId: sessionId,
+				role: "parent",
+				label: session.title ?? sessionId
+			}],
+			createdAt: now
+		});
+		const stepSnapshot = {
+			taskId,
+			taskTitle: refreshed.title,
+			stepIndex: targetStepIndex,
+			totalSteps: refreshed.steps.length,
+			step: refreshedStep,
+			itemKey,
+			capturedAt: now
+		};
+		return {
+			task: refreshed,
+			updatedStepIndex: targetStepIndex,
+			stepSnapshot
 		};
 	});
-	const createdAt = prevTask?.createdAt ?? nextTask.createdAt ?? nowIso;
-	const hasAnyActivity = steps.some((s) => s.items.some((i) => i.status === "in_progress" || i.status === "done"));
-	const startedAt = prevTask?.startedAt ?? nextTask.startedAt ?? (nextTask.status === "in_progress" || nextTask.status === "done" || hasAnyActivity ? nowIso : void 0);
-	const completedAt = nextTask.status === "done" || nextTask.status === "cancelled" || nextTask.status === "superseded" ? prevTask?.status === nextTask.status && prevTask.completedAt ? prevTask.completedAt : nextTask.completedAt ?? nowIso : void 0;
+	await exportTasksMarkdownIfConfigured(db, sessionId);
+	return result;
+}
+// server/repositories/artifacts.ts
+var ArtifactLinksArraySchema = array(FileRefSchema);
+var EMPTY_PLAN_BODY = PlanBodyJsonSchema.parse({});
+var EMPTY_REPORT_BODY = ReportBodyJsonSchema.parse({});
+function mapPlanRow(row) {
+	const body = parseJsonWithSchema(row.bodyJson, PlanBodyJsonSchema, EMPTY_PLAN_BODY);
 	return {
-		...nextTask,
-		steps,
-		createdAt,
-		startedAt,
-		completedAt
+		taskId: row.taskId,
+		sessionId: row.sessionId,
+		slug: row.slug,
+		title: row.title,
+		target: {
+			repo: row.targetRepo,
+			branch: row.targetBranch,
+			commit: row.targetCommit
+		},
+		follows: row.follows ?? void 0,
+		overview: row.overview,
+		expectedOutcomes: body.expectedOutcomes,
+		scope: body.scope,
+		openQuestions: body.openQuestions,
+		userStories: body.userStories,
+		functionalRequirements: body.functionalRequirements,
+		nonFunctionalRequirements: body.nonFunctionalRequirements,
+		currentImplementation: body.currentImplementation,
+		keyDecisions: body.keyDecisions,
+		proposedChanges: body.proposedChanges,
+		dataModels: body.dataModels,
+		components: body.components,
+		fileStructure: body.fileStructure,
+		architectureDiagram: body.architectureDiagram,
+		risks: body.risks,
+		alternatives: body.alternatives,
+		calibration: body.calibration,
+		testing: body.testing,
+		language: row.language,
+		reviewStatus: row.reviewStatus ?? void 0,
+		reviewComment: row.reviewComment ?? void 0,
+		generatedPlanPath: row.generatedPlanPath ?? void 0,
+		approvedVia: row.approvedVia ?? void 0,
+		createdAt: row.createdAt,
+		reviewedAt: row.reviewedAt ?? void 0
 	};
 }
-function assertNoImmediateQuestionBlocker(session, taskNumber) {
-	const blockers = getUnresolvedQuestions(session).filter((entry) => entry.policy.blockingMode === "immediate" && (!entry.policy.taskNumber || !taskNumber || entry.policy.taskNumber === taskNumber));
-	if (blockers.length > 0) {
-		const summary = blockers.map((b) => `"${b.question.id}" in "${b.questionSet.title}" (${b.questionSet.id})`).join(", ");
-		throw new Error(`Blocked by immediate question(s): ${summary}. Answer and submit them before progressing.`);
-	}
+function mapReportRow(row) {
+	const body = parseJsonWithSchema(row.bodyJson, ReportBodyJsonSchema, EMPTY_REPORT_BODY);
+	return {
+		taskId: row.taskId,
+		sessionId: row.sessionId,
+		slug: row.slug,
+		title: row.title,
+		mode: row.mode,
+		outcome: row.outcome,
+		target: {
+			repo: row.targetRepo,
+			branch: row.targetBranch,
+			commit: row.targetCommit
+		},
+		planRef: row.planRef ?? void 0,
+		summary: row.summary,
+		actionsCompleted: body.actionsCompleted,
+		filesChanged: body.filesChanged,
+		diffStat: body.diffStat,
+		planDeviations: body.planDeviations,
+		verification: body.verification,
+		tryCommand: body.tryCommand,
+		unverifiedLimitations: body.unverifiedLimitations,
+		operationalNotes: body.operationalNotes,
+		verificationMatrix: body.verificationMatrix,
+		findings: body.findings,
+		followUps: body.followUps,
+		language: row.language,
+		createdAt: row.createdAt
+	};
 }
-function assertStepQuestionsSatisfied(session, taskNumber, nextTask, opts) {
-	const stepBlockers = getUnresolvedQuestions(session).filter((entry) => entry.policy.blockingMode === "before_step_finish" && entry.policy.taskNumber === taskNumber);
-	if (stepBlockers.length === 0) return;
-	for (const blocker of stepBlockers) {
-		const stepNum = blocker.policy.stepNumber ?? 1;
-		const label = formatBlockingModeLabel("before_step_finish", taskNumber, stepNum);
-		if (opts?.finishingReport || nextTask?.status === "done") throw new Error(`Blocked by deferred question "${blocker.question.id}" (${label}) in "${blocker.questionSet.title}". Answer it before completing Task ${taskNumber}.`);
-		if (!nextTask) continue;
-		const boundStep = nextTask.steps[stepNum - 1];
-		if (boundStep && boundStep.items.every((item) => item.status === "done")) throw new Error(`Cannot finish Step ${stepNum} of Task ${taskNumber} until deferred question "${blocker.question.id}" (${blocker.question.prompt}) in "${blocker.questionSet.title}" is answered.`);
-		if (nextTask.steps.some((step, idx) => idx > stepNum - 1 && step.items.some((item) => item.status === "in_progress" || item.status === "done"))) throw new Error(`Cannot advance past Step ${stepNum} of Task ${taskNumber} until deferred question "${blocker.question.id}" (${blocker.question.prompt}) in "${blocker.questionSet.title}" is answered.`);
-	}
+function mapHandoffRow(row) {
+	return {
+		id: row.id,
+		sessionId: row.sessionId,
+		taskId: row.taskId ?? void 0,
+		kind: row.kind,
+		title: row.title,
+		summary: row.summary,
+		workingNow: row.workingNow ?? void 0,
+		verifyCommand: row.verifyCommand ?? void 0,
+		entryPoint: row.entryPoint ?? void 0,
+		nextStep: row.nextStep ?? void 0,
+		artifactLinks: parseJsonWithSchema(row.artifactLinksJson, ArtifactLinksArraySchema, []),
+		structuredData: parseJsonObject(row.structuredDataJson),
+		createdAt: row.createdAt
+	};
 }
-function createSessionStore(rawDataDir) {
-	const dataDir = path.resolve(rawDataDir);
-	const sessionsDir = path.join(dataDir, "sessions");
-	const exportsDir = path.join(dataDir, "exports");
-	const indexPath = path.join(dataDir, "index.json");
-	const settingsPath = path.join(dataDir, "settings.json");
-	async function getSettings() {
-		try {
-			const raw = await fs.readFile(settingsPath, "utf8");
-			return migrateUiSettings(JSON.parse(raw));
-		} catch (err) {
-			if (isEnoent(err)) return { ...DEFAULT_UI_SETTINGS };
-			throw err;
-		}
+/** Look up an immutable plan by global `taskId`, returning `null` if absent. */
+function getPlanByTaskId(db, taskId) {
+	const row = db.select().from(plans).where(eq(plans.taskId, taskId)).get();
+	return row ? mapPlanRow(row) : null;
+}
+/** List plans matching optional session/group filters, ordered newest task first. */
+function listPlans(db, filter) {
+	const conditions = [];
+	if (filter?.sessionId) conditions.push(eq(plans.sessionId, filter.sessionId));
+	if (filter?.groupId) {
+		const sessionIds = db.select({ id: sessions.id }).from(sessions).where(eq(sessions.groupId, filter.groupId)).all().map((r) => r.id);
+		if (sessionIds.length === 0) return [];
+		conditions.push(inArray(plans.sessionId, sessionIds));
 	}
-	async function updateSettings(patch) {
-		const current = await getSettings();
-		const next = UiSettingsSchema.parse({
-			...current,
-			...patch,
-			schemaVersion: 1
-		});
-		await writeFileAtomic(settingsPath, JSON.stringify(next, null, 2));
-		return next;
+	return db.select().from(plans).where(conditions.length > 0 ? and(...conditions) : void 0).orderBy(desc(plans.taskId)).limit(filter?.limit ?? 100).all().map(mapPlanRow);
+}
+/** Look up an immutable report by global `taskId`, returning `null` if absent. */
+function getReportByTaskId(db, taskId) {
+	const row = db.select().from(reports).where(eq(reports.taskId, taskId)).get();
+	return row ? mapReportRow(row) : null;
+}
+/** List reports matching optional session/group filters, ordered newest task first. */
+function listReports(db, filter) {
+	const conditions = [];
+	if (filter?.sessionId) conditions.push(eq(reports.sessionId, filter.sessionId));
+	if (filter?.groupId) {
+		const sessionIds = db.select({ id: sessions.id }).from(sessions).where(eq(sessions.groupId, filter.groupId)).all().map((r) => r.id);
+		if (sessionIds.length === 0) return [];
+		conditions.push(inArray(reports.sessionId, sessionIds));
 	}
-	function resolveSessionPath(rawSessionId) {
-		const sessionId = SessionIdSchema.parse(rawSessionId);
-		const resolved = path.resolve(sessionsDir, `${sessionId}.json`);
-		if (!resolved.startsWith(`${sessionsDir}${path.sep}`)) throw new Error("Invalid sessionId path resolution.");
-		return resolved;
+	return db.select().from(reports).where(conditions.length > 0 ? and(...conditions) : void 0).orderBy(desc(reports.taskId)).limit(filter?.limit ?? 100).all().map(mapReportRow);
+}
+/** List structured session handoffs matching optional session, group, or task filters. */
+function listHandoffs(db, filter) {
+	const conditions = [];
+	if (filter?.sessionId) conditions.push(eq(handoffs.sessionId, filter.sessionId));
+	if (filter?.groupId) {
+		const sessionIds = db.select({ id: sessions.id }).from(sessions).where(eq(sessions.groupId, filter.groupId)).all().map((r) => r.id);
+		if (sessionIds.length === 0) return [];
+		conditions.push(inArray(handoffs.sessionId, sessionIds));
 	}
-	async function readIndex() {
-		try {
-			const raw = await fs.readFile(indexPath, "utf8");
-			return migrateSessionIndex(JSON.parse(raw));
-		} catch (err) {
-			if (isEnoent(err)) return rebuildIndex();
-			throw err;
-		}
-	}
-	async function rebuildIndex() {
-		let entries;
-		try {
-			entries = await fs.readdir(sessionsDir, { withFileTypes: true });
-		} catch (err) {
-			if (isEnoent(err)) return [];
-			throw err;
-		}
-		const summaries = [];
-		for (const entry of entries) {
-			if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
-			try {
-				const raw = await fs.readFile(path.join(sessionsDir, entry.name), "utf8");
-				const parsed = migrateSessionData(JSON.parse(raw));
-				summaries.push(summarizeSession(parsed));
-			} catch {}
-		}
-		if (summaries.length === 0) return [];
-		summaries.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-		await writeFileAtomic(indexPath, JSON.stringify({
-			schemaVersion: 1,
-			sessions: summaries
-		}, null, 2));
-		return summaries;
-	}
-	async function saveSession(session, exportMarkdown = true) {
-		const validated = SessionDataSchema.parse({
-			...session,
-			schemaVersion: 1,
-			updatedAt: (/* @__PURE__ */ new Date()).toISOString()
-		});
-		await writeFileAtomic(resolveSessionPath(validated.sessionId), JSON.stringify(validated, null, 2));
-		const currentIndex = await readIndex();
-		const nextSummary = summarizeSession(validated);
-		const filtered = currentIndex.filter((item) => item.sessionId !== validated.sessionId);
-		filtered.unshift(nextSummary);
-		filtered.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-		await writeFileAtomic(indexPath, JSON.stringify({
-			schemaVersion: 1,
-			sessions: filtered
-		}, null, 2));
-		if (exportMarkdown && validated.exportDir) await exportMarkdownFiles(validated);
-		return validated;
-	}
-	async function exportMarkdownFiles(session) {
-		if (!session.exportDir) return;
-		const targetDir = validateExportDir(session.exportDir);
-		await fs.mkdir(targetDir, { recursive: true });
-		await writeFileAtomic(path.join(targetDir, "tasks.md"), renderTasksMarkdown(session));
-		for (const plan of session.plans) {
-			const filename = formatTaskFilename(plan.taskNumber, plan.slug, "plan");
-			await writeFileAtomic(path.join(targetDir, filename), renderPlanMarkdown(plan));
-		}
-		for (const report of session.reports) {
-			const filename = formatTaskFilename(report.taskNumber, report.slug, "report");
-			await writeFileAtomic(path.join(targetDir, filename), renderReportMarkdown(report, void 0, session.workspacePath));
-		}
-	}
-	async function getSession(sessionId) {
-		const sessionPath = resolveSessionPath(sessionId);
-		try {
-			const raw = await fs.readFile(sessionPath, "utf8");
-			return migrateSessionData(JSON.parse(raw));
-		} catch (err) {
-			if (isEnoent(err)) return null;
-			throw err;
-		}
-	}
-	async function ensureSession(sessionId, meta) {
-		const existing = await getSession(sessionId);
-		const validExportDir = meta?.exportDir ? validateExportDir(meta.exportDir) : void 0;
-		if (existing) {
-			if (!(meta?.workspacePath && meta.workspacePath !== existing.workspacePath || validExportDir && validExportDir !== existing.exportDir)) return existing;
-			return saveSession({
-				...existing,
-				workspacePath: meta?.workspacePath ?? existing.workspacePath,
-				exportDir: validExportDir ?? existing.exportDir
-			}, true);
-		}
+	if (filter?.taskId !== void 0) conditions.push(eq(handoffs.taskId, filter.taskId));
+	return db.select().from(handoffs).where(conditions.length > 0 ? and(...conditions) : void 0).orderBy(desc(handoffs.createdAt)).limit(filter?.limit ?? 100).all().map(mapHandoffRow);
+}
+/**
+* Persist a technical plan, auto-allocating a global `taskId` if omitted, and
+* optionally export `NNN-<slug>.plan.md` + `tasks.md` to `exportDir`.
+*/
+async function writePlan(db, sessionId, input, meta) {
+	const result = db.transaction((tx) => {
 		const now = (/* @__PURE__ */ new Date()).toISOString();
-		return saveSession({
-			schemaVersion: 1,
-			sessionId: SessionIdSchema.parse(sessionId),
-			workspacePath: meta?.workspacePath,
-			exportDir: validExportDir,
+		const session = ensureSessionTx(tx, sessionId, meta, now);
+		let taskId = input.taskId;
+		if (taskId !== void 0) {
+			const existingTask = getTaskById(tx, taskId);
+			if (!existingTask) throw new NotFoundError("Task", taskId);
+			if (existingTask.sessionId !== sessionId) throw new ValidationError(`Task ${formatTaskId(taskId)} belongs to session "${existingTask.sessionId}", not "${sessionId}".`);
+		} else {
+			taskId = tx.insert(tasks).values({
+				sessionId,
+				slug: input.slug,
+				title: input.title,
+				status: "planned",
+				summary: input.overview,
+				createdAt: now,
+				updatedAt: now
+			}).returning().get().id;
+			recordTimelineEvent(tx, {
+				sessionId,
+				groupId: session.groupId,
+				eventType: "task_created",
+				actor: "agent",
+				title: `Allocated Task ${formatTaskId(taskId)}: ${input.title}`,
+				summary: input.overview,
+				links: [{
+					entityType: "task",
+					entityId: String(taskId),
+					role: "subject",
+					label: `Task ${formatTaskId(taskId)}`
+				}, {
+					entityType: "session",
+					entityId: sessionId,
+					role: "parent",
+					label: session.title ?? sessionId
+				}],
+				createdAt: now
+			});
+		}
+		const fileName = formatTaskFilename(taskId, input.slug, "plan");
+		const generatedPlanPath = session.exportDir ? path.join(session.exportDir, fileName) : void 0;
+		tx.update(tasks).set({
+			planFile: fileName,
+			updatedAt: now
+		}).where(eq(tasks.id, taskId)).run();
+		const bodyJson = JSON.stringify({
+			expectedOutcomes: input.expectedOutcomes,
+			scope: input.scope,
+			openQuestions: input.openQuestions,
+			userStories: input.userStories,
+			functionalRequirements: input.functionalRequirements,
+			nonFunctionalRequirements: input.nonFunctionalRequirements,
+			currentImplementation: input.currentImplementation,
+			keyDecisions: input.keyDecisions,
+			proposedChanges: input.proposedChanges,
+			dataModels: input.dataModels,
+			components: input.components,
+			fileStructure: input.fileStructure,
+			architectureDiagram: input.architectureDiagram,
+			risks: input.risks,
+			alternatives: input.alternatives,
+			calibration: input.calibration,
+			testing: input.testing
+		});
+		const existingPlan = tx.select().from(plans).where(eq(plans.taskId, taskId)).get();
+		const reviewStatus = input.reviewStatus ?? existingPlan?.reviewStatus ?? "pending_review";
+		const reviewedAt = reviewStatus === "approved" || reviewStatus === "changes_requested" ? existingPlan?.reviewedAt ?? now : existingPlan?.reviewedAt ?? null;
+		let savedRow;
+		if (existingPlan) savedRow = tx.update(plans).set({
+			slug: input.slug,
+			title: input.title,
+			targetRepo: input.target.repo,
+			targetBranch: input.target.branch,
+			targetCommit: input.target.commit,
+			follows: input.follows ?? null,
+			overview: input.overview,
+			language: input.language ?? "en",
+			reviewStatus,
+			reviewComment: input.reviewComment ?? existingPlan.reviewComment,
+			generatedPlanPath: generatedPlanPath ?? existingPlan.generatedPlanPath,
+			approvedVia: input.approvedVia ?? existingPlan.approvedVia,
+			bodyJson,
+			reviewedAt
+		}).where(eq(plans.taskId, taskId)).returning().get();
+		else savedRow = tx.insert(plans).values({
+			taskId,
+			sessionId,
+			slug: input.slug,
+			title: input.title,
+			targetRepo: input.target.repo,
+			targetBranch: input.target.branch,
+			targetCommit: input.target.commit,
+			follows: input.follows ?? null,
+			overview: input.overview,
+			language: input.language ?? "en",
+			reviewStatus,
+			reviewComment: input.reviewComment ?? null,
+			generatedPlanPath: generatedPlanPath ?? null,
+			approvedVia: input.approvedVia ?? null,
+			bodyJson,
 			createdAt: now,
-			updatedAt: now,
-			tasks: [],
-			plans: [],
-			reports: [],
-			handoffs: [],
-			questionSets: [],
-			toolCalls: []
-		}, Boolean(validExportDir));
-	}
-	function allocateTaskNumberForSession(session) {
-		return allocateNextTaskNumber([
-			...session.tasks.map((t) => t.taskNumber),
-			...session.plans.map((p) => p.taskNumber),
-			...session.reports.map((r) => r.taskNumber)
-		]);
+			reviewedAt
+		}).returning().get();
+		const plan = mapPlanRow(savedRow);
+		recordTimelineEvent(tx, {
+			sessionId,
+			groupId: session.groupId,
+			eventType: existingPlan ? "plan_updated" : "plan_written",
+			actor: "agent",
+			title: `${existingPlan ? "Updated" : "Wrote"} Plan ${formatTaskId(taskId)}: ${plan.title}`,
+			summary: fileName,
+			links: [
+				{
+					entityType: "plan",
+					entityId: String(taskId),
+					role: "subject",
+					label: fileName
+				},
+				{
+					entityType: "task",
+					entityId: String(taskId),
+					role: "parent",
+					label: `Task ${formatTaskId(taskId)}`
+				},
+				{
+					entityType: "session",
+					entityId: sessionId,
+					role: "parent",
+					label: session.title ?? sessionId
+				}
+			],
+			createdAt: now
+		});
+		return {
+			plan,
+			exportDir: session.exportDir,
+			fileName
+		};
+	});
+	const planMarkdown = renderPlanMarkdown(result.plan);
+	if (result.exportDir) {
+		await writeFileAtomic(path.join(result.exportDir, result.fileName), planMarkdown);
+		await exportTasksMarkdownIfConfigured(db, sessionId);
 	}
 	return {
-		getDataDir: () => dataDir,
-		listSessions: () => readIndex(),
-		getSession,
-		async getLatestSession() {
-			const first = (await readIndex())[0];
-			if (!first) return null;
-			return getSession(first.sessionId);
-		},
-		getSettings,
-		updateSettings,
-		async getRevision(sessionId) {
-			const [sessions, settings] = await Promise.all([readIndex(), getSettings()]);
-			let session = null;
-			if (sessionId) session = await getSession(sessionId);
-			else if (sessions[0]) session = await getSession(sessions[0].sessionId);
-			return {
-				session,
-				sessions,
-				settings,
-				revision: computeRevision(session, sessions, settings)
-			};
-		},
-		async clearToolCalls(sessionId) {
-			const session = await getSession(sessionId);
-			if (!session) throw new Error(`Session "${sessionId}" does not exist.`);
-			return saveSession({
-				...session,
-				toolCalls: []
-			}, false);
-		},
-		ensureSession,
-		async upsertTask(sessionId, taskInput, meta) {
-			const session = await ensureSession(sessionId, meta);
-			const taskNumber = taskInput.taskNumber ?? allocateTaskNumberForSession(session);
-			const existingTask = session.tasks.find((t) => t.taskNumber === taskNumber);
-			const matchingPlan = session.plans.find((p) => p.taskNumber === taskNumber);
-			const matchingReport = session.reports.find((r) => r.taskNumber === taskNumber);
-			const nowIso = (/* @__PURE__ */ new Date()).toISOString();
-			const nextTask = applyTaskTimestamps(normalizeSingleInProgress(TaskRecordSchema.parse({
-				...taskInput,
-				taskNumber,
-				planFile: taskInput.planFile ?? (matchingPlan ? formatTaskFilename(matchingPlan.taskNumber, matchingPlan.slug, "plan") : void 0),
-				reportFile: taskInput.reportFile ?? (matchingReport ? formatTaskFilename(matchingReport.taskNumber, matchingReport.slug, "report") : void 0),
-				updatedAt: nowIso
-			})), existingTask, nowIso);
-			if (nextTask.status === "in_progress" || nextTask.status === "done" || nextTask.steps.some((step) => step.items.some((item) => item.status !== "pending"))) {
-				assertNoImmediateQuestionBlocker(session, taskNumber);
-				assertStepQuestionsSatisfied(session, taskNumber, nextTask);
-			}
-			const tasks = session.tasks.filter((t) => t.taskNumber !== taskNumber);
-			tasks.push(nextTask);
-			tasks.sort((a, b) => a.taskNumber.localeCompare(b.taskNumber));
-			return {
-				session: await saveSession({
-					...session,
-					tasks
-				}),
-				task: nextTask
-			};
-		},
-		async updateTaskItem(sessionId, taskNumber, itemId, status, taskStatus) {
-			const session = await getSession(sessionId);
-			if (!session) throw new Error(`Session "${sessionId}" does not exist.`);
-			const existing = session.tasks.find((t) => t.taskNumber === taskNumber);
-			if (!existing) throw new Error(`Task "${taskNumber}" was not found in session "${sessionId}".`);
-			let foundItem = false;
-			let updatedStepIndex = -1;
-			const updatedSteps = existing.steps.map((step, stepIdx) => ({
-				...step,
-				items: step.items.map((item) => {
-					if (item.id === itemId) {
-						foundItem = true;
-						updatedStepIndex = stepIdx;
-						return {
-							...item,
-							status
-						};
-					}
-					if (status === "in_progress" && item.status === "in_progress") return {
-						...item,
-						status: "pending"
-					};
-					return item;
-				})
-			}));
-			if (!foundItem || updatedStepIndex === -1) throw new Error(`Task item "${itemId}" was not found in Task ${taskNumber}.`);
-			const allDone = updatedSteps.every((step) => step.items.every((item) => item.status === "done"));
-			const nextStatus = taskStatus ?? (allDone ? "done" : existing.status === "planned" ? "in_progress" : existing.status);
-			const nowIso = (/* @__PURE__ */ new Date()).toISOString();
-			const updatedTask = applyTaskTimestamps({
-				...existing,
-				status: nextStatus,
-				steps: updatedSteps,
-				updatedAt: nowIso
-			}, existing, nowIso);
-			if (status !== "pending" || taskStatus === "in_progress" || taskStatus === "done") {
-				assertNoImmediateQuestionBlocker(session, taskNumber);
-				assertStepQuestionsSatisfied(session, taskNumber, updatedTask);
-			}
-			const tasks = session.tasks.map((t) => t.taskNumber === taskNumber ? updatedTask : t);
-			return {
-				session: await saveSession({
-					...session,
-					tasks
-				}),
-				task: updatedTask,
-				updatedStepIndex
-			};
-		},
-		async writePlan(sessionId, planInput, meta) {
-			const session = await ensureSession(sessionId, meta);
-			const taskNumber = planInput.taskNumber ?? allocateTaskNumberForSession(session);
-			const existing = session.plans.find((p) => p.taskNumber === taskNumber);
-			const filename = formatTaskFilename(taskNumber, planInput.slug, "plan");
-			const stagedPath = path.join(exportsDir, session.sessionId, filename);
-			const planFilePath = session.exportDir ? path.join(validateExportDir(session.exportDir), filename) : stagedPath;
-			const nextPlan = PlanRecordSchema.parse({
-				...planInput,
-				taskNumber,
-				generatedPlanPath: planFilePath,
-				createdAt: existing?.createdAt ?? (/* @__PURE__ */ new Date()).toISOString()
+		plan: result.plan,
+		planFilePath: result.exportDir ? path.join(result.exportDir, result.fileName) : result.fileName,
+		planMarkdown
+	};
+}
+/**
+* Persist an immutable implementation or audit report (`NNN-<slug>.report.md`).
+* Rejects overwrites when a report already exists for `taskId`.
+*/
+async function writeReport(db, sessionId, input, meta) {
+	const result = db.transaction((tx) => {
+		const now = (/* @__PURE__ */ new Date()).toISOString();
+		const session = ensureSessionTx(tx, sessionId, meta, now);
+		let taskId = input.taskId;
+		if (taskId !== void 0) {
+			const existingTask = getTaskById(tx, taskId);
+			if (!existingTask) throw new NotFoundError("Task", taskId);
+			if (existingTask.sessionId !== sessionId) throw new ValidationError(`Task ${formatTaskId(taskId)} belongs to session "${existingTask.sessionId}", not "${sessionId}".`);
+			if (tx.select().from(reports).where(eq(reports.taskId, taskId)).get()) throw new ReportImmutableError(taskId);
+		} else {
+			taskId = tx.insert(tasks).values({
+				sessionId,
+				slug: input.slug,
+				title: input.title,
+				status: "done",
+				summary: input.summary,
+				createdAt: now,
+				startedAt: now,
+				completedAt: now,
+				updatedAt: now
+			}).returning().get().id;
+			recordTimelineEvent(tx, {
+				sessionId,
+				groupId: session.groupId,
+				eventType: "task_created",
+				actor: "agent",
+				title: `Allocated Task ${formatTaskId(taskId)} (${input.mode}): ${input.title}`,
+				summary: input.summary,
+				links: [{
+					entityType: "task",
+					entityId: String(taskId),
+					role: "subject",
+					label: `Task ${formatTaskId(taskId)}`
+				}, {
+					entityType: "session",
+					entityId: sessionId,
+					role: "parent",
+					label: session.title ?? sessionId
+				}],
+				createdAt: now
 			});
-			const planMarkdown = renderPlanMarkdown(nextPlan);
-			await writeFileAtomic(stagedPath, planMarkdown);
-			const plans = session.plans.filter((p) => p.taskNumber !== taskNumber);
-			plans.push(nextPlan);
-			plans.sort((a, b) => a.taskNumber.localeCompare(b.taskNumber));
-			const tasks = session.tasks.map((t) => t.taskNumber === taskNumber ? {
-				...t,
-				planFile: filename,
-				updatedAt: (/* @__PURE__ */ new Date()).toISOString()
-			} : t);
-			return {
-				session: await saveSession({
-					...session,
-					plans,
-					tasks
-				}),
-				plan: nextPlan,
-				planFilePath,
-				planMarkdown
-			};
-		},
-		async writeReport(sessionId, reportInput, meta) {
-			const session = await ensureSession(sessionId, meta);
-			const taskNumber = reportInput.taskNumber ?? allocateTaskNumberForSession(session);
-			if (session.reports.find((r) => r.taskNumber === taskNumber)) throw new Error(`Report ${taskNumber} is already delivered and immutable. Allocate a new task ID for follow-up reports.`);
-			if (reportInput.mode === "implementation") {
-				assertNoImmediateQuestionBlocker(session, taskNumber);
-				assertStepQuestionsSatisfied(session, taskNumber, session.tasks.find((t) => t.taskNumber === taskNumber), { finishingReport: true });
-			} else assertNoImmediateQuestionBlocker(session, taskNumber);
-			const matchingPlan = session.plans.find((p) => p.taskNumber === taskNumber);
-			const nextReport = ReportRecordSchema.parse({
-				...reportInput,
-				taskNumber,
-				planRef: reportInput.planRef ?? (matchingPlan ? formatTaskFilename(matchingPlan.taskNumber, matchingPlan.slug, "plan") : void 0),
-				createdAt: (/* @__PURE__ */ new Date()).toISOString()
-			});
-			const reports = [...session.reports, nextReport].sort((a, b) => a.taskNumber.localeCompare(b.taskNumber));
-			const reportFile = formatTaskFilename(nextReport.taskNumber, nextReport.slug, "report");
-			const tasks = session.tasks.map((t) => t.taskNumber === taskNumber ? {
-				...t,
-				reportFile,
-				updatedAt: (/* @__PURE__ */ new Date()).toISOString()
-			} : t);
-			return {
-				session: await saveSession({
-					...session,
-					reports,
-					tasks
-				}),
-				report: nextReport
-			};
-		},
-		async recordHandoff(sessionId, handoffInput, meta) {
-			const session = await ensureSession(sessionId, meta);
-			const handoff = {
-				...handoffInput,
-				id: handoffInput.id ?? `handoff-${Date.now()}-${crypto$1.randomUUID().slice(0, 6)}`,
-				createdAt: (/* @__PURE__ */ new Date()).toISOString()
-			};
-			const handoffs = [handoff, ...session.handoffs];
-			return {
-				session: await saveSession({
-					...session,
-					handoffs
-				}),
-				handoff
-			};
-		},
-		async createQuestionSet(sessionId, questionInput, meta) {
-			const session = await ensureSession(sessionId, meta);
-			const defaultSetMode = questionInput.blockingMode ?? "immediate";
-			const activeTask = session.tasks.find((t) => t.status === "in_progress") ?? session.tasks.find((t) => t.status === "planned") ?? session.tasks[session.tasks.length - 1];
-			const normalizedQuestions = questionInput.questions.map((q) => {
-				if ((q.blockingMode ?? defaultSetMode) !== "before_step_finish") return q;
-				const targetTaskNum = q.taskNumber ?? questionInput.taskNumber ?? activeTask?.taskNumber;
-				const targetTask = session.tasks.find((t) => t.taskNumber === targetTaskNum);
-				if (!targetTask) throw new Error(`Question "${q.id}" uses blockingMode "before_step_finish", which requires an existing task (taskNumber "${targetTaskNum ?? "none"}" was not found).`);
-				const activeStepIdx = targetTask.steps.findIndex((step) => step.items.some((item) => item.status !== "done"));
-				const defaultStepNum = activeStepIdx === -1 ? 1 : activeStepIdx + 1;
-				const resolvedStepNum = q.stepNumber ?? questionInput.stepNumber ?? defaultStepNum;
-				if (resolvedStepNum < 1 || resolvedStepNum > targetTask.steps.length) throw new Error(`Question "${q.id}" stepNumber ${resolvedStepNum} is out of bounds for Task ${targetTask.taskNumber} (1..${targetTask.steps.length}).`);
-				return {
-					...q,
-					taskNumber: targetTask.taskNumber,
-					stepNumber: resolvedStepNum
-				};
-			});
-			const answers = {};
-			for (const q of normalizedQuestions) if (q.defaultValue !== void 0) answers[q.id] = q.defaultValue;
-			const questionSet = QuestionSetRecordSchema.parse({
-				...questionInput,
-				questions: normalizedQuestions,
-				id: questionInput.id ?? `qs-${Date.now()}-${crypto$1.randomUUID().slice(0, 6)}`,
-				blockingMode: defaultSetMode,
-				status: "pending",
-				answeredQuestionIds: [],
-				answers,
-				otherTexts: {},
-				createdAt: (/* @__PURE__ */ new Date()).toISOString()
-			});
-			const questionSets = [questionSet, ...session.questionSets.filter((q) => q.id !== questionSet.id)];
-			return {
-				session: await saveSession({
-					...session,
-					questionSets
-				}),
-				questionSet
-			};
-		},
-		async saveQuestionDraft(sessionId, questionSetId, answers, otherTexts) {
-			const session = await getSession(sessionId);
-			if (!session) throw new Error(`Session "${sessionId}" does not exist.`);
-			const existing = session.questionSets.find((q) => q.id === questionSetId);
-			if (!existing) throw new Error(`Question set "${questionSetId}" was not found.`);
-			if (existing.status === "submitted") return {
-				session,
-				questionSet: existing
-			};
-			const updated = {
-				...existing,
-				answers: {
-					...existing.answers,
-					...answers
+		}
+		const fileName = formatTaskFilename(taskId, input.slug, "report");
+		const existingTaskRow = tx.select().from(tasks).where(eq(tasks.id, taskId)).get();
+		const planRef = input.planRef ?? existingTaskRow.planFile ?? void 0;
+		tx.update(tasks).set({
+			reportFile: fileName,
+			status: input.outcome.toLowerCase().includes("block") ? existingTaskRow.status : "done",
+			completedAt: input.outcome.toLowerCase().includes("block") ? existingTaskRow.completedAt : existingTaskRow.completedAt ?? now,
+			updatedAt: now
+		}).where(eq(tasks.id, taskId)).run();
+		const bodyJson = JSON.stringify({
+			actionsCompleted: input.actionsCompleted ?? [],
+			filesChanged: input.filesChanged ?? [],
+			diffStat: input.diffStat,
+			planDeviations: input.planDeviations ?? [],
+			verification: input.verification ?? [],
+			tryCommand: input.tryCommand,
+			unverifiedLimitations: input.unverifiedLimitations,
+			operationalNotes: input.operationalNotes ?? [],
+			verificationMatrix: input.verificationMatrix ?? [],
+			findings: input.findings ?? [],
+			followUps: input.followUps ?? []
+		});
+		const report = mapReportRow(tx.insert(reports).values({
+			taskId,
+			sessionId,
+			slug: input.slug,
+			title: input.title,
+			mode: input.mode,
+			outcome: input.outcome,
+			targetRepo: input.target.repo,
+			targetBranch: input.target.branch,
+			targetCommit: input.target.commit,
+			planRef: planRef ?? null,
+			summary: input.summary,
+			language: input.language ?? "en",
+			bodyJson,
+			createdAt: now
+		}).returning().get());
+		recordTimelineEvent(tx, {
+			sessionId,
+			groupId: session.groupId,
+			eventType: "report_written",
+			actor: "agent",
+			title: `Delivered ${report.mode} Report ${formatTaskId(taskId)}: ${report.title}`,
+			summary: `${report.outcome} (${fileName})`,
+			links: [
+				{
+					entityType: "report",
+					entityId: String(taskId),
+					role: "subject",
+					label: fileName
 				},
-				otherTexts: {
-					...existing.otherTexts,
-					...otherTexts
+				{
+					entityType: "task",
+					entityId: String(taskId),
+					role: "parent",
+					label: `Task ${formatTaskId(taskId)}`
+				},
+				{
+					entityType: "session",
+					entityId: sessionId,
+					role: "parent",
+					label: session.title ?? sessionId
 				}
-			};
-			const questionSets = session.questionSets.map((q) => q.id === questionSetId ? updated : q);
-			return {
-				session: await saveSession({
-					...session,
-					questionSets
-				}, false),
-				questionSet: updated
-			};
-		},
-		async submitQuestionAnswers(sessionId, questionSetId, answers, otherTexts, options) {
-			const session = await getSession(sessionId);
-			if (!session) throw new Error(`Session "${sessionId}" does not exist.`);
-			const existing = session.questionSets.find((q) => q.id === questionSetId);
-			if (!existing) throw new Error(`Question set "${questionSetId}" was not found.`);
-			if (existing.status === "submitted") return {
-				session,
-				questionSet: existing,
-				submittedQuestionIds: []
-			};
-			const mergedAnswers = {
-				...existing.answers,
-				...answers
-			};
-			const mergedOthers = {
-				...existing.otherTexts,
-				...otherTexts
-			};
-			const alreadyAnswered = new Set(existing.answeredQuestionIds);
-			const openQuestions = existing.questions.filter((q) => !alreadyAnswered.has(q.id));
-			let targetQuestions;
-			if (options?.questionIds && options.questionIds.length > 0) {
-				const requested = new Set(options.questionIds);
-				targetQuestions = openQuestions.filter((q) => requested.has(q.id));
-			} else if (options?.scope === "immediate") targetQuestions = openQuestions.filter((q) => resolveQuestionPolicy(existing, q).blockingMode === "immediate");
-			else if (options?.scope === "before_step_finish") targetQuestions = openQuestions.filter((q) => resolveQuestionPolicy(existing, q).blockingMode === "before_step_finish");
-			else if (options?.scope === "answered") targetQuestions = openQuestions.filter((q) => isNonEmptyAnswer(mergedAnswers[q.id], mergedOthers[q.id]));
-			else targetQuestions = openQuestions;
-			if (targetQuestions.length === 0) throw new Error("No matching open questions selected for submission.");
-			const missingIds = [];
-			for (const q of targetQuestions) if (q.required && !isNonEmptyAnswer(mergedAnswers[q.id], mergedOthers[q.id])) missingIds.push(q.id);
-			if (missingIds.length > 0) throw new Error(`Missing required answers for questions: ${missingIds.join(", ")}.`);
-			const submittedIds = targetQuestions.map((q) => q.id);
-			const nextAnsweredIds = Array.from(/* @__PURE__ */ new Set([...existing.answeredQuestionIds, ...submittedIds]));
-			const allAnswered = existing.questions.every((q) => nextAnsweredIds.includes(q.id));
-			const updated = {
-				...existing,
-				status: allAnswered ? "submitted" : "partial",
-				answeredQuestionIds: nextAnsweredIds,
-				answers: mergedAnswers,
-				otherTexts: mergedOthers,
-				submittedAt: allAnswered ? (/* @__PURE__ */ new Date()).toISOString() : existing.submittedAt
-			};
-			const questionSets = session.questionSets.map((q) => q.id === questionSetId ? updated : q);
-			return {
-				session: await saveSession({
-					...session,
-					questionSets
-				}, false),
-				questionSet: updated,
-				submittedQuestionIds: submittedIds
-			};
-		},
-		async recordToolCall(sessionId, toolName, status, summary, argsSummary) {
-			const session = await getSession(sessionId);
-			if (!session) return;
-			const toolCalls = [{
-				id: `call-${Date.now()}-${crypto$1.randomUUID().slice(0, 6)}`,
-				toolName,
-				timestamp: (/* @__PURE__ */ new Date()).toISOString(),
-				status,
-				summary,
-				argsSummary
-			}, ...session.toolCalls].slice(0, MAX_TOOL_CALLS);
-			await saveSession({
-				...session,
-				toolCalls
-			}, false);
-		},
-		async buildPayload(session, mode, activeTab, options) {
-			const [sessions, settings] = await Promise.all([options?.includeSessions ? readIndex() : Promise.resolve(void 0), getSettings()]);
-			const revision = options?.revision ?? (sessions ? computeRevision(session, sessions, settings) : `${session?.sessionId ?? "none"}|${session?.updatedAt ?? "0"}|${settings.displayType}:${settings.stepDisplayType}`);
-			return {
-				mode,
-				sessionId: session?.sessionId ?? null,
-				activeTab,
-				activeItemId: options?.activeItemId,
-				activeStepIndex: options?.activeStepIndex,
-				activeTaskItemId: options?.activeTaskItemId,
-				stepSnapshot: options?.stepSnapshot,
-				revision,
-				settings,
-				session,
-				sessions
-			};
+			],
+			createdAt: now
+		});
+		return {
+			report,
+			exportDir: session.exportDir,
+			fileName
+		};
+	});
+	const reportMarkdown = renderReportMarkdown(result.report);
+	if (result.exportDir) {
+		await writeFileAtomic(path.join(result.exportDir, result.fileName), reportMarkdown);
+		await exportTasksMarkdownIfConfigured(db, sessionId);
+	}
+	const session = getSession(db, sessionId);
+	return {
+		report: result.report,
+		reportFilePath: session?.exportDir ? path.join(session.exportDir, result.fileName) : result.fileName,
+		reportMarkdown
+	};
+}
+/** Record a structured handoff (`plan_approval`, `mid_session_pause`, `completion`, `subagent_scout`, `custom`). */
+function recordHandoff(db, sessionId, input, meta) {
+	return { handoff: db.transaction((tx) => {
+		const now = (/* @__PURE__ */ new Date()).toISOString();
+		const session = ensureSessionTx(tx, sessionId, meta, now);
+		const id = input.id?.trim() || `h-${crypto$1.randomUUID().slice(0, 8)}`;
+		if (input.taskId !== void 0) {
+			if (!tx.select({ id: tasks.id }).from(tasks).where(eq(tasks.id, input.taskId)).get()) throw new NotFoundError("Task", input.taskId);
 		}
+		const inserted = tx.insert(handoffs).values({
+			id,
+			sessionId,
+			taskId: input.taskId ?? null,
+			kind: input.kind,
+			title: input.title,
+			summary: input.summary,
+			workingNow: input.workingNow ?? null,
+			verifyCommand: input.verifyCommand ?? null,
+			entryPoint: input.entryPoint ?? null,
+			nextStep: input.nextStep ?? null,
+			artifactLinksJson: JSON.stringify(input.artifactLinks ?? []),
+			structuredDataJson: input.structuredData ? JSON.stringify(input.structuredData) : null,
+			createdAt: now
+		}).returning().get();
+		recordTimelineEvent(tx, {
+			sessionId,
+			groupId: session.groupId,
+			eventType: "handoff_recorded",
+			actor: "agent",
+			title: `Handoff (${input.kind}): ${input.title}`,
+			summary: input.summary,
+			links: [
+				{
+					entityType: "handoff",
+					entityId: id,
+					role: "subject",
+					label: input.title
+				},
+				{
+					entityType: "session",
+					entityId: sessionId,
+					role: "parent",
+					label: session.title ?? sessionId
+				},
+				...input.taskId !== void 0 ? [{
+					entityType: "task",
+					entityId: String(input.taskId),
+					role: "related",
+					label: `Task ${formatTaskId(input.taskId)}`
+				}] : []
+			],
+			createdAt: now
+		});
+		return mapHandoffRow(inserted);
+	}) };
+}
+// server/repositories/workspace.ts
+/**
+* Build a strictly read-only DashboardPayload supporting single-Session scope or
+* whole-Group merged scope.
+*/
+function buildDashboardPayload(db, options = {}) {
+	const settings = getUiSettings(db);
+	const groups = listSessionGroups(db);
+	const sessions = listSessions(db, { rootDir: options.rootDirFilter?.trim() || void 0 });
+	const activeSession = (options.sessionId ? getSession(db, options.sessionId) : null) ?? (sessions[0] ? getSession(db, sessions[0].sessionId) : null) ?? getLatestSession(db);
+	const requestedGroupId = options.groupId ?? activeSession?.groupId ?? groups[0]?.id ?? null;
+	const activeGroup = requestedGroupId ? getSessionGroup(db, requestedGroupId) : null;
+	const scope = options.scope === "group" && activeGroup ? "group" : "session";
+	const filter = scope === "group" && activeGroup ? { groupId: activeGroup.id } : activeSession ? { sessionId: activeSession.sessionId } : void 0;
+	const taskList = filter ? listTasks(db, filter) : [];
+	const planList = filter ? listPlans(db, filter) : [];
+	const reportList = filter ? listReports(db, filter) : [];
+	const handoffList = filter ? listHandoffs(db, filter) : [];
+	const questionSetList = filter ? listQuestionSets(db, filter) : [];
+	const timeline = filter ? queryTimelineEvents(db, {
+		...filter,
+		limit: 150
+	}) : [];
+	const toolCallList = filter ? listToolCalls(db, {
+		...filter,
+		limit: 200
+	}) : [];
+	const revision = computeRevision({
+		scope,
+		sessionId: activeSession?.sessionId ?? null,
+		groupId: activeGroup?.id ?? null,
+		sessionUpdatedAt: activeSession?.updatedAt ?? null,
+		groupUpdatedAt: activeGroup?.updatedAt ?? null,
+		settingsUpdatedAt: settings.updatedAt ?? null,
+		sessions: sessions.map((s) => `${s.sessionId}:${s.updatedAt}:${s.groupId ?? ""}`),
+		groups: groups.map((g) => `${g.id}:${g.updatedAt}`),
+		latestTimelineId: timeline[0]?.id ?? 0,
+		latestToolCallId: toolCallList[0]?.id ?? "",
+		taskCount: taskList.length
+	});
+	return {
+		kind: "dashboard",
+		scope,
+		sessionId: activeSession?.sessionId ?? null,
+		groupId: activeGroup?.id ?? null,
+		activeTab: options.activeTab ?? "tasks",
+		activeItemId: options.activeItemId,
+		revision,
+		settings,
+		session: activeSession,
+		group: activeGroup,
+		sessions,
+		groups,
+		tasks: taskList,
+		plans: planList,
+		reports: reportList,
+		handoffs: handoffList,
+		questionSets: questionSetList,
+		timeline,
+		toolCalls: toolCallList
 	};
 }
-// node_modules/.pnpm/@modelcontextprotocol+ext-apps@2.0.4_@modelcontextprotocol+client@2.4.0_@modelcontextpr_fb5c80dda1a266aabc30a0f021c945eb/node_modules/@modelcontextprotocol/ext-apps/dist/src/server/index.js
-var D = "ui/resourceUri";
-var L = "text/html;profile=mcp-app";
-function j(B, Q, F, V) {
-	let q = F._meta, J = q.ui, Z = q[D], $ = q;
-	if (J?.resourceUri && !Z) $ = {
-		...q,
-		[D]: J.resourceUri
+/** Build an isolated WidgetPayload for a specific `/widget/<route>` inline UI view. */
+function buildWidgetPayload(db, options) {
+	const session = getSession(db, options.sessionId);
+	const settings = getUiSettings(db);
+	const questionSetList = listQuestionSets(db, { sessionId: options.sessionId });
+	const task = options.taskId !== void 0 ? getTaskById(db, options.taskId) ?? void 0 : getCurrentTaskForSession(db, options.sessionId) ?? void 0;
+	const plan = options.widget === "plan" && options.taskId !== void 0 ? getPlanByTaskId(db, options.taskId) ?? void 0 : void 0;
+	const report = options.widget === "report" && options.taskId !== void 0 ? getReportByTaskId(db, options.taskId) ?? void 0 : void 0;
+	const handoff = options.widget === "handoff" ? listHandoffs(db, { sessionId: options.sessionId }).find((h) => h.id === options.handoffId) ?? listHandoffs(db, {
+		sessionId: options.sessionId,
+		limit: 1
+	})[0] : void 0;
+	const questionSet = options.widget === "questions" ? questionSetList.find((q) => q.id === options.questionSetId) ?? questionSetList[0] : void 0;
+	return {
+		kind: "widget",
+		widget: options.widget,
+		sessionId: options.sessionId,
+		rootDir: session?.rootDir,
+		sessionTitle: session?.title,
+		settings,
+		task,
+		stepSnapshot: options.stepSnapshot,
+		plan,
+		report,
+		handoff,
+		questionSet,
+		questionSets: questionSetList
 	};
-	else if (Z && !J?.resourceUri) $ = {
-		...q,
-		ui: {
-			...J,
-			resourceUri: Z
-		}
-	};
-	return B.registerTool(Q, {
-		...F,
-		_meta: $
-	}, V);
 }
-function G(B, Q, F, V, q) {
-	return B.registerResource(Q, F, {
-		mimeType: L,
-		...V
-	}, q);
-}
-// server/tools.ts
-var APP_RESOURCE_URI = "ui://new-worker/app.html";
-var UI_CSP = { resourceDomains: ["https://fonts.googleapis.com", "https://fonts.gstatic.com"] };
+// server/mcp/tools/shared.ts
+/** Visibility metadata restricting UI callback tools to MCP App webviews. */
+var APP_ONLY_META = { ui: { visibility: ["app"] } };
+/** Optional session metadata fields shared across model-facing mutating tools. */
+var SessionMetaZodFields = {
+	sessionTitle: string().optional().describe("Optional human-readable title for the session."),
+	rootDir: string().optional().describe("Optional absolute root directory path associated with this session."),
+	exportDir: string().optional().describe("Optional absolute directory path for Markdown artifact export."),
+	groupId: GroupIdSchema.nullable().optional().describe("Optional 1:N session group ID.")
+};
+/** Schema for polymorphic entity associations attached to timeline notes. */
+var TimelineNoteLinkInputSchema = object({
+	entityType: TimelineEntityTypeSchema,
+	entityId: string().min(1),
+	role: TimelineLinkRoleSchema.optional(),
+	label: string().optional()
+});
+/**
+* Format an unknown thrown value into a concise single-string error message.
+*
+* @param err - Caught exception or thrown primitive value.
+* @returns Human-readable message suitable for MCP `isError` responses.
+*/
 function summarizeError(err) {
 	return err instanceof Error ? err.message : String(err);
 }
-function registerNewWorkerServer(server, options) {
-	const { store, loadAppHtml } = options;
-	G(server, "New Worker Web UI", APP_RESOURCE_URI, {
-		description: "Interactive React UI for new-worker tasks, plans, reports, handoffs, tool calls, and configurable questions.",
-		mimeType: L,
-		_meta: { ui: {
-			prefersBorder: false,
-			csp: UI_CSP
-		} }
-	}, async () => {
-		return { contents: [{
-			uri: APP_RESOURCE_URI,
-			mimeType: L,
-			text: await loadAppHtml(),
-			_meta: { ui: {
-				prefersBorder: false,
-				csp: UI_CSP
-			} }
-		}] };
-	});
-	j(server, "open_workspace", {
-		title: "New Worker Workspace",
-		description: "Open the new-worker workspace dashboard in the side pane or sidebar. Strictly read-only: never creates sessions or writes JSON files.",
-		inputSchema: object({
-			sessionId: SessionIdSchema.optional(),
-			activeTab: WorkspaceTabSchema.optional(),
-			activeItemId: string().min(1).optional()
-		}),
-		_meta: {
-			"ui": { resourceUri: APP_RESOURCE_URI },
-			"com.google.antigravity/ui": { entrypoints: [{
-				type: "aux_pane",
-				title: "New Worker"
-			}, {
-				type: "global",
-				title: "New Worker"
-			}] }
-		}
-	}, async (args) => {
-		const session = args.sessionId ? await store.getSession(args.sessionId) : await store.getLatestSession();
-		const activeTab = args.activeTab ?? "tasks";
-		const payload = await store.buildPayload(session, "dashboard", activeTab, {
-			activeItemId: args.activeItemId,
-			includeSessions: true
-		});
-		if (!session) return {
+/**
+* Extract optional session metadata fields when at least one metadata property was supplied.
+*
+* @param args - Tool arguments possibly carrying session metadata overrides.
+* @returns Normalized {@link SessionMetaInput} object, or `undefined` when all fields are omitted.
+*/
+function buildSessionMeta(args) {
+	if (args.sessionTitle === void 0 && args.rootDir === void 0 && args.exportDir === void 0 && args.groupId === void 0) return;
+	return {
+		title: args.sessionTitle,
+		rootDir: args.rootDir,
+		exportDir: args.exportDir,
+		groupId: args.groupId
+	};
+}
+/**
+* Execute a mutating MCP tool handler, persisting any thrown error to `tool_calls`
+* when `sessionId` is known and returning an `isError` MCP response.
+*
+* @param db - Active SQLite database handle.
+* @param ctx - Tool name and optional target session identifier for audit logging.
+* @param fn - Tool handler producing the normal MCP payload.
+* @returns Handler result on success or {@link ToolTextErrorResult} on failure.
+*/
+async function runLoggedTool(db, ctx, fn) {
+	try {
+		return await fn();
+	} catch (err) {
+		const msg = summarizeError(err);
+		if (ctx.sessionId) try {
+			recordToolCall(db, ctx.sessionId, ctx.toolName, "error", msg);
+		} catch {}
+		return {
+			isError: true,
 			content: [{
 				type: "text",
-				text: "No sessions recorded yet."
-			}],
-			structuredContent: payload
+				text: msg
+			}]
 		};
-		const pendingSets = session.questionSets.filter((q) => q.status !== "submitted").length;
+	}
+}
+/**
+* Execute a read-only or UI callback MCP tool handler, converting thrown exceptions
+* into structured `isError` payloads without writing audit records.
+*
+* @param fn - Handler returning the MCP tool response.
+* @returns Handler result on success or {@link ToolTextErrorResult} on failure.
+*/
+async function runSafeTool(fn) {
+	try {
+		return await fn();
+	} catch (err) {
+		return {
+			isError: true,
+			content: [{
+				type: "text",
+				text: summarizeError(err)
+			}]
+		};
+	}
+}
+// server/mcp/tools/appTools.ts
+/**
+* Register the 6 `app_*` tools restricted to UI webviews (`visibility: ["app"]`).
+*
+* @param server - Target MCP server instance.
+* @param db - Active Drizzle SQLite database connection.
+*/
+function registerAppOnlyTools(server, db) {
+	j(server, "app_get_dashboard_state", {
+		title: "App Get Dashboard State",
+		description: "Read-only fetch of dashboard state for a session or group with revision short-circuit.",
+		inputSchema: object({
+			scope: DashboardScopeSchema.optional(),
+			sessionId: SessionIdSchema.optional(),
+			groupId: GroupIdSchema.optional(),
+			rootDirFilter: string().optional(),
+			activeTab: DashboardTabSchema.optional(),
+			activeItemId: string().optional(),
+			sinceRevision: string().optional()
+		}),
+		_meta: APP_ONLY_META
+	}, async (args) => {
+		const payload = buildDashboardPayload(db, {
+			scope: args.scope,
+			sessionId: args.sessionId,
+			groupId: args.groupId,
+			rootDirFilter: args.rootDirFilter,
+			activeTab: args.activeTab,
+			activeItemId: args.activeItemId
+		});
+		if (args.sinceRevision && args.sinceRevision === payload.revision) return {
+			content: [{
+				type: "text",
+				text: "Unchanged"
+			}],
+			structuredContent: {
+				unchanged: true,
+				revision: payload.revision
+			}
+		};
 		return {
 			content: [{
 				type: "text",
-				text: `Workspace "${session.sessionId}" ready (${session.tasks.length} tasks, ${session.plans.length} plans, ${session.reports.length} reports, ${pendingSets} open question sets).`
+				text: "Dashboard state loaded."
 			}],
 			structuredContent: payload
 		};
 	});
-	j(server, "upsert_task", {
-		title: "Upsert Task",
-		description: "Create or update a task in the session hub with sequential NN numbering and render tasks.md to exportDir when set. Steps must cover substantive execution work only — never create steps for initializing a plan, opening the workspace, or bootstrapping tasks.md. Progressing a task requires no blocking immediate/step questions.",
+	j(server, "app_get_widget_state", {
+		title: "App Get Widget State",
+		description: "Read-only refresh of an isolated inline widget route payload.",
 		inputSchema: object({
+			widget: WidgetRouteSchema,
 			sessionId: SessionIdSchema,
-			workspacePath: string().min(1).optional(),
-			exportDir: string().min(1).optional(),
-			taskNumber: TaskNumberSchema.optional(),
-			slug: SlugSchema,
-			title: string().min(1),
-			status: TaskLifecycleStatusSchema,
-			summary: string().min(1),
-			steps: array(TaskStepSchema).min(1),
-			planFile: string().optional(),
-			reportFile: string().optional()
+			taskId: TaskIdSchema.optional(),
+			handoffId: string().optional(),
+			questionSetId: string().optional()
 		}),
-		_meta: { ui: { resourceUri: APP_RESOURCE_URI } }
+		_meta: APP_ONLY_META
 	}, async (args) => {
-		try {
-			const { session, task } = await store.upsertTask(args.sessionId, {
-				taskNumber: args.taskNumber,
-				slug: args.slug,
-				title: args.title,
-				status: args.status,
-				summary: args.summary,
-				steps: args.steps,
-				planFile: args.planFile,
-				reportFile: args.reportFile
-			}, {
-				workspacePath: args.workspacePath,
-				exportDir: args.exportDir
-			});
-			await store.recordToolCall(session.sessionId, "upsert_task", "ok", `Task ${task.taskNumber} (${task.status}): ${task.title}`);
-			const refreshed = await store.getSession(session.sessionId) ?? session;
-			const payload = await store.buildPayload(refreshed, "tasks", "tasks", { activeItemId: task.taskNumber });
+		const payload = buildWidgetPayload(db, {
+			widget: args.widget,
+			sessionId: args.sessionId,
+			taskId: args.taskId,
+			handoffId: args.handoffId,
+			questionSetId: args.questionSetId
+		});
+		return {
+			content: [{
+				type: "text",
+				text: `Widget ${args.widget} loaded.`
+			}],
+			structuredContent: payload
+		};
+	});
+	j(server, "app_question_action", {
+		title: "App Question Action",
+		description: "Save draft answers or submit scoped/full question answers from the UI.",
+		inputSchema: object({
+			action: _enum(["save_draft", "submit"]),
+			sessionId: SessionIdSchema,
+			questionSetId: string().min(1),
+			answers: record(string(), QuestionAnswerValueSchema),
+			otherTexts: record(string(), string()).default({}),
+			scope: _enum([
+				"all",
+				"immediate",
+				"before_step_finish",
+				"answered"
+			]).optional(),
+			questionIds: array(string().min(1)).optional(),
+			source: _enum(["dashboard", "widget"]).optional(),
+			dashboardScope: DashboardScopeSchema.optional(),
+			groupId: GroupIdSchema.optional()
+		}),
+		_meta: APP_ONLY_META
+	}, (args) => runSafeTool(() => {
+		if (args.action === "save_draft") {
+			const questionSet = saveQuestionDraft(db, args.sessionId, args.questionSetId, args.answers, args.otherTexts);
 			return {
 				content: [{
 					type: "text",
-					text: `Saved Task ${task.taskNumber} - ${task.title} [${task.status}] in session "${session.sessionId}".`
+					text: "Draft saved."
 				}],
-				structuredContent: payload
-			};
-		} catch (err) {
-			await store.recordToolCall(args.sessionId, "upsert_task", "error", summarizeError(err));
-			return {
-				isError: true,
-				content: [{
-					type: "text",
-					text: summarizeError(err)
-				}]
+				structuredContent: args.source === "widget" ? buildWidgetPayload(db, {
+					widget: "questions",
+					sessionId: args.sessionId,
+					taskId: questionSet.taskId,
+					questionSetId: questionSet.id
+				}) : buildDashboardPayload(db, {
+					scope: args.dashboardScope,
+					sessionId: args.sessionId,
+					groupId: args.groupId,
+					activeTab: "questions",
+					activeItemId: questionSet.id
+				})
 			};
 		}
+		const { questionSet, submittedQuestionIds } = submitQuestionAnswers(db, args.sessionId, args.questionSetId, args.answers, args.otherTexts, {
+			scope: args.scope,
+			questionIds: args.questionIds
+		});
+		const replyText = formatQuestionReply(questionSet, questionSet.answers, questionSet.otherTexts, submittedQuestionIds);
+		const structuredContent = args.source === "widget" ? buildWidgetPayload(db, {
+			widget: "questions",
+			sessionId: args.sessionId,
+			taskId: questionSet.taskId,
+			questionSetId: questionSet.id
+		}) : buildDashboardPayload(db, {
+			scope: args.dashboardScope,
+			sessionId: args.sessionId,
+			groupId: args.groupId,
+			activeTab: "questions",
+			activeItemId: questionSet.id
+		});
+		return {
+			content: [{
+				type: "text",
+				text: replyText
+			}],
+			structuredContent
+		};
+	}));
+	j(server, "app_update_settings", {
+		title: "App Update Settings",
+		description: "Persist inline widget display settings (widget and step default display modes).",
+		inputSchema: object({
+			displayType: WidgetDisplayModeSchema.optional(),
+			stepDisplayType: StepDisplayOverrideSchema.optional(),
+			scope: DashboardScopeSchema.optional(),
+			sessionId: SessionIdSchema.optional(),
+			groupId: GroupIdSchema.optional(),
+			activeTab: DashboardTabSchema.optional(),
+			activeItemId: string().optional()
+		}),
+		_meta: APP_ONLY_META
+	}, async (args) => {
+		const settings = updateUiSettings(db, {
+			displayType: args.displayType,
+			stepDisplayType: args.stepDisplayType
+		});
+		const payload = buildDashboardPayload(db, {
+			scope: args.scope,
+			sessionId: args.sessionId,
+			groupId: args.groupId,
+			activeTab: args.activeTab,
+			activeItemId: args.activeItemId
+		});
+		return {
+			content: [{
+				type: "text",
+				text: `Settings saved (displayType=${settings.displayType}, stepDisplayType=${settings.stepDisplayType}).`
+			}],
+			structuredContent: payload
+		};
 	});
-	j(server, "update_task_item", {
-		title: "Update Task Item",
-		description: "Update a single step checklist item status (pending, in_progress, done), sync tasks.md, and render an immutable snapshot of the active step inline. Blocked if blocking questions are unanswered.",
+	j(server, "app_clear_tool_calls", {
+		title: "App Clear Tool Calls",
+		description: "Clear stored tool call audit history for a session.",
 		inputSchema: object({
 			sessionId: SessionIdSchema,
-			taskNumber: TaskNumberSchema,
-			itemId: string().min(1),
-			status: TaskItemStatusSchema,
-			taskStatus: TaskLifecycleStatusSchema.optional()
+			scope: DashboardScopeSchema.optional(),
+			groupId: GroupIdSchema.optional()
 		}),
-		_meta: { ui: { resourceUri: APP_RESOURCE_URI } }
+		_meta: APP_ONLY_META
 	}, async (args) => {
-		try {
-			const { session, task, updatedStepIndex } = await store.updateTaskItem(args.sessionId, args.taskNumber, args.itemId, args.status, args.taskStatus);
-			await store.recordToolCall(session.sessionId, "update_task_item", "ok", `Task ${task.taskNumber} Step ${updatedStepIndex + 1} item "${args.itemId}" -> ${args.status}`);
-			const refreshed = await store.getSession(session.sessionId) ?? session;
-			const updatedStep = task.steps[updatedStepIndex];
-			const stepSnapshot = updatedStep ? {
-				taskNumber: task.taskNumber,
-				taskTitle: task.title,
-				stepIndex: updatedStepIndex,
-				totalSteps: task.steps.length,
-				step: updatedStep,
-				itemId: args.itemId,
-				capturedAt: (/* @__PURE__ */ new Date()).toISOString()
-			} : void 0;
-			const payload = await store.buildPayload(refreshed, "task_step", "tasks", {
-				activeItemId: task.taskNumber,
-				activeStepIndex: updatedStepIndex,
-				activeTaskItemId: args.itemId,
-				stepSnapshot
-			});
-			const stepBlockers = getUnresolvedQuestions(refreshed).filter((entry) => entry.policy.blockingMode === "before_step_finish" && entry.policy.taskNumber === task.taskNumber && entry.policy.stepNumber === updatedStepIndex + 1);
-			const blockerNote = stepBlockers.length > 0 ? ` Note: ${stepBlockers.length} deferred question(s) must be answered before finishing Step ${updatedStepIndex + 1}.` : "";
-			return {
-				content: [{
-					type: "text",
-					text: `Updated Task ${task.taskNumber} Step ${updatedStepIndex + 1} item "${args.itemId}" to "${args.status}" (task status: ${task.status}).${blockerNote}`
-				}],
-				structuredContent: payload
-			};
-		} catch (err) {
-			await store.recordToolCall(args.sessionId, "update_task_item", "error", summarizeError(err));
-			return {
-				isError: true,
-				content: [{
-					type: "text",
-					text: summarizeError(err)
-				}]
-			};
-		}
+		clearToolCalls(db, args.sessionId);
+		const payload = buildDashboardPayload(db, {
+			scope: args.scope,
+			sessionId: args.sessionId,
+			groupId: args.groupId,
+			activeTab: "calls"
+		});
+		return {
+			content: [{
+				type: "text",
+				text: `Cleared tool call history for "${args.sessionId}".`
+			}],
+			structuredContent: payload
+		};
 	});
+	j(server, "app_manage_workspace", {
+		title: "App Manage Workspace",
+		description: "Dashboard-only management for 1:N session groups, session title/rootDir, and user timeline notes.",
+		inputSchema: object({
+			action: _enum([
+				"upsert_group",
+				"delete_group",
+				"assign_group",
+				"update_session",
+				"add_timeline_note"
+			]),
+			sessionId: SessionIdSchema.optional(),
+			groupId: GroupIdSchema.nullable().optional(),
+			name: string().optional(),
+			description: string().optional(),
+			notes: string().optional(),
+			title: string().optional(),
+			rootDir: string().optional(),
+			summary: string().optional(),
+			links: array(TimelineNoteLinkInputSchema).optional(),
+			scope: DashboardScopeSchema.optional(),
+			activeTab: DashboardTabSchema.optional()
+		}),
+		_meta: APP_ONLY_META
+	}, (args) => runSafeTool(() => {
+		let nextSessionId = args.sessionId;
+		let nextGroupId = args.groupId ?? void 0;
+		switch (args.action) {
+			case "upsert_group":
+				if (!args.name?.trim()) throw new ValidationError("Group name cannot be empty.");
+				nextGroupId = upsertSessionGroup(db, {
+					id: args.groupId ?? void 0,
+					name: args.name,
+					description: args.description,
+					notes: args.notes
+				}).id;
+				break;
+			case "delete_group":
+				if (!args.groupId) throw new ValidationError("delete_group requires groupId.");
+				deleteSessionGroup(db, args.groupId);
+				nextGroupId = void 0;
+				break;
+			case "assign_group": {
+				if (!args.sessionId || args.groupId === void 0) throw new ValidationError("assign_group requires sessionId and groupId.");
+				const session = assignSessionGroup(db, args.sessionId, args.groupId);
+				nextSessionId = session.sessionId;
+				nextGroupId = session.groupId ?? void 0;
+				break;
+			}
+			case "update_session": {
+				if (!args.sessionId) throw new ValidationError("update_session requires sessionId.");
+				const session = upsertSession(db, args.sessionId, {
+					title: args.title,
+					rootDir: args.rootDir,
+					groupId: args.groupId
+				});
+				nextSessionId = session.sessionId;
+				nextGroupId = session.groupId ?? void 0;
+				break;
+			}
+			case "add_timeline_note":
+				if (!args.title?.trim()) throw new ValidationError("Note title cannot be empty.");
+				recordTimelineEvent(db, {
+					sessionId: args.sessionId ?? null,
+					groupId: args.groupId ?? null,
+					eventType: "note",
+					actor: "user",
+					title: args.title.trim(),
+					summary: args.summary?.trim() || void 0,
+					links: args.links ?? []
+				});
+		}
+		const payload = buildDashboardPayload(db, {
+			scope: args.scope,
+			sessionId: nextSessionId,
+			groupId: nextGroupId,
+			activeTab: args.activeTab
+		});
+		return {
+			content: [{
+				type: "text",
+				text: `Workspace updated (${args.action}).`
+			}],
+			structuredContent: payload
+		};
+	}));
+}
+// server/mcp/resources.ts
+var DASHBOARD_RESOURCE_URI = "ui://new-worker/dashboard";
+var WIDGET_RESOURCE_URIS = {
+	"task": "ui://new-worker/widget/task",
+	"task-step": "ui://new-worker/widget/task-step",
+	"plan": "ui://new-worker/widget/plan",
+	"report": "ui://new-worker/widget/report",
+	"handoff": "ui://new-worker/widget/handoff",
+	"questions": "ui://new-worker/widget/questions"
+};
+var WIDGET_LABELS = {
+	"task": "New Worker Task Widget",
+	"task-step": "New Worker Task Step Widget",
+	"plan": "New Worker Plan Widget",
+	"report": "New Worker Report Widget",
+	"handoff": "New Worker Handoff Widget",
+	"questions": "New Worker Questions Widget"
+};
+/** Inject `window.__NEW_WORKER_ROUTE__` into the single-file widget HTML before `</head>`. */
+function injectWidgetRoute(html, route) {
+	const routeTag = `<script>window.__NEW_WORKER_ROUTE__=${JSON.stringify(`/widget/${route}`)};<\/script>`;
+	if (html.includes("</head>")) return html.replace("</head>", `${routeTag}</head>`);
+	return `${routeTag}${html}`;
+}
+/** Register the isolated Dashboard UI resource and all 6 route-tagged inline Widget UI resources. */
+function registerUiResources(server, options) {
+	const { loadDashboardHtml, loadWidgetHtml } = options;
+	G(server, "New Worker Dashboard", DASHBOARD_RESOURCE_URI, {
+		description: "Interactive Dashboard UI for multi-session groups, tasks, plans, reports, handoffs, questions, timeline, and tool calls.",
+		mimeType: L,
+		_meta: { ui: { prefersBorder: false } }
+	}, async () => {
+		return { contents: [{
+			uri: DASHBOARD_RESOURCE_URI,
+			mimeType: L,
+			text: await loadDashboardHtml(),
+			_meta: { ui: { prefersBorder: false } }
+		}] };
+	});
+	Object.keys(WIDGET_RESOURCE_URIS).forEach((route) => {
+		const uri = WIDGET_RESOURCE_URIS[route];
+		G(server, WIDGET_LABELS[route], uri, {
+			description: `Isolated inline MCP App widget for route /widget/${route}.`,
+			mimeType: L,
+			_meta: { ui: { prefersBorder: false } }
+		}, async () => {
+			const rawHtml = await loadWidgetHtml();
+			return { contents: [{
+				uri,
+				mimeType: L,
+				text: injectWidgetRoute(rawHtml, route),
+				_meta: { ui: { prefersBorder: false } }
+			}] };
+		});
+	});
+}
+// server/mcp/tools/artifactTools.ts
+/**
+* Register `write_plan`, `write_report`, and `record_handoff` tools for structured
+* Markdown-backed deliverables and mid-session handoffs.
+*
+* @param server - Target MCP server instance.
+* @param db - Active Drizzle SQLite database connection.
+*/
+function registerArtifactTools(server, db) {
 	j(server, "write_plan", {
 		title: "Write Plan",
-		description: "Persist structured plan data, generate NN-<slug>.plan.md on disk, and return its file path for harness-native plan presentation.",
+		description: "Persist a structured technical plan. If taskId is omitted, automatically allocates a new global taskId starting from 1 and returns taskId plus planFilePath (001-<slug>.plan.md exported when exportDir is configured).",
 		inputSchema: object({
 			sessionId: SessionIdSchema,
-			workspacePath: string().min(1).optional(),
-			exportDir: string().min(1).optional(),
-			taskNumber: TaskNumberSchema.optional(),
+			taskId: TaskIdSchema.optional().describe("Existing global taskId to attach this plan to; omit to allocate a new global taskId."),
 			slug: SlugSchema,
 			title: string().min(1),
 			target: TargetRepoSchema,
 			follows: string().optional(),
 			overview: string().min(1),
 			expectedOutcomes: array(string().min(1)).min(1),
-			scope: object({
-				inScope: array(string().min(1)).min(1),
-				outOfScope: array(string().min(1)).min(1)
-			}),
+			scope: PlanScopeSchema,
 			openQuestions: array(string().min(1)).optional(),
 			userStories: array(string().min(1)).optional(),
 			functionalRequirements: array(string().min(1)).optional(),
@@ -24884,84 +33672,66 @@ function registerNewWorkerServer(server, options) {
 			architectureDiagram: string().optional(),
 			risks: array(PlanRiskRowSchema).optional(),
 			alternatives: string().optional(),
-			calibration: object({
-				cadence: string(),
-				familiarity: string(),
-				structureStance: string()
-			}).optional(),
-			testing: object({
-				validationCommands: array(string().min(1)).min(1),
-				keyScenarios: array(string().min(1)).min(1),
-				edgeCases: array(string().min(1)).optional(),
-				testChanges: array(string().min(1)).min(1)
-			}),
-			language: LanguageSchema.optional()
+			calibration: PlanCalibrationSchema.optional(),
+			testing: PlanTestingSchema,
+			language: LanguageSchema.optional(),
+			...SessionMetaZodFields
 		}),
-		_meta: { ui: { resourceUri: APP_RESOURCE_URI } }
-	}, async (args) => {
-		try {
-			const { session, plan, planFilePath } = await store.writePlan(args.sessionId, {
-				taskNumber: args.taskNumber,
-				slug: args.slug,
-				title: args.title,
-				target: args.target,
-				follows: args.follows,
-				overview: args.overview,
-				expectedOutcomes: args.expectedOutcomes,
-				scope: args.scope,
-				openQuestions: args.openQuestions,
-				userStories: args.userStories,
-				functionalRequirements: args.functionalRequirements,
-				nonFunctionalRequirements: args.nonFunctionalRequirements,
-				currentImplementation: args.currentImplementation,
-				keyDecisions: args.keyDecisions,
-				proposedChanges: args.proposedChanges,
-				dataModels: args.dataModels,
-				components: args.components,
-				fileStructure: args.fileStructure,
-				architectureDiagram: args.architectureDiagram,
-				risks: args.risks,
-				alternatives: args.alternatives,
-				calibration: args.calibration,
-				testing: args.testing,
-				language: args.language ?? "en"
-			}, {
-				workspacePath: args.workspacePath,
-				exportDir: args.exportDir
-			});
-			const filename = formatTaskFilename(plan.taskNumber, plan.slug, "plan");
-			await store.recordToolCall(session.sessionId, "write_plan", "ok", `Saved ${filename}`);
-			const refreshed = await store.getSession(session.sessionId) ?? session;
-			const payload = await store.buildPayload(refreshed, "plan", "plans", { activeItemId: plan.taskNumber });
-			return {
-				content: [{
-					type: "text",
-					text: `Saved Plan ${plan.taskNumber} (${filename}).\nGenerated plan file: ${planFilePath}\nPresent or move this generated Markdown file using your harness's native plan/artifact system.`
-				}],
-				structuredContent: {
-					...payload,
-					planFilePath
-				}
-			};
-		} catch (err) {
-			await store.recordToolCall(args.sessionId, "write_plan", "error", summarizeError(err));
-			return {
-				isError: true,
-				content: [{
-					type: "text",
-					text: summarizeError(err)
-				}]
-			};
-		}
-	});
+		_meta: { ui: { resourceUri: WIDGET_RESOURCE_URIS.plan } }
+	}, (args) => runLoggedTool(db, {
+		sessionId: args.sessionId,
+		toolName: "write_plan"
+	}, async () => {
+		const { plan, planFilePath } = await writePlan(db, args.sessionId, {
+			taskId: args.taskId,
+			slug: args.slug,
+			title: args.title,
+			target: args.target,
+			follows: args.follows,
+			overview: args.overview,
+			expectedOutcomes: args.expectedOutcomes,
+			scope: args.scope,
+			openQuestions: args.openQuestions,
+			userStories: args.userStories,
+			functionalRequirements: args.functionalRequirements,
+			nonFunctionalRequirements: args.nonFunctionalRequirements,
+			currentImplementation: args.currentImplementation,
+			keyDecisions: args.keyDecisions,
+			proposedChanges: args.proposedChanges,
+			dataModels: args.dataModels,
+			components: args.components,
+			fileStructure: args.fileStructure,
+			architectureDiagram: args.architectureDiagram,
+			risks: args.risks,
+			alternatives: args.alternatives,
+			calibration: args.calibration,
+			testing: args.testing,
+			language: args.language
+		}, buildSessionMeta(args));
+		recordToolCall(db, args.sessionId, "write_plan", "ok", `Plan ${formatTaskId(plan.taskId)}: ${plan.title}`, `taskId=${plan.taskId}`);
+		const payload = buildWidgetPayload(db, {
+			widget: "plan",
+			sessionId: args.sessionId,
+			taskId: plan.taskId
+		});
+		return {
+			content: [{
+				type: "text",
+				text: `Saved Plan ${formatTaskId(plan.taskId)} "${plan.title}" (taskId: ${plan.taskId}, file: ${planFilePath}).`
+			}],
+			structuredContent: {
+				...payload,
+				taskId: plan.taskId,
+				planFilePath
+			}
+		};
+	}));
 	j(server, "write_report", {
 		title: "Write Report",
-		description: "Persist an immutable Implementation or Audit report NN and render NN-<slug>.report.md to exportDir when set. Implementation reports require answered blocking questions.",
+		description: "Deliver an immutable implementation or audit report. Rejects overwrites if a report already exists for taskId. Auto-allocates a global taskId when omitted (useful for standalone audits) and exports NNN-<slug>.report.md when exportDir is set.",
 		inputSchema: object({
 			sessionId: SessionIdSchema,
-			workspacePath: string().min(1).optional(),
-			exportDir: string().min(1).optional(),
-			taskNumber: TaskNumberSchema.optional(),
+			taskId: TaskIdSchema.optional(),
 			slug: SlugSchema,
 			title: string().min(1),
 			mode: ReportModeSchema,
@@ -24980,67 +33750,61 @@ function registerNewWorkerServer(server, options) {
 			verificationMatrix: array(AuditVerificationRowSchema).optional(),
 			findings: array(AuditFindingSchema).optional(),
 			followUps: array(ReportFollowUpSchema).optional(),
-			language: LanguageSchema.optional()
+			language: LanguageSchema.optional(),
+			...SessionMetaZodFields
 		}),
-		_meta: { ui: { resourceUri: APP_RESOURCE_URI } }
-	}, async (args) => {
-		try {
-			const { session, report } = await store.writeReport(args.sessionId, {
-				taskNumber: args.taskNumber,
-				slug: args.slug,
-				title: args.title,
-				mode: args.mode,
-				outcome: args.outcome,
-				target: args.target,
-				planRef: args.planRef,
-				summary: args.summary,
-				actionsCompleted: args.actionsCompleted ?? [],
-				filesChanged: args.filesChanged ?? [],
-				diffStat: args.diffStat,
-				planDeviations: args.planDeviations ?? [],
-				verification: args.verification ?? [],
-				tryCommand: args.tryCommand,
-				unverifiedLimitations: args.unverifiedLimitations,
-				operationalNotes: args.operationalNotes ?? [],
-				verificationMatrix: args.verificationMatrix ?? [],
-				findings: args.findings ?? [],
-				followUps: args.followUps ?? [],
-				language: args.language ?? "en"
-			}, {
-				workspacePath: args.workspacePath,
-				exportDir: args.exportDir
-			});
-			const filename = formatTaskFilename(report.taskNumber, report.slug, "report");
-			await store.recordToolCall(session.sessionId, "write_report", "ok", `Delivered ${filename} (${report.mode}: ${report.outcome})`);
-			const refreshed = await store.getSession(session.sessionId) ?? session;
-			const payload = await store.buildPayload(refreshed, "report", "reports", { activeItemId: report.taskNumber });
-			return {
-				content: [{
-					type: "text",
-					text: `Delivered ${report.mode} Report ${report.taskNumber} (${filename}, outcome: ${report.outcome}).`
-				}],
-				structuredContent: payload
-			};
-		} catch (err) {
-			await store.recordToolCall(args.sessionId, "write_report", "error", summarizeError(err));
-			return {
-				isError: true,
-				content: [{
-					type: "text",
-					text: summarizeError(err)
-				}]
-			};
-		}
-	});
+		_meta: { ui: { resourceUri: WIDGET_RESOURCE_URIS.report } }
+	}, (args) => runLoggedTool(db, {
+		sessionId: args.sessionId,
+		toolName: "write_report"
+	}, async () => {
+		const { report, reportFilePath } = await writeReport(db, args.sessionId, {
+			taskId: args.taskId,
+			slug: args.slug,
+			title: args.title,
+			mode: args.mode,
+			outcome: args.outcome,
+			target: args.target,
+			planRef: args.planRef,
+			summary: args.summary,
+			actionsCompleted: args.actionsCompleted,
+			filesChanged: args.filesChanged,
+			diffStat: args.diffStat,
+			planDeviations: args.planDeviations,
+			verification: args.verification,
+			tryCommand: args.tryCommand,
+			unverifiedLimitations: args.unverifiedLimitations,
+			operationalNotes: args.operationalNotes,
+			verificationMatrix: args.verificationMatrix,
+			findings: args.findings,
+			followUps: args.followUps,
+			language: args.language
+		}, buildSessionMeta(args));
+		recordToolCall(db, args.sessionId, "write_report", "ok", `Report ${formatTaskId(report.taskId)} (${report.mode}): ${report.outcome}`, `taskId=${report.taskId}`);
+		const payload = buildWidgetPayload(db, {
+			widget: "report",
+			sessionId: args.sessionId,
+			taskId: report.taskId
+		});
+		return {
+			content: [{
+				type: "text",
+				text: `Delivered ${report.mode} Report ${formatTaskId(report.taskId)} "${report.title}" (${report.outcome}, file: ${reportFilePath}).`
+			}],
+			structuredContent: {
+				...payload,
+				taskId: report.taskId,
+				reportFilePath
+			}
+		};
+	}));
 	j(server, "record_handoff", {
 		title: "Record Handoff",
-		description: "Record a structured handoff (plan approval, mid-session pause, completion, or subagent scout) for the session viewer.",
+		description: "Record a structured mid-session pause, plan approval request, subagent scout summary, or completion handoff linked to the session and optional global taskId.",
 		inputSchema: object({
 			sessionId: SessionIdSchema,
-			workspacePath: string().min(1).optional(),
-			exportDir: string().min(1).optional(),
 			id: string().min(1).optional(),
-			taskNumber: TaskNumberSchema.optional(),
+			taskId: TaskIdSchema.optional(),
 			kind: HandoffKindSchema,
 			title: string().min(1),
 			summary: string().min(1),
@@ -25049,392 +33813,783 @@ function registerNewWorkerServer(server, options) {
 			entryPoint: string().optional(),
 			nextStep: string().optional(),
 			artifactLinks: array(FileRefSchema).optional(),
-			structuredData: record(string(), unknown()).optional()
+			structuredData: record(string(), unknown()).optional(),
+			...SessionMetaZodFields
 		}),
-		_meta: { ui: { resourceUri: APP_RESOURCE_URI } }
-	}, async (args) => {
-		try {
-			const { session, handoff } = await store.recordHandoff(args.sessionId, {
-				id: args.id,
-				taskNumber: args.taskNumber,
-				kind: args.kind,
-				title: args.title,
-				summary: args.summary,
-				workingNow: args.workingNow,
-				verifyCommand: args.verifyCommand,
-				entryPoint: args.entryPoint,
-				nextStep: args.nextStep,
-				artifactLinks: args.artifactLinks ?? [],
-				structuredData: args.structuredData
-			}, {
-				workspacePath: args.workspacePath,
-				exportDir: args.exportDir
-			});
-			await store.recordToolCall(session.sessionId, "record_handoff", "ok", `Handoff (${handoff.kind}): ${handoff.title}`);
-			const refreshed = await store.getSession(session.sessionId) ?? session;
-			const payload = await store.buildPayload(refreshed, "handoff", "handoffs", { activeItemId: handoff.id });
-			return {
-				content: [{
-					type: "text",
-					text: `Recorded handoff "${handoff.title}" (${handoff.kind}).${handoff.nextStep ? ` Next: ${handoff.nextStep}` : ""}`
-				}],
-				structuredContent: payload
-			};
-		} catch (err) {
-			return {
-				isError: true,
-				content: [{
-					type: "text",
-					text: summarizeError(err)
-				}]
-			};
-		}
-	});
-	j(server, "ask_questions", {
-		title: "Ask Bulk Questions",
-		description: "Render an interactive question form inline with configurable per-question blocking modes: immediate (blocks progression now), before_step_finish (blocks completing the target step), or anytime (non-blocking).",
-		inputSchema: object({
-			sessionId: SessionIdSchema,
-			workspacePath: string().min(1).optional(),
-			exportDir: string().min(1).optional(),
-			id: string().min(1).optional(),
-			title: string().min(1),
-			description: string().optional(),
-			submitLabel: string().min(1).optional(),
-			blockingMode: QuestionBlockingModeSchema.optional(),
-			taskNumber: TaskNumberSchema.optional(),
-			stepNumber: number$1().int().positive().optional(),
-			sections: array(QuestionSectionSchema).optional(),
-			questions: array(QuestionItemSchema).min(1)
-		}),
-		_meta: { ui: { resourceUri: APP_RESOURCE_URI } }
-	}, async (args) => {
-		try {
-			const { session, questionSet } = await store.createQuestionSet(args.sessionId, {
-				id: args.id,
-				title: args.title,
-				description: args.description,
-				submitLabel: args.submitLabel ?? "Submit Answers",
-				blockingMode: args.blockingMode ?? "immediate",
-				taskNumber: args.taskNumber,
-				stepNumber: args.stepNumber,
-				sections: args.sections ?? [],
-				questions: args.questions
-			}, {
-				workspacePath: args.workspacePath,
-				exportDir: args.exportDir
-			});
-			await store.recordToolCall(session.sessionId, "ask_questions", "ok", `Created question set "${questionSet.title}" (${questionSet.questions.length} items, default: ${questionSet.blockingMode})`);
-			const refreshed = await store.getSession(session.sessionId) ?? session;
-			const payload = await store.buildPayload(refreshed, "questions", "questions", { activeItemId: questionSet.id });
-			const guidance = questionSet.questions.some((q) => (q.blockingMode ?? questionSet.blockingMode) === "immediate") ? "Immediate blocking questions are present: wait for user submission before progressing." : "No immediate blockers: you may continue intermediate work while respecting any before_step_finish or anytime gates. Read answers via get_session_state.";
-			return {
-				content: [{
-					type: "text",
-					text: `${formatPlainTextQuestions(questionSet)}\n\n${guidance}`
-				}],
-				structuredContent: payload
-			};
-		} catch (err) {
-			await store.recordToolCall(args.sessionId, "ask_questions", "error", summarizeError(err));
-			return {
-				isError: true,
-				content: [{
-					type: "text",
-					text: summarizeError(err)
-				}]
-			};
-		}
-	});
-	server.registerTool("get_session_state", {
-		title: "Get Session State",
-		description: "Read stored tasks, plan review status, active blockers, reports, handoffs, and submitted question answers for a session.",
-		inputSchema: object({ sessionId: SessionIdSchema.optional() })
-	}, async (args) => {
-		const session = args.sessionId ? await store.getSession(args.sessionId) : await store.getLatestSession();
-		if (!session) return { content: [{
-			type: "text",
-			text: args.sessionId ? `No session found for "${args.sessionId}".` : "No sessions stored yet."
-		}] };
-		const submittedSets = session.questionSets.filter((q) => q.status === "submitted" || q.status === "partial");
-		const unresolved = getUnresolvedQuestions(session);
-		const summaryLines = [`Session "${session.sessionId}": ${session.tasks.length} tasks, ${session.plans.length} plans, ${session.reports.length} reports, ${session.questionSets.filter((q) => q.status === "submitted").length}/${session.questionSets.length} question sets submitted.`];
-		if (unresolved.length > 0) {
-			const blockerDescriptions = unresolved.map((u) => {
-				const label = formatBlockingModeLabel(u.policy.blockingMode, u.policy.taskNumber, u.policy.stepNumber);
-				return `${u.question.id} [${label}]`;
-			});
-			summaryLines.push(`Open questions: ${blockerDescriptions.join(", ")}.`);
-		}
-		for (const qs of submittedSets.slice(0, 3)) {
-			const answeredIds = qs.status === "partial" ? qs.answeredQuestionIds : void 0;
-			summaryLines.push("", formatQuestionReply(qs, qs.answers, qs.otherTexts, answeredIds));
-		}
-		return {
-			content: [{
-				type: "text",
-				text: summaryLines.join("\n")
-			}],
-			structuredContent: { session }
-		};
-	});
-	j(server, "app_get_state", {
-		title: "App Get State",
-		description: "Read-only fetch of the active session and session index for the Web UI.",
-		inputSchema: object({
-			sessionId: SessionIdSchema.optional(),
-			mode: AppViewModeSchema.optional(),
-			activeTab: WorkspaceTabSchema.optional(),
-			activeItemId: string().optional(),
-			activeStepIndex: number$1().int().nonnegative().optional(),
-			activeTaskItemId: string().optional(),
-			sinceRevision: string().optional()
-		}),
-		_meta: { ui: { visibility: ["app"] } }
-	}, async (args) => {
-		const { session, revision } = await store.getRevision(args.sessionId);
-		if (args.sinceRevision && args.sinceRevision === revision) return {
-			content: [{
-				type: "text",
-				text: "Unchanged."
-			}],
-			structuredContent: {
-				unchanged: true,
-				revision
-			}
-		};
-		const payload = await store.buildPayload(session, args.mode ?? "dashboard", args.activeTab ?? "tasks", {
-			activeItemId: args.activeItemId,
-			activeStepIndex: args.activeStepIndex,
-			activeTaskItemId: args.activeTaskItemId,
-			revision,
-			includeSessions: true
+		_meta: { ui: { resourceUri: WIDGET_RESOURCE_URIS.handoff } }
+	}, (args) => runLoggedTool(db, {
+		sessionId: args.sessionId,
+		toolName: "record_handoff"
+	}, () => {
+		const { handoff } = recordHandoff(db, args.sessionId, {
+			id: args.id,
+			taskId: args.taskId,
+			kind: args.kind,
+			title: args.title,
+			summary: args.summary,
+			workingNow: args.workingNow,
+			verifyCommand: args.verifyCommand,
+			entryPoint: args.entryPoint,
+			nextStep: args.nextStep,
+			artifactLinks: args.artifactLinks,
+			structuredData: args.structuredData
+		}, buildSessionMeta(args));
+		recordToolCall(db, args.sessionId, "record_handoff", "ok", `Handoff (${handoff.kind}): ${handoff.title}`, `handoffId=${handoff.id}`);
+		const payload = buildWidgetPayload(db, {
+			widget: "handoff",
+			sessionId: args.sessionId,
+			taskId: handoff.taskId,
+			handoffId: handoff.id
 		});
 		return {
 			content: [{
 				type: "text",
-				text: session ? `Loaded session "${session.sessionId}".` : "No sessions recorded yet."
+				text: `Recorded ${handoff.kind} handoff "${handoff.title}" (id: ${handoff.id}).`
+			}],
+			structuredContent: payload
+		};
+	}));
+}
+// server/mcp/tools/questionTools.ts
+/**
+* Register the `ask_questions` interactive elicitation tool bound to the
+* standalone questions widget (`ui://new-worker/widget/questions`).
+*
+* @param server - Target MCP server instance.
+* @param db - Active Drizzle SQLite database connection.
+*/
+function registerQuestionTools(server, db) {
+	j(server, "ask_questions", {
+		title: "Ask Questions",
+		description: "Present a structured interactive question set supporting immediate, before_step_finish, and anytime blocking modes, optional global taskId + stepNumber binding, and grouped sections.",
+		inputSchema: object({
+			sessionId: SessionIdSchema,
+			id: string().min(1).optional(),
+			title: string().min(1),
+			description: string().optional(),
+			submitLabel: string().optional(),
+			blockingMode: QuestionBlockingModeSchema.optional(),
+			taskId: TaskIdSchema.optional(),
+			stepNumber: number$1().int().positive().optional(),
+			sections: array(QuestionSectionSchema).optional(),
+			questions: array(QuestionItemSchema).min(1),
+			...SessionMetaZodFields
+		}),
+		_meta: { ui: { resourceUri: WIDGET_RESOURCE_URIS.questions } }
+	}, (args) => runLoggedTool(db, {
+		sessionId: args.sessionId,
+		toolName: "ask_questions"
+	}, () => {
+		const { questionSet } = createQuestionSet(db, args.sessionId, {
+			id: args.id,
+			title: args.title,
+			description: args.description,
+			submitLabel: args.submitLabel,
+			blockingMode: args.blockingMode,
+			taskId: args.taskId,
+			stepNumber: args.stepNumber,
+			sections: args.sections,
+			questions: args.questions
+		}, buildSessionMeta(args));
+		recordToolCall(db, args.sessionId, "ask_questions", "ok", `Question set "${questionSet.title}" (${questionSet.questions.length} Qs, ${questionSet.blockingMode})`, `questionSetId=${questionSet.id}`);
+		const payload = buildWidgetPayload(db, {
+			widget: "questions",
+			sessionId: args.sessionId,
+			taskId: questionSet.taskId,
+			questionSetId: questionSet.id
+		});
+		return {
+			content: [{
+				type: "text",
+				text: formatPlainTextQuestions(questionSet)
+			}],
+			structuredContent: payload
+		};
+	}));
+}
+// server/mcp/tools/taskTools.ts
+var ToolStepInputSchema = object({
+	title: string().min(1),
+	outcome: string().min(1),
+	items: array(object({
+		id: string().min(1).describe("Stable checklist item key within the task."),
+		text: string().min(1),
+		status: TaskItemStatusSchema
+	})).min(1)
+});
+/**
+* Register the `upsert_task` and `update_task_item` tools backed by SQLite task storage
+* and bound to the isolated task and task-step widgets.
+*
+* @param server - Target MCP server instance.
+* @param db - Active Drizzle SQLite database connection.
+*/
+function registerTaskTools(server, db) {
+	j(server, "upsert_task", {
+		title: "Upsert Task",
+		description: "Create a new global task (auto-incremented integer taskId starting at 1 across all sessions when taskId is omitted) or replace/update an existing task's title, status, summary, and step checklists. Automatically records timeline events and exports tasks.md when exportDir is configured.",
+		inputSchema: object({
+			sessionId: SessionIdSchema,
+			taskId: TaskIdSchema.optional().describe("Existing global task ID to update; omit to allocate the next global task ID."),
+			slug: SlugSchema,
+			title: string().min(1),
+			status: TaskLifecycleStatusSchema,
+			summary: string().min(1),
+			steps: array(ToolStepInputSchema).min(1),
+			planFile: string().optional(),
+			reportFile: string().optional(),
+			...SessionMetaZodFields
+		}),
+		_meta: { ui: { resourceUri: WIDGET_RESOURCE_URIS.task } }
+	}, (args) => runLoggedTool(db, {
+		sessionId: args.sessionId,
+		toolName: "upsert_task"
+	}, async () => {
+		const { task } = await upsertTask(db, args.sessionId, {
+			taskId: args.taskId,
+			slug: args.slug,
+			title: args.title,
+			status: args.status,
+			summary: args.summary,
+			steps: args.steps.map((step) => ({
+				title: step.title,
+				outcome: step.outcome,
+				items: step.items.map((item) => ({
+					itemKey: item.id,
+					text: item.text,
+					status: item.status
+				}))
+			})),
+			planFile: args.planFile,
+			reportFile: args.reportFile
+		}, buildSessionMeta(args));
+		recordToolCall(db, args.sessionId, "upsert_task", "ok", `Task ${formatTaskId(task.taskId)} (${task.status}) — ${task.title}`, `taskId=${task.taskId}, steps=${task.steps.length}`);
+		const payload = buildWidgetPayload(db, {
+			widget: "task",
+			sessionId: args.sessionId,
+			taskId: task.taskId
+		});
+		return {
+			content: [{
+				type: "text",
+				text: `Saved Task ${formatTaskId(task.taskId)} "${task.title}" (${task.status}, ${task.steps.length} steps).`
+			}],
+			structuredContent: payload
+		};
+	}));
+	j(server, "update_task_item", {
+		title: "Update Task Item",
+		description: "Update one checklist item's status (pending, in_progress, done) by global taskId and itemId. Enforces single in-progress item and immediate/before_step_finish question blockers, emits step transition timeline events, and returns an immutable step snapshot for inline chat display.",
+		inputSchema: object({
+			sessionId: SessionIdSchema,
+			taskId: TaskIdSchema,
+			itemId: string().min(1).describe("Checklist itemKey defined in upsert_task."),
+			status: TaskItemStatusSchema,
+			taskStatus: TaskLifecycleStatusSchema.optional()
+		}),
+		_meta: { ui: { resourceUri: WIDGET_RESOURCE_URIS["task-step"] } }
+	}, (args) => runLoggedTool(db, {
+		sessionId: args.sessionId,
+		toolName: "update_task_item"
+	}, async () => {
+		const { task, updatedStepIndex, stepSnapshot } = await updateTaskItem(db, args.sessionId, args.taskId, args.itemId, args.status, args.taskStatus);
+		recordToolCall(db, args.sessionId, "update_task_item", "ok", `Task ${formatTaskId(task.taskId)} item ${args.itemId} -> ${args.status}`, `taskId=${task.taskId}, step=${updatedStepIndex + 1}`);
+		const payload = buildWidgetPayload(db, {
+			widget: "task-step",
+			sessionId: args.sessionId,
+			taskId: task.taskId,
+			stepSnapshot
+		});
+		return {
+			content: [{
+				type: "text",
+				text: `Task ${formatTaskId(task.taskId)} Step ${updatedStepIndex + 1} item "${args.itemId}" -> ${args.status} (task status: ${task.status}).`
+			}],
+			structuredContent: payload
+		};
+	}));
+}
+// server/mcp/tools/workspaceTools.ts
+function queryGroups(db, rootDir) {
+	const groups = listSessionGroups(db);
+	const allSessions = listSessions(db, { rootDir: rootDir?.trim() || void 0 });
+	const ungroupedCount = allSessions.filter((s) => !s.groupId).length;
+	return {
+		content: [{
+			type: "text",
+			text: `${groups.length} group(s), ${allSessions.length} session(s) (${ungroupedCount} ungrouped).`
+		}],
+		structuredContent: {
+			groups,
+			totalSessions: allSessions.length,
+			ungroupedSessionCount: ungroupedCount
+		}
+	};
+}
+function resolveSessionForContext(db, args) {
+	if (args.sessionId) return getSession(db, args.sessionId);
+	if (args.groupId) return null;
+	if (!args.rootDir) return getLatestSession(db);
+	const firstMatch = listSessions(db, { rootDir: args.rootDir })[0];
+	return firstMatch ? getSession(db, firstMatch.sessionId) : null;
+}
+function querySessionContext(db, args) {
+	const session = resolveSessionForContext(db, args);
+	const resolvedGroupId = args.groupId ?? session?.groupId ?? null;
+	const group = resolvedGroupId ? getSessionGroup(db, resolvedGroupId) : null;
+	if (!session && !group) return {
+		content: [{
+			type: "text",
+			text: "No matching session or group found."
+		}],
+		structuredContent: {
+			session: null,
+			group: null
+		}
+	};
+	const siblingSessions = resolvedGroupId ? listSessions(db, { groupId: resolvedGroupId }) : [];
+	const activeTask = session ? getCurrentTaskForSession(db, session.sessionId) : null;
+	const scopeFilter = resolvedGroupId && !session ? { groupId: resolvedGroupId } : session ? { sessionId: session.sessionId } : void 0;
+	const unresolved = getUnresolvedQuestions(scopeFilter ? listQuestionSets(db, scopeFilter) : []).map((u) => ({
+		questionSetId: u.questionSet.id,
+		questionId: u.question.id,
+		prompt: u.question.prompt,
+		blockingMode: u.policy.blockingMode,
+		taskId: u.policy.taskId,
+		stepNumber: u.policy.stepNumber
+	}));
+	const summaryParts = [];
+	if (session) summaryParts.push(`Session "${session.sessionId}"${session.title ? ` (${session.title})` : ""}, rootDir: ${session.rootDir ?? "unset"}`);
+	if (group) summaryParts.push(`Group "${group.name}" (${group.id}, ${siblingSessions.length} session(s))`);
+	if (activeTask) summaryParts.push(`Active task: ${formatTaskId(activeTask.taskId)} "${activeTask.title}" (${activeTask.status})`);
+	if (unresolved.length > 0) summaryParts.push(`${unresolved.length} unresolved question(s)`);
+	return {
+		content: [{
+			type: "text",
+			text: summaryParts.join(" | ")
+		}],
+		structuredContent: {
+			session,
+			group,
+			siblingSessions,
+			activeTaskSummary: activeTask ? {
+				taskId: activeTask.taskId,
+				title: activeTask.title,
+				status: activeTask.status,
+				stepCount: activeTask.steps.length
+			} : null,
+			unresolvedQuestions: unresolved
+		}
+	};
+}
+function queryTaskSummaries(db, args, limit) {
+	const parsedStatus = args.status ? TaskLifecycleStatusSchema.parse(args.status) : void 0;
+	const summaries = listTasks(db, {
+		sessionId: args.sessionId,
+		groupId: args.groupId,
+		status: parsedStatus,
+		limit
+	}).map((t) => {
+		const allItems = t.steps.flatMap((s) => s.items);
+		return {
+			taskId: t.taskId,
+			sessionId: t.sessionId,
+			slug: t.slug,
+			title: t.title,
+			status: t.status,
+			summary: t.summary,
+			stepCount: t.steps.length,
+			doneItems: allItems.filter((i) => i.status === "done").length,
+			totalItems: allItems.length,
+			hasPlan: Boolean(t.planFile),
+			hasReport: Boolean(t.reportFile),
+			updatedAt: t.updatedAt
+		};
+	});
+	return {
+		content: [{
+			type: "text",
+			text: summaries.length === 0 ? "No matching tasks found." : summaries.map((s) => `${formatTaskId(s.taskId)} [${s.status}] ${s.title} (${s.doneItems}/${s.totalItems} items)`).join("\n")
+		}],
+		structuredContent: { tasks: summaries }
+	};
+}
+function queryTaskDetail(db, args) {
+	const task = args.taskId !== void 0 ? getTaskById(db, args.taskId) : args.sessionId ? getCurrentTaskForSession(db, args.sessionId) : (() => {
+		const latest = getLatestSession(db);
+		return latest ? getCurrentTaskForSession(db, latest.sessionId) : null;
+	})();
+	if (!task) return {
+		content: [{
+			type: "text",
+			text: "No matching task found."
+		}],
+		structuredContent: { task: null }
+	};
+	const activeIdx = task.steps.findIndex((s) => s.items.some((i) => i.status !== "done"));
+	const resolvedIdx = activeIdx === -1 ? Math.max(0, task.steps.length - 1) : activeIdx;
+	const activeStep = task.steps[resolvedIdx];
+	const stepsToReturn = args.currentStepOnly && activeStep ? [activeStep] : task.steps;
+	const taskQuestions = listQuestionSets(db, {
+		sessionId: task.sessionId,
+		taskId: task.taskId
+	});
+	return {
+		content: [{
+			type: "text",
+			text: `Task ${formatTaskId(task.taskId)} "${task.title}" (${task.status}, ${task.steps.length} steps, active step ${resolvedIdx + 1}).`
+		}],
+		structuredContent: {
+			task: {
+				...task,
+				steps: stepsToReturn
+			},
+			activeStepIndex: resolvedIdx,
+			totalSteps: task.steps.length,
+			questionSets: taskQuestions
+		}
+	};
+}
+function queryPlans(db, args, limit) {
+	if (args.taskId !== void 0) {
+		const plan = getPlanByTaskId(db, args.taskId);
+		if (!plan) return {
+			content: [{
+				type: "text",
+				text: `No plan found for Task ${formatTaskId(args.taskId)}.`
+			}],
+			structuredContent: { plan: null }
+		};
+		const planMarkdown = args.includeMarkdown ? renderPlanMarkdown(plan) : void 0;
+		return {
+			content: [{
+				type: "text",
+				text: `Plan ${formatTaskId(plan.taskId)} "${plan.title}" (${formatTaskFilename(plan.taskId, plan.slug, "plan")}, reviewStatus: ${plan.reviewStatus ?? "pending_review"}).`
+			}],
+			structuredContent: planMarkdown ? {
+				plan,
+				planMarkdown
+			} : { plan }
+		};
+	}
+	const summaries = listPlans(db, {
+		sessionId: args.sessionId,
+		groupId: args.groupId,
+		limit
+	}).map((p) => ({
+		taskId: p.taskId,
+		sessionId: p.sessionId,
+		slug: p.slug,
+		title: p.title,
+		reviewStatus: p.reviewStatus ?? "pending_review",
+		fileName: formatTaskFilename(p.taskId, p.slug, "plan"),
+		createdAt: p.createdAt
+	}));
+	return {
+		content: [{
+			type: "text",
+			text: summaries.length === 0 ? "No plans found." : summaries.map((p) => `${formatTaskId(p.taskId)} ${p.title} (${p.fileName})`).join("\n")
+		}],
+		structuredContent: { plans: summaries }
+	};
+}
+function queryReports(db, args, limit) {
+	if (args.taskId !== void 0) {
+		const report = getReportByTaskId(db, args.taskId);
+		if (!report) return {
+			content: [{
+				type: "text",
+				text: `No report found for Task ${formatTaskId(args.taskId)}.`
+			}],
+			structuredContent: { report: null }
+		};
+		const reportMarkdown = args.includeMarkdown ? renderReportMarkdown(report) : void 0;
+		return {
+			content: [{
+				type: "text",
+				text: `Report ${formatTaskId(report.taskId)} "${report.title}" (${report.mode}, outcome: ${report.outcome}).`
+			}],
+			structuredContent: reportMarkdown ? {
+				report,
+				reportMarkdown
+			} : { report }
+		};
+	}
+	const summaries = listReports(db, {
+		sessionId: args.sessionId,
+		groupId: args.groupId,
+		limit
+	}).map((r) => ({
+		taskId: r.taskId,
+		sessionId: r.sessionId,
+		slug: r.slug,
+		title: r.title,
+		mode: r.mode,
+		outcome: r.outcome,
+		fileName: formatTaskFilename(r.taskId, r.slug, "report"),
+		createdAt: r.createdAt
+	}));
+	return {
+		content: [{
+			type: "text",
+			text: summaries.length === 0 ? "No reports found." : summaries.map((r) => `${formatTaskId(r.taskId)} [${r.mode}] ${r.title} (${r.outcome})`).join("\n")
+		}],
+		structuredContent: { reports: summaries }
+	};
+}
+function queryHandoffs(db, args, limit) {
+	const handoffs = listHandoffs(db, {
+		sessionId: args.sessionId,
+		groupId: args.groupId,
+		taskId: args.taskId,
+		limit
+	});
+	return {
+		content: [{
+			type: "text",
+			text: handoffs.length === 0 ? "No handoffs found." : handoffs.map((h) => `[${h.kind}] ${h.title}: ${h.summary}`).join("\n")
+		}],
+		structuredContent: { handoffs }
+	};
+}
+function queryQuestions(db, args, limit) {
+	const statusFilter = args.status ? _enum([
+		"pending",
+		"partial",
+		"submitted"
+	]).parse(args.status) : void 0;
+	const questionSets = listQuestionSets(db, {
+		sessionId: args.sessionId,
+		groupId: args.groupId,
+		taskId: args.taskId,
+		status: statusFilter
+	}).slice(0, limit);
+	const unresolved = getUnresolvedQuestions(questionSets).map((u) => ({
+		questionSetId: u.questionSet.id,
+		questionId: u.question.id,
+		prompt: u.question.prompt,
+		label: formatBlockingModeLabel(u.policy.blockingMode, u.policy.taskId, u.policy.stepNumber)
+	}));
+	if (args.unresolvedOnly) return {
+		content: [{
+			type: "text",
+			text: unresolved.length === 0 ? "No unresolved questions." : unresolved.map((u) => `${u.questionId} [${u.label}]: ${u.prompt}`).join("\n")
+		}],
+		structuredContent: { unresolved }
+	};
+	const lines = [`${questionSets.length} question set(s), ${unresolved.length} unresolved question(s).`];
+	for (const qs of questionSets.filter((s) => s.status !== "pending").slice(0, 3)) {
+		const answeredIds = qs.status === "partial" ? qs.answeredQuestionIds : void 0;
+		lines.push("", formatQuestionReply(qs, qs.answers, qs.otherTexts, answeredIds));
+	}
+	return {
+		content: [{
+			type: "text",
+			text: lines.join("\n")
+		}],
+		structuredContent: {
+			questionSets,
+			unresolved
+		}
+	};
+}
+/**
+* Register the workspace dashboard entrypoint (`open_workspace`), context mutator
+* (`manage_context`), and read-only query tools (`query_workspace`, `query_timeline`).
+*
+* @param server - Target MCP server instance.
+* @param db - Active Drizzle SQLite database connection.
+*/
+function registerWorkspaceTools(server, db) {
+	j(server, "open_workspace", {
+		title: "New Worker Workspace",
+		description: "Open the New Worker Dashboard in the side pane or global sidebar. Strictly read-only: accepts empty `{}` and never creates sessions or writes database rows. Supports switching between single-session and multi-session group views.",
+		inputSchema: object({
+			scope: DashboardScopeSchema.optional().describe("View scope: 'session' (default) or 'group'."),
+			sessionId: SessionIdSchema.optional().describe("Target session ID; defaults to the most recently updated session."),
+			groupId: GroupIdSchema.optional().describe("Target group ID when viewing group scope."),
+			activeTab: DashboardTabSchema.optional().describe("Initial dashboard tab: tasks, plans, reports, handoffs, questions, timeline, or calls."),
+			activeItemId: string().min(1).optional().describe("Optional task ID, handoff ID, or question set ID to focus.")
+		}),
+		_meta: {
+			"ui": { resourceUri: DASHBOARD_RESOURCE_URI },
+			"com.google.antigravity/ui": { entrypoints: [{
+				type: "aux_pane",
+				title: "New Worker"
+			}, {
+				type: "global",
+				title: "New Worker"
+			}] }
+		}
+	}, async (args) => {
+		const payload = buildDashboardPayload(db, {
+			scope: args.scope,
+			sessionId: args.sessionId,
+			groupId: args.groupId,
+			activeTab: args.activeTab,
+			activeItemId: args.activeItemId
+		});
+		if (!payload.session && !payload.group) return {
+			content: [{
+				type: "text",
+				text: "No sessions or groups recorded yet."
+			}],
+			structuredContent: payload
+		};
+		const openQuestions = payload.questionSets.filter((q) => q.status !== "submitted").length;
+		return {
+			content: [{
+				type: "text",
+				text: `${payload.scope === "group" && payload.group ? `Group "${payload.group.name}"` : `Session "${payload.session?.sessionId ?? "none"}"`} ready (${payload.tasks.length} tasks, ${payload.plans.length} plans, ${payload.reports.length} reports, ${openQuestions} open question sets, ${payload.timeline.length} timeline events).`
 			}],
 			structuredContent: payload
 		};
 	});
-	j(server, "app_save_question_draft", {
-		title: "App Save Question Draft",
-		description: "Eagerly save in-progress bulk question answers on the server.",
+	server.registerTool("manage_context", {
+		title: "Manage Session, Group & Timeline Context",
+		description: [
+			"Create or update session metadata, 1:N session groups, group membership, or manual timeline notes (data-only, no widget).",
+			"Actions:",
+			"- 'upsert_session': requires sessionId; updates optional title, rootDir (absolute path), exportDir, and groupId (or null).",
+			"- 'upsert_group': requires name; creates or updates a group (optional groupId, description, notes).",
+			"- 'delete_group': requires groupId; removes group while keeping member sessions intact (groupId = null).",
+			"- 'assign_group': requires sessionId and groupId (string to assign, null to detach).",
+			"- 'add_timeline_note': requires title; appends a timeline note with optional sessionId, groupId, summary, and polymorphic links[]."
+		].join("\n"),
 		inputSchema: object({
-			sessionId: SessionIdSchema,
-			questionSetId: string().min(1),
-			answers: record(string(), QuestionAnswerValueSchema),
-			otherTexts: record(string(), string())
-		}),
-		_meta: { ui: { visibility: ["app"] } }
-	}, async (args) => {
-		try {
-			const { session, questionSet } = await store.saveQuestionDraft(args.sessionId, args.questionSetId, args.answers, args.otherTexts);
-			return {
-				content: [{
-					type: "text",
-					text: "Draft saved."
-				}],
-				structuredContent: await store.buildPayload(session, "questions", "questions", { activeItemId: questionSet.id })
-			};
-		} catch (err) {
-			return {
-				isError: true,
-				content: [{
-					type: "text",
-					text: summarizeError(err)
-				}]
-			};
+			action: _enum([
+				"upsert_session",
+				"upsert_group",
+				"delete_group",
+				"assign_group",
+				"add_timeline_note"
+			]),
+			sessionId: SessionIdSchema.optional(),
+			groupId: GroupIdSchema.nullable().optional(),
+			title: string().optional().describe("Session title (upsert_session) or timeline note title (add_timeline_note)."),
+			rootDir: string().optional().describe("Absolute root directory path associated with a session."),
+			exportDir: string().optional().describe("Optional absolute directory path for Markdown artifact export."),
+			name: string().optional().describe("Group display name (required for upsert_group)."),
+			description: string().optional().describe("Group description (for upsert_group)."),
+			notes: string().optional().describe("Shared context notes stored on a group (for upsert_group)."),
+			summary: string().optional().describe("Timeline note body/summary (for add_timeline_note)."),
+			links: array(TimelineNoteLinkInputSchema).optional().describe("Polymorphic entity associations for add_timeline_note.")
+		})
+	}, (args) => runLoggedTool(db, {
+		sessionId: args.sessionId,
+		toolName: "manage_context"
+	}, () => {
+		switch (args.action) {
+			case "upsert_session": {
+				if (!args.sessionId) throw new ValidationError("upsert_session requires sessionId.");
+				const session = upsertSession(db, args.sessionId, {
+					title: args.title,
+					rootDir: args.rootDir,
+					exportDir: args.exportDir,
+					groupId: args.groupId
+				});
+				recordToolCall(db, session.sessionId, "manage_context", "ok", `Updated session "${session.title ?? session.sessionId}"`, "action=upsert_session");
+				return {
+					content: [{
+						type: "text",
+						text: `Session "${session.sessionId}" saved (title: ${session.title ?? "-"}, rootDir: ${session.rootDir ?? "-"}, groupId: ${session.groupId ?? "none"}).`
+					}],
+					structuredContent: {
+						action: args.action,
+						session
+					}
+				};
+			}
+			case "upsert_group": {
+				if (!args.name?.trim()) throw new ValidationError("upsert_group requires a non-empty name.");
+				const group = upsertSessionGroup(db, {
+					id: args.groupId ?? void 0,
+					name: args.name,
+					description: args.description,
+					notes: args.notes
+				});
+				if (args.sessionId) recordToolCall(db, args.sessionId, "manage_context", "ok", `Saved group "${group.name}" (${group.id})`, "action=upsert_group");
+				return {
+					content: [{
+						type: "text",
+						text: `Saved session group "${group.name}" (groupId: ${group.id}).`
+					}],
+					structuredContent: {
+						action: args.action,
+						group
+					}
+				};
+			}
+			case "delete_group":
+				if (!args.groupId) throw new ValidationError("delete_group requires groupId.");
+				deleteSessionGroup(db, args.groupId);
+				if (args.sessionId) recordToolCall(db, args.sessionId, "manage_context", "ok", `Deleted group ${args.groupId}`, "action=delete_group");
+				return {
+					content: [{
+						type: "text",
+						text: `Deleted session group "${args.groupId}".`
+					}],
+					structuredContent: {
+						action: args.action,
+						deletedGroupId: args.groupId
+					}
+				};
+			case "assign_group": {
+				if (!args.sessionId || args.groupId === void 0) throw new ValidationError("assign_group requires sessionId and groupId (string or null).");
+				const session = assignSessionGroup(db, args.sessionId, args.groupId);
+				recordToolCall(db, session.sessionId, "manage_context", "ok", session.groupId ? `Assigned session to group ${session.groupId}` : "Detached session from group", "action=assign_group");
+				return {
+					content: [{
+						type: "text",
+						text: session.groupId ? `Assigned session "${session.sessionId}" to group "${session.groupId}".` : `Detached session "${session.sessionId}" from its group.`
+					}],
+					structuredContent: {
+						action: args.action,
+						session
+					}
+				};
+			}
+			case "add_timeline_note": {
+				if (!args.title?.trim()) throw new ValidationError("add_timeline_note requires title.");
+				const event = recordTimelineEvent(db, {
+					sessionId: args.sessionId ?? null,
+					groupId: args.groupId ?? null,
+					eventType: "note",
+					actor: "agent",
+					title: args.title.trim(),
+					summary: args.summary?.trim() || void 0,
+					links: args.links ?? []
+				});
+				if (args.sessionId) recordToolCall(db, args.sessionId, "manage_context", "ok", `Timeline note: ${event.title}`, "action=add_timeline_note");
+				return {
+					content: [{
+						type: "text",
+						text: `Recorded timeline note #${event.id}: "${event.title}" (${event.links.length} link(s)).`
+					}],
+					structuredContent: {
+						action: args.action,
+						event
+					}
+				};
+			}
 		}
-	});
-	j(server, "app_submit_question_answers", {
-		title: "App Submit Question Answers",
-		description: "Validate and submit all or a subset of question answers, returning a compact chat reply.",
+	}));
+	server.registerTool("query_workspace", {
+		title: "Query Workspace State",
+		description: [
+			"Strictly read-only query tool for agents to fetch focused slices of session, group, task, plan, report, handoff, or question state without loading full session blobs.",
+			"Targets:",
+			"- 'session_context': session metadata (title, rootDir, groupId), group metadata + sibling sessions, active task summary, and unresolved blockers.",
+			"- 'groups': list all 1:N session groups with session/task/open-question counts.",
+			"- 'tasks': list lightweight task summaries filtered by sessionId, groupId, status, or limit.",
+			"- 'task_detail': fetch one task by global taskId (or active/latest task for sessionId) with steps & items (set currentStepOnly: true to fetch only the active step).",
+			"- 'plan': fetch a PlanRecord by taskId (with planMarkdown when includeMarkdown: true) or list plan summaries for sessionId/groupId.",
+			"- 'report': fetch a ReportRecord by taskId (with reportMarkdown when includeMarkdown: true) or list report summaries for sessionId/groupId.",
+			"- 'handoffs': list handoffs filtered by sessionId, groupId, or taskId.",
+			"- 'questions': list question sets & answers filtered by sessionId, groupId, taskId, status, or unresolvedOnly."
+		].join("\n"),
 		inputSchema: object({
-			sessionId: SessionIdSchema,
-			questionSetId: string().min(1),
-			answers: record(string(), QuestionAnswerValueSchema),
-			otherTexts: record(string(), string()),
-			scope: _enum([
-				"all",
-				"immediate",
-				"before_step_finish",
-				"answered"
-			]).optional(),
-			questionIds: array(string().min(1)).optional()
-		}),
-		_meta: { ui: { visibility: ["app"] } }
-	}, async (args) => {
-		try {
-			const { session, questionSet, submittedQuestionIds } = await store.submitQuestionAnswers(args.sessionId, args.questionSetId, args.answers, args.otherTexts, {
-				scope: args.scope,
-				questionIds: args.questionIds
-			});
-			const replyText = formatQuestionReply(questionSet, questionSet.answers, questionSet.otherTexts, submittedQuestionIds);
-			const payload = await store.buildPayload(session, "questions", "questions", {
-				activeItemId: questionSet.id,
-				includeSessions: true
-			});
-			return {
-				content: [{
-					type: "text",
-					text: replyText
-				}],
-				structuredContent: {
-					...payload,
-					replyText
-				}
-			};
-		} catch (err) {
-			return {
-				isError: true,
-				content: [{
-					type: "text",
-					text: summarizeError(err)
-				}]
-			};
+			target: _enum([
+				"session_context",
+				"groups",
+				"tasks",
+				"task_detail",
+				"plan",
+				"report",
+				"handoffs",
+				"questions"
+			]),
+			sessionId: SessionIdSchema.optional(),
+			groupId: GroupIdSchema.optional(),
+			taskId: TaskIdSchema.optional(),
+			rootDir: string().optional().describe("Filter sessions by exact rootDir when target is 'session_context'."),
+			status: string().optional().describe("Optional task status or question set status filter."),
+			currentStepOnly: boolean().optional().describe("For target='task_detail', return only the currently active step."),
+			unresolvedOnly: boolean().optional().describe("For target='questions', return only unresolved questions."),
+			includeMarkdown: boolean().optional().describe("For target='plan'|'report' with taskId, include rendered Markdown text."),
+			limit: number$1().int().positive().max(200).optional()
+		})
+	}, (args) => runSafeTool(() => {
+		const limit = args.limit ?? 50;
+		switch (args.target) {
+			case "groups": return queryGroups(db, args.rootDir);
+			case "session_context": return querySessionContext(db, args);
+			case "tasks": return queryTaskSummaries(db, args, limit);
+			case "task_detail": return queryTaskDetail(db, args);
+			case "plan": return queryPlans(db, args, limit);
+			case "report": return queryReports(db, args, limit);
+			case "handoffs": return queryHandoffs(db, args, limit);
+			case "questions": return queryQuestions(db, args, limit);
 		}
-	});
-	j(server, "app_update_settings", {
-		title: "App Update Settings",
-		description: "Persist Web UI display settings (displayType: minimized|compact|full, stepDisplayType: inherit|minimized|compact|full).",
+	}));
+	server.registerTool("query_timeline", {
+		title: "Query Polymorphic Timeline",
+		description: "Strictly read-only query over timeline_events and polymorphic timeline_links. Filter by sessionId, groupId, exact (entityType + entityId), entityTypes[], or eventTypes[], with beforeId cursor pagination.",
 		inputSchema: object({
 			sessionId: SessionIdSchema.optional(),
-			mode: AppViewModeSchema.optional(),
-			activeTab: WorkspaceTabSchema.optional(),
-			activeItemId: string().optional(),
-			displayType: WidgetDisplayModeSchema.optional(),
-			stepDisplayType: StepDisplayOverrideSchema.optional()
-		}),
-		_meta: { ui: { visibility: ["app"] } }
-	}, async (args) => {
-		try {
-			await store.updateSettings({
-				displayType: args.displayType,
-				stepDisplayType: args.stepDisplayType
-			});
-			const { session, settings, revision } = await store.getRevision(args.sessionId);
-			const payload = await store.buildPayload(session, args.mode ?? "dashboard", args.activeTab ?? "tasks", {
-				activeItemId: args.activeItemId,
-				revision,
-				includeSessions: true
-			});
-			return {
-				content: [{
-					type: "text",
-					text: `Updated UI settings (displayType: ${settings.displayType}, stepDisplayType: ${settings.stepDisplayType}).`
-				}],
-				structuredContent: payload
-			};
-		} catch (err) {
-			return {
-				isError: true,
-				content: [{
-					type: "text",
-					text: summarizeError(err)
-				}]
-			};
-		}
+			groupId: GroupIdSchema.optional(),
+			entityType: TimelineEntityTypeSchema.optional(),
+			entityId: string().min(1).optional(),
+			entityTypes: array(TimelineEntityTypeSchema).optional(),
+			eventTypes: array(string().min(1)).optional(),
+			limit: number$1().int().positive().max(200).optional(),
+			beforeId: number$1().int().positive().optional()
+		})
+	}, (args) => runSafeTool(() => {
+		const limit = args.limit ?? 50;
+		const events = queryTimelineEvents(db, {
+			sessionId: args.sessionId,
+			groupId: args.groupId,
+			entityType: args.entityType,
+			entityId: args.entityId,
+			entityTypes: args.entityTypes,
+			eventTypes: args.eventTypes,
+			limit,
+			beforeId: args.beforeId
+		});
+		const nextCursor = events.length === limit ? events[events.length - 1]?.id : void 0;
+		return {
+			content: [{
+				type: "text",
+				text: events.length === 0 ? "No timeline events matched." : events.map((e) => `#${e.id} [${e.eventType}] ${e.title}`).join("\n")
+			}],
+			structuredContent: {
+				events,
+				nextCursor
+			}
+		};
+	}));
+}
+// server/mcp/registerTools.ts
+/**
+* Register all 10 model-visible tools and 6 app-only UI callback tools on the
+* given MCP server instance.
+*
+* @param server - Target MCP server receiving tool registrations.
+* @param db - Active SQLite database handle backed by Drizzle ORM.
+*/
+function registerTools(server, db) {
+	registerWorkspaceTools(server, db);
+	registerTaskTools(server, db);
+	registerArtifactTools(server, db);
+	registerQuestionTools(server, db);
+	registerAppOnlyTools(server, db);
+}
+// server/mcp/server.ts
+/** Register all SEP-1865 UI resources and MCP tools on the New Worker server. */
+function registerNewWorkerServer(server, options) {
+	registerUiResources(server, {
+		loadDashboardHtml: options.loadDashboardHtml,
+		loadWidgetHtml: options.loadWidgetHtml
 	});
-	j(server, "app_clear_tool_calls", {
-		title: "App Clear Tool Calls",
-		description: "Clear recorded tool call history for a session from the Web UI.",
-		inputSchema: object({ sessionId: SessionIdSchema }),
-		_meta: { ui: { visibility: ["app"] } }
-	}, async (args) => {
-		try {
-			const session = await store.clearToolCalls(args.sessionId);
-			const payload = await store.buildPayload(session, "dashboard", "calls", { includeSessions: true });
-			return {
-				content: [{
-					type: "text",
-					text: `Cleared tool call history for "${session.sessionId}".`
-				}],
-				structuredContent: payload
-			};
-		} catch (err) {
-			return {
-				isError: true,
-				content: [{
-					type: "text",
-					text: summarizeError(err)
-				}]
-			};
-		}
-	});
+	registerTools(server, options.db);
 }
 // server/index.ts
-function isUsableCliValue(value) {
-	if (!value) return false;
-	const trimmed = value.trim();
-	return trimmed.length > 0 && !trimmed.includes("${");
-}
-function resolveDefaultDataDir() {
-	const envDir = process.env.NEW_WORKER_DATA_DIR;
-	if (isUsableCliValue(envDir)) return path.resolve(envDir.trim());
-	const currentDir = path.dirname(fileURLToPath(import.meta.url));
-	const base = path.basename(currentDir);
-	if (base === "dist" || base === "server") return path.resolve(currentDir, "..", "data");
-	const xdgData = process.env.XDG_DATA_HOME?.trim() || path.join(os.homedir(), ".local", "share");
-	return path.join(xdgData, "new-worker-mcp");
-}
-function parseCliArgs(argv) {
-	let dataDir = resolveDefaultDataDir();
-	const envHtml = process.env.NEW_WORKER_APP_HTML;
-	let htmlPath = isUsableCliValue(envHtml) ? envHtml.trim() : void 0;
-	for (let i = 0; i < argv.length; i += 1) {
-		const arg = argv[i];
-		if (!arg) continue;
-		if (arg.startsWith("--data-dir=")) {
-			const candidate = arg.slice(11);
-			if (isUsableCliValue(candidate)) dataDir = path.resolve(candidate.trim());
-		} else if (arg === "--data-dir") {
-			const candidate = argv[i + 1];
-			if (isUsableCliValue(candidate)) {
-				dataDir = path.resolve(candidate.trim());
-				i += 1;
-			}
-		} else if (arg.startsWith("--html-path=")) {
-			const candidate = arg.slice(12);
-			if (isUsableCliValue(candidate)) htmlPath = candidate.trim();
-		} else if (arg === "--html-path") {
-			const candidate = argv[i + 1];
-			if (isUsableCliValue(candidate)) {
-				htmlPath = candidate.trim();
-				i += 1;
-			}
-		}
-	}
-	return {
-		dataDir,
-		htmlPath
-	};
-}
-function resolveDefaultHtmlPath() {
+function resolveDefaultHtmlPath(filename) {
 	const currentFile = fileURLToPath(import.meta.url);
 	const currentDir = path.dirname(currentFile);
-	if (path.basename(currentDir) === "dist") return path.join(currentDir, "app.html");
-	return path.resolve(currentDir, "..", "dist", "app.html");
-}
-async function main() {
-	const config = parseCliArgs(process.argv.slice(2));
-	const resolvedHtmlPath = config.htmlPath ? path.resolve(config.htmlPath) : resolveDefaultHtmlPath();
-	const store = createSessionStore(config.dataDir);
-	const server = new McpServer({
-		name: "new-worker-ui",
-		version: "1.3.0"
-	}, { capabilities: {
-		resources: {},
-		tools: {}
-	} });
-	registerNewWorkerServer(server, {
-		store,
-		loadAppHtml: () => fs.readFile(resolvedHtmlPath, "utf8")
-	});
-	const transport = new StdioServerTransport();
-	await server.connect(transport);
-	console.error(`new-worker-ui MCP server running on stdio (dataDir: ${store.getDataDir()})`);
+	if (path.basename(currentDir) === "dist") return path.join(currentDir, filename);
+	return path.resolve(currentDir, "..", "dist", filename);
 }
 function safeRealpath(targetPath) {
 	try {
@@ -25443,8 +34598,34 @@ function safeRealpath(targetPath) {
 		return path.resolve(targetPath);
 	}
 }
+async function main() {
+	const config = parseCliArgs(process.argv.slice(2));
+	const dashboardHtmlPath = config.dashboardHtmlPath ? path.resolve(config.dashboardHtmlPath) : resolveDefaultHtmlPath("dashboard.html");
+	const widgetHtmlPath = config.widgetHtmlPath ? path.resolve(config.widgetHtmlPath) : resolveDefaultHtmlPath("widget.html");
+	const handle = openDatabase(config.dataDir);
+	const server = new McpServer({
+		name: "new-worker-ui",
+		version: "2.0.0"
+	}, { capabilities: {
+		resources: {},
+		tools: {}
+	} });
+	registerNewWorkerServer(server, {
+		db: handle.db,
+		loadDashboardHtml: () => fs$1.readFile(dashboardHtmlPath, "utf8"),
+		loadWidgetHtml: () => fs$1.readFile(widgetHtmlPath, "utf8")
+	});
+	const shutdown = () => {
+		handle.close();
+	};
+	process.once("SIGINT", shutdown);
+	process.once("SIGTERM", shutdown);
+	const transport = new StdioServerTransport();
+	await server.connect(transport);
+	console.error(`new-worker-ui MCP server running on stdio (db: ${handle.dbPath}, schema v${handle.migrationResult.currentVersion})`);
+}
 if (process.argv[1] && safeRealpath(process.argv[1]) === safeRealpath(fileURLToPath(import.meta.url))) main().catch((err) => {
 	console.error("Fatal error starting new-worker-ui MCP server:", err);
 	process.exit(1);
 });
-export { isUsableCliValue, parseCliArgs, resolveDefaultDataDir };
+export {};
