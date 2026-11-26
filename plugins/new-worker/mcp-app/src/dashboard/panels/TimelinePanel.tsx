@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { DashboardScope, SessionSummary, TimelineActor, TimelineEntityType, TimelineEvent, TimelineLink } from "@/shared/contracts.js";
-import { formatShortTimestamp } from "@/shared/format.js";
+import { cx, formatShortTimestamp } from "@/shared/format.js";
 import { ActionButton } from "@/ui/primitives/ActionButton.js";
 import { EmptyState } from "@/ui/primitives/EmptyState.js";
-import { FilterPills } from "@/ui/primitives/FilterPills.js";
-import { StatusBadge } from "@/ui/primitives/StatusBadge.js";
+import { type FilterPillOption, FilterPills } from "@/ui/primitives/FilterPills.js";
+import { describeTimelineEvent, filterTimelineEvents, formatEntityTypeLabel, formatTimelineClock, groupTimelineEventsByDate } from "./timelineModel.js";
 import styles from "./TimelinePanel.module.css";
 
 export interface TimelinePanelProps {
@@ -18,7 +18,7 @@ export interface TimelinePanelProps {
 type ActorFilter = "all" | TimelineActor;
 type EntityFilter = "all" | TimelineEntityType;
 
-/** Dashboard panel rendering chronological polymorphic timeline events with actor/entity filters. */
+/** Dashboard panel rendering chronological polymorphic timeline events along a vertical rail. */
 export function TimelinePanel({
 	scope,
 	events,
@@ -30,18 +30,21 @@ export function TimelinePanel({
 	const [entityFilter, setEntityFilter] = useState<EntityFilter>("all");
 
 	const sessionNames = new Map(sessions.map(s => [s.sessionId, s.title ?? s.sessionId]));
+	const hasSystemActor = events.some(e => e.actor === "system");
+
+	const actorOptions: Array<FilterPillOption<ActorFilter>> = [
+		{ value: "all", label: `All Actors (${events.length})` },
+		{ value: "agent", label: "Agent" },
+		{ value: "user", label: "User" },
+		...(hasSystemActor ? [{ value: "system" as const, label: "System" }] : []),
+	];
 
 	const presentEntityTypes = Array.from(
 		new Set(events.flatMap(e => e.links.map(l => l.entityType))),
 	);
 
-	const visibleEvents = events.filter((event) => {
-		if (actorFilter !== "all" && event.actor !== actorFilter) {
-			return false;
-		}
-		return !(entityFilter !== "all"
-			&& !event.links.some(link => link.entityType === entityFilter));
-	});
+	const visibleEvents = filterTimelineEvents(events, actorFilter, entityFilter);
+	const dayGroups = groupTimelineEventsByDate(visibleEvents);
 
 	return (
 		<div className={styles["timeline-panel"]}>
@@ -50,11 +53,7 @@ export function TimelinePanel({
 					ariaLabel="Filter timeline by actor"
 					value={actorFilter}
 					onChange={setActorFilter}
-					options={[
-						{ value: "all", label: `All Actors (${events.length})` },
-						{ value: "agent", label: "Agent" },
-						{ value: "user", label: "User" },
-					]}
+					options={actorOptions}
 				/>
 				<ActionButton variant="primary" size="compact" onClick={onOpenNoteDialog}>
 					+ Add Note
@@ -71,14 +70,14 @@ export function TimelinePanel({
 							{ value: "all", label: "All Entities" },
 							...presentEntityTypes.map(type => ({
 								value: type,
-								label: type,
+								label: formatEntityTypeLabel(type),
 							})),
 						]}
 					/>
 				</div>
 			)}
 
-			{visibleEvents.length === 0
+			{dayGroups.length === 0
 				? (
 						<EmptyState
 							title="No timeline events match."
@@ -86,42 +85,103 @@ export function TimelinePanel({
 						/>
 					)
 				: (
-						<div className={styles.feed}>
-							{visibleEvents.map(event => (
-								<article key={event.id} className={styles.event}>
-									<div className={styles.head}>
-										<strong>{event.title}</strong>
-										<div className={styles.badges}>
-											<StatusBadge
-												label={event.actor}
-												tone={event.actor === "user" ? "info" : "neutral"}
-											/>
-											<StatusBadge label={event.eventType} />
-											{scope === "group" && event.sessionId && (
-												<StatusBadge
-													label={sessionNames.get(event.sessionId) ?? event.sessionId}
-												/>
-											)}
-											<StatusBadge label={formatShortTimestamp(event.createdAt)} />
-										</div>
+					<div className={styles.stream}>
+						<ol role="list" className={styles.groups}
+						    aria-label="Timeline events by date">
+							{dayGroups.map(group => (
+								<li key={group.dateKey} className={styles.group}>
+									<div className={styles.day}>
+										<span className={styles.datelabel}>{group.dateLabel}</span>
+										<span className={styles.daycount}>
+												{`${group.events.length} ${group.events.length === 1 ? "event" : "events"}`}
+											</span>
 									</div>
-									{event.summary && <p className={styles.summary}>{event.summary}</p>}
-									{event.links.length > 0 && (
-										<div className={styles.links}>
-											{event.links.map((link, idx) => (
-												<ActionButton
-													key={`${link.entityType}-${link.entityId}-${idx}`}
-													variant="subtle"
-													size="compact"
-													onClick={() => onNavigateLink(link)}
+
+									<ol role="list" className={styles.track}>
+										{group.events.map((event) => {
+											const presentation = describeTimelineEvent(event);
+											const isNote = event.eventType === "note";
+											const sessionLabel = scope === "group" && event.sessionId
+												? (sessionNames.get(event.sessionId) ?? event.sessionId)
+												: null;
+
+											return (
+												<li
+													key={event.id}
+													className={cx(styles.entry, isNote && styles["-note"])}
 												>
-													{link.label ?? `${link.entityType}:${link.entityId}`}
-												</ActionButton>
-											))}
-										</div>
-									)}
-								</article>
+													<time
+														className={styles.time}
+														dateTime={event.createdAt}
+														title={formatShortTimestamp(event.createdAt)}
+													>
+														{formatTimelineClock(event.createdAt)}
+													</time>
+
+													<div className={styles.rail} aria-hidden="true">
+															<span
+																className={cx(
+																	styles.node,
+																	styles[`-${presentation.tone}`],
+																	styles[`-${presentation.shape}`],
+																)}
+															/>
+													</div>
+
+													<div className={styles.body}>
+														<div className={styles.headline}>
+															<span
+																className={styles.title}>{event.title}</span>
+															<div className={styles.meta}>
+																	<span
+																		className={cx(
+																			styles.kind,
+																			styles[`-${presentation.tone}`],
+																		)}
+																	>
+																		{presentation.label}
+																	</span>
+																<span
+																	className={cx(
+																		styles.actor,
+																		event.actor === "user" && styles["-user"],
+																	)}
+																>
+																		{event.actor}
+																	</span>
+																{sessionLabel && (
+																	<span
+																		className={styles.session}>{sessionLabel}</span>
+																)}
+															</div>
+														</div>
+
+														{event.summary && (
+															<p className={styles.summary}>{event.summary}</p>
+														)}
+
+														{event.links.length > 0 && (
+															<div className={styles.links}>
+																{event.links.map((link, idx) => (
+																	<button
+																		key={`${link.entityType}-${link.entityId}-${idx}`}
+																		type="button"
+																		className={styles.chip}
+																		onClick={() => onNavigateLink(link)}
+																	>
+																		{link.label ?? `${formatEntityTypeLabel(link.entityType)} ${link.entityId}`}
+																	</button>
+																))}
+															</div>
+														)}
+													</div>
+												</li>
+											);
+										})}
+									</ol>
+								</li>
 							))}
+						</ol>
 						</div>
 					)}
 		</div>
