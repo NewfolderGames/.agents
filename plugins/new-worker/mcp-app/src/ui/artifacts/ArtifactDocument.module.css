@@ -1,0 +1,112 @@
+.artifact-document {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    & .subsection {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 10px;
+
+        &:first-child {
+            margin-top: 0;
+        }
+    }
+
+    & .subheading {
+        margin: 0;
+        color: var(--color-text-secondary);
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    & .list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin: 0;
+        padding-left: 18px;
+    }
+
+    & .commands {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    & .command-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 6px 8px;
+        border: 1px solid var(--color-border-secondary);
+        border-radius: 4px;
+        background: var(--color-background-secondary);
+    }
+
+    & .meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        color: var(--color-text-secondary);
+        font-size: 12px;
+    }
+
+    & .callout {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 8px 10px;
+        border: 1px solid var(--color-border-secondary);
+        border-radius: 4px;
+        background: var(--color-background-secondary);
+    }
+
+    & .diffs {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 8px;
+    }
+
+    & .severity-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 10px;
+
+        &:first-child {
+            margin-top: 0;
+        }
+    }
+
+    & .finding-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 8px 10px;
+        border: 1px solid var(--color-border-secondary);
+        border-radius: 4px;
+        background: var(--color-background-secondary);
+    }
+
+    & .finding-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+    }
+
+    & .muted {
+        margin: 0;
+        color: var(--color-text-secondary);
+        font-size: 12px;
+    }
+}

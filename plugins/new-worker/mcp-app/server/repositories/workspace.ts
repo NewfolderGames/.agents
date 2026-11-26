@@ -147,6 +147,7 @@ export function buildWidgetPayload(
 		widget: options.widget,
 		sessionId: options.sessionId,
 		rootDir: session?.rootDir,
+		exportDir: session?.exportDir,
 		sessionTitle: session?.title,
 		settings,
 		task,

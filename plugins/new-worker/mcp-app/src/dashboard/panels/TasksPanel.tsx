@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { DashboardScope, SessionSummary, TaskRecord } from "@/shared/contracts.js";
+import type { DashboardScope, SessionSummary, TaskRecord, TaskStep } from "@/shared/contracts.js";
 import { formatDuration, formatTaskId, formatTimestampTooltip } from "@/shared/format.js";
 import { ActionButton } from "@/ui/primitives/ActionButton.js";
 import { ChecklistRow } from "@/ui/primitives/ChecklistRow.js";
@@ -24,6 +24,44 @@ type TaskFilter = "all" | "active" | "done";
 
 function isArchivedStatus(status: TaskRecord["status"]): boolean {
 	return status === "done" || status === "cancelled" || status === "superseded";
+}
+
+function TaskStepsList({ steps }: { steps: TaskStep[] }) {
+	if (steps.length === 0) {
+		return null;
+	}
+
+	return (
+		<div className={styles.steps}>
+			{steps.map((step, idx) => (
+				<div key={step.id ?? idx} className={styles.step}>
+					<div className={styles.head}>
+						<strong>{`Step ${idx + 1}: ${step.title}`}</strong>
+						<StatusBadge
+							label={`${step.items.filter(i => i.status === "done").length}/${step.items.length}`}
+						/>
+					</div>
+					<p className={styles.outcome}>{step.outcome}</p>
+					<ul className={styles.items}>
+						{step.items.map(item => (
+							<li key={item.itemKey}>
+								<ChecklistRow
+									label={item.text}
+									status={item.status}
+									duration={formatDuration(item.startedAt, item.completedAt)}
+									timestampTooltip={formatTimestampTooltip(
+										item.createdAt,
+										item.startedAt,
+										item.completedAt,
+									)}
+								/>
+							</li>
+						))}
+					</ul>
+				</div>
+			))}
+		</div>
+	);
 }
 
 /** Dashboard panel summarizing global tasks with active/done filters and expandable step checklists. */
@@ -190,35 +228,7 @@ export function TasksPanel({
 								)}
 							>
 								<p className={styles.summary}>{task.summary}</p>
-								<div className={styles.steps}>
-									{task.steps.map((step, idx) => (
-										<div key={step.id ?? idx} className={styles.step}>
-											<div className={styles.head}>
-												<strong>{`Step ${idx + 1}: ${step.title}`}</strong>
-												<StatusBadge
-													label={`${step.items.filter(i => i.status === "done").length}/${step.items.length}`}
-												/>
-											</div>
-											<p className={styles.outcome}>{step.outcome}</p>
-											<ul className={styles.items}>
-												{step.items.map(item => (
-													<li key={item.itemKey}>
-														<ChecklistRow
-															label={item.text}
-															status={item.status}
-															duration={formatDuration(item.startedAt, item.completedAt)}
-															timestampTooltip={formatTimestampTooltip(
-																item.createdAt,
-																item.startedAt,
-																item.completedAt,
-															)}
-														/>
-													</li>
-												))}
-											</ul>
-										</div>
-									))}
-								</div>
+								<TaskStepsList steps={task.steps} />
 							</SectionCard>
 						);
 					})}
@@ -228,49 +238,56 @@ export function TasksPanel({
 			{archivedTasks.length > 0 && (
 				<SectionCard title={`Completed & Archived (${archivedTasks.length})`}>
 					<div className={styles.archive}>
-						{archivedTasks.map(task => (
-							<details
-								key={task.taskId}
-								className={styles.item}
-								open={activeTaskId === String(task.taskId)}
-							>
-								<summary>
-									{`Task ${formatTaskId(task.taskId)} - ${task.title} (${task.status})`}
-								</summary>
-								<div className={styles.body}>
-									<p className={styles.summary}>{task.summary}</p>
-									<div className={styles.rowactions}>
-										{scope === "group" && (
-											<ActionButton
-												variant="subtle"
-												size="compact"
-												onClick={() => onSelectSession(task.sessionId)}
-											>
-												{sessionNames.get(task.sessionId) ?? task.sessionId}
-											</ActionButton>
-										)}
-										{task.planFile && (
-											<ActionButton
-												variant="subtle"
-												size="compact"
-												onClick={() => onOpenPlan(task.taskId)}
-											>
-												Open Plan
-											</ActionButton>
-										)}
-										{task.reportFile && (
-											<ActionButton
-												variant="subtle"
-												size="compact"
-												onClick={() => onOpenReport(task.taskId)}
-											>
-												Open Report
-											</ActionButton>
-										)}
+						{archivedTasks.map((task) => {
+							const duration = formatDuration(task.startedAt, task.completedAt);
+							const tooltip = formatTimestampTooltip(task.createdAt, task.startedAt, task.completedAt);
+							return (
+								<details
+									key={task.taskId}
+									className={styles.item}
+									open={activeTaskId === String(task.taskId)}
+								>
+									<summary>
+										{`Task ${formatTaskId(task.taskId)} - ${task.title} (${task.status})`}
+									</summary>
+									<div className={styles.body}>
+										<p className={styles.summary}>{task.summary}</p>
+										<div className={styles.rowactions}>
+											{duration
+												&& <StatusBadge label={duration} title={tooltip} />}
+											{scope === "group" && (
+												<ActionButton
+													variant="subtle"
+													size="compact"
+													onClick={() => onSelectSession(task.sessionId)}
+												>
+													{sessionNames.get(task.sessionId) ?? task.sessionId}
+												</ActionButton>
+											)}
+											{task.planFile && (
+												<ActionButton
+													variant="subtle"
+													size="compact"
+													onClick={() => onOpenPlan(task.taskId)}
+												>
+													Open Plan
+												</ActionButton>
+											)}
+											{task.reportFile && (
+												<ActionButton
+													variant="subtle"
+													size="compact"
+													onClick={() => onOpenReport(task.taskId)}
+												>
+													Open Report
+												</ActionButton>
+											)}
+										</div>
+										<TaskStepsList steps={task.steps} />
 									</div>
-								</div>
-							</details>
-						))}
+								</details>
+							);
+						})}
 					</div>
 				</SectionCard>
 			)}

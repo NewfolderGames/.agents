@@ -1,11 +1,10 @@
 import type { DashboardScope, PlanRecord, SessionSummary } from "@/shared/contracts.js";
+import { resolveFileReference } from "@/shared/fileRefs.js";
 import { formatTaskFilename, formatTaskId } from "@/shared/format.js";
+import { PlanDocumentView } from "@/ui/artifacts/PlanDocumentView.js";
 import { ActionButton } from "@/ui/primitives/ActionButton.js";
-import { DataTable } from "@/ui/primitives/DataTable.js";
 import { EmptyState } from "@/ui/primitives/EmptyState.js";
 import { FileLink } from "@/ui/primitives/FileLink.js";
-import { MarkdownBlock } from "@/ui/primitives/MarkdownBlock.js";
-import { SectionCard } from "@/ui/primitives/SectionCard.js";
 import { StatusBadge } from "@/ui/primitives/StatusBadge.js";
 import styles from "./ArtifactPanel.module.css";
 
@@ -15,18 +14,20 @@ export interface PlansPanelProps {
 	sessions: SessionSummary[];
 	activeTaskId?: string;
 	rootDir?: string;
+	exportDir?: string;
 	onSelectPlan: (taskId: string) => void;
 	onSelectSession: (sessionId: string) => void;
 	onOpenFile?: (filePath: string, rootDir?: string) => Promise<boolean>;
 }
 
-/** Dashboard panel browsing technical plans, scope boundaries, decisions, and planned file changes. */
+/** Dashboard panel browsing complete technical plans, diagrams, decisions, risks, and testing details. */
 export function PlansPanel({
 	scope,
 	plans,
 	sessions,
 	activeTaskId,
 	rootDir,
+	exportDir,
 	onSelectPlan,
 	onSelectSession,
 	onOpenFile,
@@ -42,7 +43,20 @@ export function PlansPanel({
 
 	const sessionMap = new Map(sessions.map(s => [s.sessionId, s]));
 	const activePlan = plans.find(p => String(p.taskId) === activeTaskId) ?? plans[0]!;
-	const resolvedRoot = sessionMap.get(activePlan.sessionId)?.rootDir ?? rootDir;
+	const activeSession = sessionMap.get(activePlan.sessionId);
+	const resolvedRoot = activeSession?.rootDir ?? rootDir;
+	const resolvedExportDir = activeSession?.exportDir ?? exportDir;
+	const fileName = formatTaskFilename(activePlan.taskId, activePlan.slug, "plan");
+	const planFilePath = activePlan.generatedPlanPath
+		?? (resolvedExportDir
+			? `${resolvedExportDir.replace(/\/$/, "")}/${fileName}`
+			: undefined);
+	const followsRef = activePlan.follows
+		? resolveFileReference(activePlan.follows, {
+				rootDir: resolvedRoot,
+				exportDir: resolvedExportDir,
+			})
+		: null;
 
 	return (
 		<div className={styles["artifact-panel"]}>
@@ -63,98 +77,53 @@ export function PlansPanel({
 			)}
 
 			<div className={styles.meta}>
-				<code>{formatTaskFilename(activePlan.taskId, activePlan.slug, "plan")}</code>
+				{planFilePath
+					? (
+							<FileLink
+								path={planFilePath}
+								label={fileName}
+								rootDir={resolvedRoot}
+								onOpenFile={onOpenFile}
+							/>
+						)
+					: <code>{fileName}</code>}
 				<span>{`${activePlan.target.repo} @ ${activePlan.target.branch} (${activePlan.target.commit})`}</span>
 				{activePlan.reviewStatus && <StatusBadge label={activePlan.reviewStatus} />}
+				{activePlan.follows && (
+					followsRef
+						? (
+								<span>
+									{"Follows: "}
+									<FileLink
+										path={followsRef.path}
+										lineStart={followsRef.lineStart}
+										lineEnd={followsRef.lineEnd}
+										label={followsRef.label}
+										rootDir={resolvedRoot}
+										onOpenFile={onOpenFile}
+									/>
+								</span>
+							)
+						: <StatusBadge label={`Follows: ${activePlan.follows}`} tone="info" />
+				)}
 				{scope === "group" && (
 					<ActionButton
 						variant="subtle"
 						size="compact"
 						onClick={() => onSelectSession(activePlan.sessionId)}
 					>
-						{sessionMap.get(activePlan.sessionId)?.title ?? activePlan.sessionId}
+						{activeSession?.title ?? activePlan.sessionId}
 					</ActionButton>
 				)}
 			</div>
 
-			<SectionCard title={`Plan ${formatTaskId(activePlan.taskId)}: ${activePlan.title}`}>
-				<MarkdownBlock content={activePlan.overview} />
-			</SectionCard>
-
-			<SectionCard title="Scope">
-				<strong>In Scope</strong>
-				<ul className={styles.list}>
-					{activePlan.scope.inScope.map((item, idx) => (
-						<li key={idx}>
-							<MarkdownBlock content={item} />
-						</li>
-					))}
-				</ul>
-				<strong>Out of Scope</strong>
-				<ul className={styles.list}>
-					{activePlan.scope.outOfScope.map((item, idx) => (
-						<li key={idx}>
-							<MarkdownBlock content={item} />
-						</li>
-					))}
-				</ul>
-			</SectionCard>
-
-			<SectionCard title="Key Decisions & Proposed Changes">
-				<ol className={styles.list}>
-					{activePlan.keyDecisions.map((dec, idx) => (
-						<li key={idx}>
-							<MarkdownBlock content={dec} />
-						</li>
-					))}
-				</ol>
-				<ol className={styles.list}>
-					{activePlan.proposedChanges.map((chg, idx) => (
-						<li key={idx}>
-							<MarkdownBlock content={chg} />
-						</li>
-					))}
-				</ol>
-			</SectionCard>
-
-			<SectionCard title="File Structure">
-				<DataTable
-					caption="Planned files"
-					hideCaption
-					rows={activePlan.fileStructure}
-					getRowKey={(row, idx) => `${row.path}-${idx}`}
-					columns={[
-						{
-							key: "path",
-							header: "Path",
-							isRowHeader: true,
-							render: row => (
-								<FileLink
-									path={row.path}
-									rootDir={resolvedRoot}
-									onOpenFile={onOpenFile}
-								/>
-							),
-						},
-						{
-							key: "action",
-							header: "Action",
-							render: row => <StatusBadge label={row.action} />,
-						},
-						{ key: "reason", header: "Reason", render: row => row.reason },
-					]}
-				/>
-			</SectionCard>
-
-			<SectionCard title="Validation Commands">
-				<ul className={styles.list}>
-					{activePlan.testing.validationCommands.map((cmd, idx) => (
-						<li key={idx}>
-							<code>{cmd}</code>
-						</li>
-					))}
-				</ul>
-			</SectionCard>
+			<PlanDocumentView
+				plan={activePlan}
+				overviewTitle={`Plan ${formatTaskId(activePlan.taskId)}: ${activePlan.title}`}
+				rootDir={resolvedRoot}
+				exportDir={resolvedExportDir}
+				onOpenFile={onOpenFile}
+			/>
 		</div>
 	);
 }

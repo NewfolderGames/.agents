@@ -1,12 +1,10 @@
 import type { DashboardScope, ReportRecord, SessionSummary } from "@/shared/contracts.js";
+import { resolveFileReference } from "@/shared/fileRefs.js";
 import { formatTaskFilename, formatTaskId } from "@/shared/format.js";
+import { ReportDocumentView } from "@/ui/artifacts/ReportDocumentView.js";
 import { ActionButton } from "@/ui/primitives/ActionButton.js";
-import { DataTable } from "@/ui/primitives/DataTable.js";
-import { DiffBlock } from "@/ui/primitives/DiffBlock.js";
 import { EmptyState } from "@/ui/primitives/EmptyState.js";
 import { FileLink } from "@/ui/primitives/FileLink.js";
-import { MarkdownBlock } from "@/ui/primitives/MarkdownBlock.js";
-import { SectionCard } from "@/ui/primitives/SectionCard.js";
 import { StatusBadge } from "@/ui/primitives/StatusBadge.js";
 import styles from "./ArtifactPanel.module.css";
 
@@ -16,20 +14,24 @@ export interface ReportsPanelProps {
 	sessions: SessionSummary[];
 	activeTaskId?: string;
 	rootDir?: string;
+	exportDir?: string;
 	onSelectReport: (taskId: string) => void;
 	onSelectSession: (sessionId: string) => void;
+	onOpenPlan?: (taskId: number) => void;
 	onOpenFile?: (filePath: string, rootDir?: string) => Promise<boolean>;
 }
 
-/** Dashboard panel inspecting implementation and audit reports, diffs, verification rows, and findings. */
+/** Dashboard panel inspecting complete implementation and audit reports, diffs, verification rows, and findings. */
 export function ReportsPanel({
 	scope,
 	reports,
 	sessions,
 	activeTaskId,
 	rootDir,
+	exportDir,
 	onSelectReport,
 	onSelectSession,
+	onOpenPlan,
 	onOpenFile,
 }: ReportsPanelProps) {
 	if (reports.length === 0) {
@@ -43,8 +45,20 @@ export function ReportsPanel({
 
 	const sessionMap = new Map(sessions.map(s => [s.sessionId, s]));
 	const activeReport = reports.find(r => String(r.taskId) === activeTaskId) ?? reports[0]!;
-	const resolvedRoot = sessionMap.get(activeReport.sessionId)?.rootDir ?? rootDir;
+	const activeSession = sessionMap.get(activeReport.sessionId);
+	const resolvedRoot = activeSession?.rootDir ?? rootDir;
+	const resolvedExportDir = activeSession?.exportDir ?? exportDir;
 	const tone = activeReport.outcome.toLowerCase().includes("block") ? "danger" : "success";
+	const fileName = formatTaskFilename(activeReport.taskId, activeReport.slug, "report");
+	const reportFilePath = resolvedExportDir
+		? `${resolvedExportDir.replace(/\/$/, "")}/${fileName}`
+		: undefined;
+	const planRefResolved = activeReport.planRef
+		? resolveFileReference(activeReport.planRef, {
+				rootDir: resolvedRoot,
+				exportDir: resolvedExportDir,
+			})
+		: null;
 
 	return (
 		<div className={styles["artifact-panel"]}>
@@ -65,129 +79,65 @@ export function ReportsPanel({
 			)}
 
 			<div className={styles.meta}>
-				<code>{formatTaskFilename(activeReport.taskId, activeReport.slug, "report")}</code>
+				{reportFilePath
+					? (
+							<FileLink
+								path={reportFilePath}
+								label={fileName}
+								rootDir={resolvedRoot}
+								onOpenFile={onOpenFile}
+							/>
+						)
+					: <code>{fileName}</code>}
+				<span>{`${activeReport.target.repo} @ ${activeReport.target.branch} (${activeReport.target.commit})`}</span>
 				<StatusBadge label={activeReport.mode} />
 				<StatusBadge label={activeReport.outcome} tone={tone} />
+				{activeReport.planRef && (
+					<>
+						{planRefResolved && onOpenFile
+							? (
+									<span>
+										{"Plan: "}
+										<FileLink
+											path={planRefResolved.path}
+											lineStart={planRefResolved.lineStart}
+											lineEnd={planRefResolved.lineEnd}
+											label={planRefResolved.label}
+											rootDir={resolvedRoot}
+											onOpenFile={onOpenFile}
+										/>
+									</span>
+								)
+							: <code>{`Plan: ${activeReport.planRef}`}</code>}
+						{onOpenPlan && (
+							<ActionButton
+								variant="subtle"
+								size="compact"
+								onClick={() => onOpenPlan(activeReport.taskId)}
+							>
+								View Plan
+							</ActionButton>
+						)}
+					</>
+				)}
 				{scope === "group" && (
 					<ActionButton
 						variant="subtle"
 						size="compact"
 						onClick={() => onSelectSession(activeReport.sessionId)}
 					>
-						{sessionMap.get(activeReport.sessionId)?.title ?? activeReport.sessionId}
+						{activeSession?.title ?? activeReport.sessionId}
 					</ActionButton>
 				)}
 			</div>
 
-			<SectionCard
-				title={`Report ${formatTaskId(activeReport.taskId)}: ${activeReport.title}`}
-			>
-				<MarkdownBlock content={activeReport.summary} />
-			</SectionCard>
-
-			{activeReport.filesChanged.length > 0 && (
-				<SectionCard title="Files Changed">
-					<DataTable
-						caption="Changed files"
-						hideCaption
-						rows={activeReport.filesChanged}
-						getRowKey={(row, idx) => `${row.path}-${idx}`}
-						columns={[
-							{
-								key: "path",
-								header: "File",
-								isRowHeader: true,
-								render: row => (
-									<FileLink
-										path={row.path}
-										lineStart={row.lineStart}
-										lineEnd={row.lineEnd}
-										rootDir={resolvedRoot}
-										onOpenFile={onOpenFile}
-									/>
-								),
-							},
-							{ key: "action", header: "Action", render: row => row.action },
-							{ key: "summary", header: "Summary", render: row => row.summary },
-						]}
-					/>
-					{activeReport.filesChanged.some(f => f.beforeText && f.afterText) && (
-						<div className={styles.diffs}>
-							{activeReport.filesChanged
-								.filter(f => f.beforeText && f.afterText)
-								.map((f, idx) => (
-									<DiffBlock
-										key={idx}
-										filePath={f.path}
-										beforeText={f.beforeText!}
-										afterText={f.afterText!}
-									/>
-								))}
-						</div>
-					)}
-				</SectionCard>
-			)}
-
-			{activeReport.verification.length > 0 && (
-				<SectionCard title="Verification">
-					<DataTable
-						caption="Verification checks"
-						hideCaption
-						rows={activeReport.verification}
-						getRowKey={(row, idx) => `${row.check}-${idx}`}
-						columns={[
-							{
-								key: "check",
-								header: "Check",
-								isRowHeader: true,
-								render: row => row.check,
-							},
-							{
-								key: "command",
-								header: "Command",
-								render: row => <code>{row.command}</code>,
-							},
-							{
-								key: "result",
-								header: "Result",
-								render: row => (
-									<StatusBadge
-										label={row.result}
-										tone={row.result === "PASS" ? "success" : row.result === "FAIL" ? "danger" : "warning"}
-									/>
-								),
-							},
-							{ key: "notes", header: "Notes", render: row => row.notes },
-						]}
-					/>
-				</SectionCard>
-			)}
-
-			{activeReport.findings.length > 0 && (
-				<SectionCard title={`Audit Findings (${activeReport.findings.length})`}>
-					<ul className={styles.list}>
-						{activeReport.findings.map(finding => (
-							<li key={finding.id}>
-								<StatusBadge
-									label={finding.severity}
-									tone={finding.severity === "critical" || finding.severity === "high" ? "danger" : "warning"}
-								/>
-								{" "}
-								<strong>{`${finding.id}: ${finding.title}`}</strong>
-								{" — "}
-								<FileLink
-									path={finding.location}
-									lineStart={finding.lineStart}
-									lineEnd={finding.lineEnd}
-									rootDir={resolvedRoot}
-									onOpenFile={onOpenFile}
-								/>
-								{`: ${finding.detail}`}
-							</li>
-						))}
-					</ul>
-				</SectionCard>
-			)}
+			<ReportDocumentView
+				report={activeReport}
+				summaryTitle={`Report ${formatTaskId(activeReport.taskId)}: ${activeReport.title}`}
+				rootDir={resolvedRoot}
+				exportDir={resolvedExportDir}
+				onOpenFile={onOpenFile}
+			/>
 		</div>
 	);
 }

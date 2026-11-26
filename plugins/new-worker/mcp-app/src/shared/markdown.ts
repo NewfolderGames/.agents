@@ -1,5 +1,6 @@
 import type { AuditFinding, FindingSeverity, PlanRecord, ReportFollowUp, ReportRecord, TaskItem, TaskRecord } from "./contracts.js";
 import { formatFileLocation, formatTaskId, padTaskId } from "./format.js";
+import { stripMermaidFence } from "./mermaid.js";
 
 function formatSessionLink(fileName: string, linkBase?: string): string {
 	if (!linkBase) {
@@ -243,14 +244,21 @@ export function renderPlanMarkdown(plan: PlanRecord, linkBase?: string): string 
 	}
 	lines.push("```");
 
-	if (plan.architectureDiagram) {
-		lines.push("", "### Architecture Diagram", "", "```mermaid", plan.architectureDiagram, "```");
+	const diagram = plan.architectureDiagram ? stripMermaidFence(plan.architectureDiagram) : "";
+	if (diagram) {
+		lines.push("", "### Architecture Diagram", "", "```mermaid", diagram, "```");
 	}
 	if (plan.risks && plan.risks.length > 0) {
 		lines.push("", "### Risks", "", "| Risk | Impact | Mitigation |", "|---|---|---|");
 		for (const risk of plan.risks) {
 			lines.push(`| ${risk.risk} | ${risk.impact} | ${risk.mitigation} |`);
 		}
+	}
+	if (plan.apiReference?.trim()) {
+		lines.push("", "## API Reference", "", plan.apiReference.trim());
+	}
+	if (plan.migrationPlan?.trim()) {
+		lines.push("", "## Migration Plan", "", plan.migrationPlan.trim());
 	}
 	if (plan.alternatives) {
 		lines.push("", "## Alternatives Considered", "", plan.alternatives);

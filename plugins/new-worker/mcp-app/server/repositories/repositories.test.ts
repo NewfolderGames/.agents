@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { openDatabase } from "../db/client.js";
-import { recordHandoff, writePlan, writeReport } from "./artifacts.js";
+import { getPlanByTaskId, recordHandoff, writePlan, writeReport } from "./artifacts.js";
 import { QuestionBlockerError, ReportImmutableError } from "./errors.js";
 import { createQuestionSet, saveQuestionDraft, submitQuestionAnswers } from "./questions.js";
 import { assignSessionGroup, getSession, listSessionGroups, listSessions, upsertSession, upsertSessionGroup } from "./sessions.js";
@@ -47,11 +47,25 @@ describe("SQLite repositories", () => {
 				currentImplementation: ["JSON files on disk."],
 				keyDecisions: ["Use node:sqlite and Drizzle."],
 				proposedChanges: ["Add SQLite tables."],
+				components: [{
+					component: "openDatabase",
+					path: "server/db/client.ts",
+					responsibility: "Initialize SQLite handle",
+				}],
 				fileStructure: [{
 					path: "server/db/client.ts",
 					action: "added",
 					reason: "DB client",
 				}],
+				architectureDiagram: "flowchart TD\n  Tool --> DB",
+				risks: [{
+					risk: "Schema drift",
+					impact: "Query failure",
+					mitigation: "Forward-only migrator",
+				}],
+				apiReference: "| Tool | Purpose |\n|---|---|\n| `write_plan` | Save plan |",
+				migrationPlan: "Run migration 0001 on startup.",
+				alternatives: "Compared against flat JSON files.",
 				testing: {
 					validationCommands: ["pnpm test"],
 					keyScenarios: ["Global ID allocation"],
@@ -62,7 +76,19 @@ describe("SQLite repositories", () => {
 		);
 
 		expect(planRes.plan.taskId).toBe(1);
-		expect(fs.existsSync(path.join(exportDirA, "001-sqlite-core.plan.md"))).toBe(true);
+		const reloadedPlan = getPlanByTaskId(handle.db, 1);
+		expect(reloadedPlan?.apiReference).toContain("`write_plan`");
+		expect(reloadedPlan?.migrationPlan).toBe("Run migration 0001 on startup.");
+		expect(reloadedPlan?.architectureDiagram).toBe("flowchart TD\n  Tool --> DB");
+		expect(reloadedPlan?.components).toHaveLength(1);
+		expect(reloadedPlan?.risks).toHaveLength(1);
+		expect(reloadedPlan?.alternatives).toBe("Compared against flat JSON files.");
+		const exportedPlanPath = path.join(exportDirA, "001-sqlite-core.plan.md");
+		expect(fs.existsSync(exportedPlanPath)).toBe(true);
+		const exportedPlanMd = fs.readFileSync(exportedPlanPath, "utf8");
+		expect(exportedPlanMd).toContain("## API Reference");
+		expect(exportedPlanMd).toContain("## Migration Plan");
+		expect(exportedPlanMd).toContain("### Architecture Diagram");
 		expect(fs.existsSync(path.join(exportDirA, "tasks.md"))).toBe(true);
 
 		const task2Res = await upsertTask(

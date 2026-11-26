@@ -38,6 +38,8 @@ export interface WritePlanInput {
 	fileStructure: PlanFileEntry[];
 	architectureDiagram?: string;
 	risks?: PlanRiskRow[];
+	apiReference?: string;
+	migrationPlan?: string;
 	alternatives?: string;
 	calibration?: { cadence: string; familiarity: string; structureStance: string };
 	testing: {
@@ -117,6 +119,8 @@ function mapPlanRow(row: typeof plans.$inferSelect): PlanRecord {
 		fileStructure: body.fileStructure,
 		architectureDiagram: body.architectureDiagram,
 		risks: body.risks,
+		apiReference: body.apiReference,
+		migrationPlan: body.migrationPlan,
 		alternatives: body.alternatives,
 		calibration: body.calibration,
 		testing: body.testing,
@@ -379,6 +383,8 @@ export async function writePlan(
 			fileStructure: input.fileStructure,
 			architectureDiagram: input.architectureDiagram,
 			risks: input.risks,
+			apiReference: input.apiReference,
+			migrationPlan: input.migrationPlan,
 			alternatives: input.alternatives,
 			calibration: input.calibration,
 			testing: input.testing,

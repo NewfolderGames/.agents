@@ -30267,6 +30267,8 @@ var PlanBodyJsonSchema = object({
 	fileStructure: array(PlanFileEntrySchema).default([]),
 	architectureDiagram: string().optional(),
 	risks: array(PlanRiskRowSchema).optional(),
+	apiReference: string().optional(),
+	migrationPlan: string().optional(),
 	alternatives: string().optional(),
 	calibration: PlanCalibrationSchema.optional(),
 	testing: object({
@@ -30302,6 +30304,8 @@ var PlanRecordSchema = object({
 	fileStructure: array(PlanFileEntrySchema).min(1),
 	architectureDiagram: string().optional(),
 	risks: array(PlanRiskRowSchema).optional(),
+	apiReference: string().optional(),
+	migrationPlan: string().optional(),
 	alternatives: string().optional(),
 	calibration: PlanCalibrationSchema.optional(),
 	testing: PlanTestingSchema,
@@ -30591,6 +30595,7 @@ var SessionSummarySchema = object({
 	groupId: GroupIdSchema.nullable(),
 	title: string().optional(),
 	rootDir: string().optional(),
+	exportDir: string().optional(),
 	updatedAt: string().min(1),
 	taskCount: number$1().int().nonnegative(),
 	pendingQuestionCount: number$1().int().nonnegative()
@@ -30668,6 +30673,7 @@ object({
 	widget: WidgetRouteSchema,
 	sessionId: SessionIdSchema,
 	rootDir: string().optional(),
+	exportDir: string().optional(),
 	sessionTitle: string().optional(),
 	settings: UiSettingsSchema,
 	task: TaskRecordSchema.optional(),
@@ -31401,6 +31407,7 @@ function listSessions(db, filter) {
 		groupId: row.groupId ?? null,
 		title: row.title ?? void 0,
 		rootDir: row.rootDir ?? void 0,
+		exportDir: row.exportDir ?? void 0,
 		updatedAt: row.updatedAt,
 		taskCount: taskCounts.get(row.id) ?? 0,
 		pendingQuestionCount: pendingCounts.get(row.id) ?? 0
@@ -31956,6 +31963,18 @@ function listToolCalls(db, filter) {
 function computeRevision(parts) {
 	return crypto$1.createHash("sha256").update(JSON.stringify(parts)).digest("hex").slice(0, 16);
 }
+// src/shared/mermaid.ts
+var OUTER_FENCE_PATTERN = /^(`{3,}|~{3,})[ \t]*(?:mermaid)?[ \t]*\r?\n([\s\S]*?)\r?\n\1[ \t]*$/i;
+/**
+* Strip a single outer fenced code block (` ```mermaid `, ` ~~~mermaid `, or bare ` ``` `)
+* from raw Mermaid source so callers can pass either bare or fenced diagrams without double-fencing.
+*/
+function stripMermaidFence(raw) {
+	const trimmed = raw.trim();
+	if (!trimmed) return "";
+	const match = OUTER_FENCE_PATTERN.exec(trimmed);
+	return match ? match[2].trim() : trimmed;
+}
 // src/shared/markdown.ts
 function formatSessionLink(fileName, linkBase) {
 	if (!linkBase) return `./${fileName}`;
@@ -32101,11 +32120,14 @@ function renderPlanMarkdown(plan, linkBase) {
 	lines.push("", "### File Structure", "", "```text");
 	for (const entry of plan.fileStructure) lines.push(`${entry.path} (${entry.action}: ${entry.reason})`);
 	lines.push("```");
-	if (plan.architectureDiagram) lines.push("", "### Architecture Diagram", "", "```mermaid", plan.architectureDiagram, "```");
+	const diagram = plan.architectureDiagram ? stripMermaidFence(plan.architectureDiagram) : "";
+	if (diagram) lines.push("", "### Architecture Diagram", "", "```mermaid", diagram, "```");
 	if (plan.risks && plan.risks.length > 0) {
 		lines.push("", "### Risks", "", "| Risk | Impact | Mitigation |", "|---|---|---|");
 		for (const risk of plan.risks) lines.push(`| ${risk.risk} | ${risk.impact} | ${risk.mitigation} |`);
 	}
+	if (plan.apiReference?.trim()) lines.push("", "## API Reference", "", plan.apiReference.trim());
+	if (plan.migrationPlan?.trim()) lines.push("", "## Migration Plan", "", plan.migrationPlan.trim());
 	if (plan.alternatives) lines.push("", "## Alternatives Considered", "", plan.alternatives);
 	lines.push("", "## Testing", "", "### Validation Approach");
 	plan.testing.validationCommands.forEach((cmd, idx) => lines.push(`${idx + 1}. \`${cmd}\``));
@@ -32668,6 +32690,8 @@ function mapPlanRow(row) {
 		fileStructure: body.fileStructure,
 		architectureDiagram: body.architectureDiagram,
 		risks: body.risks,
+		apiReference: body.apiReference,
+		migrationPlan: body.migrationPlan,
 		alternatives: body.alternatives,
 		calibration: body.calibration,
 		testing: body.testing,
@@ -32837,6 +32861,8 @@ async function writePlan(db, sessionId, input, meta) {
 			fileStructure: input.fileStructure,
 			architectureDiagram: input.architectureDiagram,
 			risks: input.risks,
+			apiReference: input.apiReference,
+			migrationPlan: input.migrationPlan,
 			alternatives: input.alternatives,
 			calibration: input.calibration,
 			testing: input.testing
@@ -33195,6 +33221,7 @@ function buildWidgetPayload(db, options) {
 		widget: options.widget,
 		sessionId: options.sessionId,
 		rootDir: session?.rootDir,
+		exportDir: session?.exportDir,
 		sessionTitle: session?.title,
 		settings,
 		task,
@@ -33671,6 +33698,8 @@ function registerArtifactTools(server, db) {
 			fileStructure: array(PlanFileEntrySchema).min(1),
 			architectureDiagram: string().optional(),
 			risks: array(PlanRiskRowSchema).optional(),
+			apiReference: string().optional(),
+			migrationPlan: string().optional(),
 			alternatives: string().optional(),
 			calibration: PlanCalibrationSchema.optional(),
 			testing: PlanTestingSchema,
@@ -33703,6 +33732,8 @@ function registerArtifactTools(server, db) {
 			fileStructure: args.fileStructure,
 			architectureDiagram: args.architectureDiagram,
 			risks: args.risks,
+			apiReference: args.apiReference,
+			migrationPlan: args.migrationPlan,
 			alternatives: args.alternatives,
 			calibration: args.calibration,
 			testing: args.testing,

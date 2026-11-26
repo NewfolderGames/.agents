@@ -1,4 +1,4 @@
-import { cx, formatFileLocation } from "@/shared/format.js";
+import { cx, formatFileLocation, toFileUri } from "@/shared/format.js";
 import styles from "./FileLink.module.css";
 
 export interface FileLinkProps {
@@ -10,7 +10,7 @@ export interface FileLinkProps {
 	onOpenFile?: (filePath: string, rootDir?: string) => Promise<boolean>;
 }
 
-/** Interactive workspace file reference link falling back to static code text offline. */
+/** Interactive workspace file reference link falling back to static code text offline or when unresolvable. */
 export function FileLink({
 	path,
 	lineStart,
@@ -20,8 +20,9 @@ export function FileLink({
 	onOpenFile,
 }: FileLinkProps) {
 	const displayText = label ?? formatFileLocation(path, lineStart, lineEnd);
+	const canOpen = Boolean(onOpenFile && toFileUri(path, rootDir));
 
-	if (!onOpenFile) {
+	if (!canOpen) {
 		return (
 			<code className={cx(styles["file-link"], styles["-static"])}>
 				{displayText}
@@ -34,7 +35,7 @@ export function FileLink({
 			type="button"
 			className={styles["file-link"]}
 			title={`Open ${displayText}`}
-			onClick={() => void onOpenFile(path, rootDir)}
+			onClick={() => void onOpenFile!(path, rootDir)}
 		>
 			<code>{displayText}</code>
 		</button>

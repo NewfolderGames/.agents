@@ -212,6 +212,7 @@ export function DashboardApp() {
 									sessions={state.sessions}
 									activeTaskId={state.activeItemId}
 									rootDir={state.session?.rootDir}
+									exportDir={state.session?.exportDir}
 									onSelectPlan={id => state.setActiveItemId(id)}
 									onSelectSession={id => void fetchDashboard({
 										scope: "session",
@@ -228,11 +229,16 @@ export function DashboardApp() {
 									sessions={state.sessions}
 									activeTaskId={state.activeItemId}
 									rootDir={state.session?.rootDir}
+									exportDir={state.session?.exportDir}
 									onSelectReport={id => state.setActiveItemId(id)}
 									onSelectSession={id => void fetchDashboard({
 										scope: "session",
 										sessionId: id,
 									})}
+									onOpenPlan={(taskId) => {
+										state.setActiveItemId(String(taskId));
+										state.setActiveTab("plans");
+									}}
 									onOpenFile={bridge.openWorkspaceFile}
 								/>
 							</TabPanel>

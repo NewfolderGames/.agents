@@ -258,6 +258,7 @@ export function listSessions(
 		groupId: row.groupId ?? null,
 		title: row.title ?? undefined,
 		rootDir: row.rootDir ?? undefined,
+		exportDir: row.exportDir ?? undefined,
 		updatedAt: row.updatedAt,
 		taskCount: taskCounts.get(row.id) ?? 0,
 		pendingQuestionCount: pendingCounts.get(row.id) ?? 0,

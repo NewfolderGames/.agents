@@ -85,40 +85,43 @@ export function TimelinePanel({
 						/>
 					)
 				: (
-					<div className={styles.stream}>
-						<ol role="list" className={styles.groups}
-						    aria-label="Timeline events by date">
-							{dayGroups.map(group => (
-								<li key={group.dateKey} className={styles.group}>
-									<div className={styles.day}>
-										<span className={styles.datelabel}>{group.dateLabel}</span>
-										<span className={styles.daycount}>
+						<div className={styles.stream}>
+							<ol
+								role="list"
+								className={styles.groups}
+								aria-label="Timeline events by date"
+							>
+								{dayGroups.map(group => (
+									<li key={group.dateKey} className={styles.group}>
+										<div className={styles.day}>
+											<span className={styles.datelabel}>{group.dateLabel}</span>
+											<span className={styles.daycount}>
 												{`${group.events.length} ${group.events.length === 1 ? "event" : "events"}`}
 											</span>
-									</div>
+										</div>
 
-									<ol role="list" className={styles.track}>
-										{group.events.map((event) => {
-											const presentation = describeTimelineEvent(event);
-											const isNote = event.eventType === "note";
-											const sessionLabel = scope === "group" && event.sessionId
-												? (sessionNames.get(event.sessionId) ?? event.sessionId)
-												: null;
+										<ol role="list" className={styles.track}>
+											{group.events.map((event) => {
+												const presentation = describeTimelineEvent(event);
+												const isNote = event.eventType === "note";
+												const sessionLabel = scope === "group" && event.sessionId
+													? (sessionNames.get(event.sessionId) ?? event.sessionId)
+													: null;
 
-											return (
-												<li
-													key={event.id}
-													className={cx(styles.entry, isNote && styles["-note"])}
-												>
-													<time
-														className={styles.time}
-														dateTime={event.createdAt}
-														title={formatShortTimestamp(event.createdAt)}
+												return (
+													<li
+														key={event.id}
+														className={cx(styles.entry, isNote && styles["-note"])}
 													>
-														{formatTimelineClock(event.createdAt)}
-													</time>
+														<time
+															className={styles.time}
+															dateTime={event.createdAt}
+															title={formatShortTimestamp(event.createdAt)}
+														>
+															{formatTimelineClock(event.createdAt)}
+														</time>
 
-													<div className={styles.rail} aria-hidden="true">
+														<div className={styles.rail} aria-hidden="true">
 															<span
 																className={cx(
 																	styles.node,
@@ -126,13 +129,16 @@ export function TimelinePanel({
 																	styles[`-${presentation.shape}`],
 																)}
 															/>
-													</div>
+														</div>
 
-													<div className={styles.body}>
-														<div className={styles.headline}>
-															<span
-																className={styles.title}>{event.title}</span>
-															<div className={styles.meta}>
+														<div className={styles.body}>
+															<div className={styles.headline}>
+																<span
+																	className={styles.title}
+																>
+																	{event.title}
+																</span>
+																<div className={styles.meta}>
 																	<span
 																		className={cx(
 																			styles.kind,
@@ -141,47 +147,50 @@ export function TimelinePanel({
 																	>
 																		{presentation.label}
 																	</span>
-																<span
-																	className={cx(
-																		styles.actor,
-																		event.actor === "user" && styles["-user"],
-																	)}
-																>
+																	<span
+																		className={cx(
+																			styles.actor,
+																			event.actor === "user" && styles["-user"],
+																		)}
+																	>
 																		{event.actor}
 																	</span>
-																{sessionLabel && (
-																	<span
-																		className={styles.session}>{sessionLabel}</span>
-																)}
+																	{sessionLabel && (
+																		<span
+																			className={styles.session}
+																		>
+																			{sessionLabel}
+																		</span>
+																	)}
+																</div>
 															</div>
+
+															{event.summary && (
+																<p className={styles.summary}>{event.summary}</p>
+															)}
+
+															{event.links.length > 0 && (
+																<div className={styles.links}>
+																	{event.links.map((link, idx) => (
+																		<button
+																			key={`${link.entityType}-${link.entityId}-${idx}`}
+																			type="button"
+																			className={styles.chip}
+																			onClick={() => onNavigateLink(link)}
+																		>
+																			{link.label ?? `${formatEntityTypeLabel(link.entityType)} ${link.entityId}`}
+																		</button>
+																	))}
+																</div>
+															)}
 														</div>
-
-														{event.summary && (
-															<p className={styles.summary}>{event.summary}</p>
-														)}
-
-														{event.links.length > 0 && (
-															<div className={styles.links}>
-																{event.links.map((link, idx) => (
-																	<button
-																		key={`${link.entityType}-${link.entityId}-${idx}`}
-																		type="button"
-																		className={styles.chip}
-																		onClick={() => onNavigateLink(link)}
-																	>
-																		{link.label ?? `${formatEntityTypeLabel(link.entityType)} ${link.entityId}`}
-																	</button>
-																))}
-															</div>
-														)}
-													</div>
-												</li>
-											);
-										})}
-									</ol>
-								</li>
-							))}
-						</ol>
+													</li>
+												);
+											})}
+										</ol>
+									</li>
+								))}
+							</ol>
 						</div>
 					)}
 		</div>

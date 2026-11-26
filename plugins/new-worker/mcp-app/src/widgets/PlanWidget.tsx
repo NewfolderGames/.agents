@@ -1,5 +1,7 @@
 import type { PlanRecord, WidgetDisplayMode } from "@/shared/contracts.js";
+import { resolveFileReference } from "@/shared/fileRefs.js";
 import { formatTaskFilename, formatTaskId } from "@/shared/format.js";
+import { PlanDocumentView } from "@/ui/artifacts/PlanDocumentView.js";
 import { ActionButton } from "@/ui/primitives/ActionButton.js";
 import { EmptyState } from "@/ui/primitives/EmptyState.js";
 import { FileLink } from "@/ui/primitives/FileLink.js";
@@ -13,14 +15,16 @@ import styles from "./ArtifactWidget.module.css";
 export interface PlanWidgetProps {
 	plan?: PlanRecord;
 	rootDir?: string;
+	exportDir?: string;
 	defaultDisplayMode: WidgetDisplayMode;
 	onOpenFile?: (filePath: string, rootDir?: string) => Promise<boolean>;
 }
 
-/** Standalone inline widget displaying a technical plan summary, key decisions, and planned files. */
+/** Standalone inline widget displaying a technical plan in minimized, compact, or full parity mode. */
 export function PlanWidget({
 	plan,
 	rootDir,
+	exportDir,
 	defaultDisplayMode,
 	onOpenFile,
 }: PlanWidgetProps) {
@@ -31,6 +35,13 @@ export function PlanWidget({
 	}
 
 	const fileName = formatTaskFilename(plan.taskId, plan.slug, "plan");
+	const planFilePath = plan.generatedPlanPath
+		?? (exportDir
+			? `${exportDir.replace(/\/$/, "")}/${fileName}`
+			: undefined);
+	const followsRef = plan.follows
+		? resolveFileReference(plan.follows, { rootDir, exportDir })
+		: null;
 
 	if (displayMode === "minimized") {
 		return (
@@ -66,35 +77,53 @@ export function PlanWidget({
 		>
 			<div className={styles["artifact-widget"]}>
 				<div className={styles.meta}>
-					<code>{fileName}</code>
+					{planFilePath
+						? (
+								<FileLink
+									path={planFilePath}
+									label={fileName}
+									rootDir={rootDir}
+									onOpenFile={onOpenFile}
+								/>
+							)
+						: <code>{fileName}</code>}
 					<span>{`${plan.target.repo} @ ${plan.target.branch} (${plan.target.commit})`}</span>
+					{plan.reviewStatus && <StatusBadge label={plan.reviewStatus} />}
+					{plan.follows && (
+						followsRef
+							? (
+									<span>
+										{"Follows: "}
+										<FileLink
+											path={followsRef.path}
+											lineStart={followsRef.lineStart}
+											lineEnd={followsRef.lineEnd}
+											label={followsRef.label}
+											rootDir={rootDir}
+											onOpenFile={onOpenFile}
+										/>
+									</span>
+								)
+							: <StatusBadge label={`Follows: ${plan.follows}`} tone="info" />
+					)}
 				</div>
-				<MarkdownBlock content={plan.overview} />
-				{!isCompact && (
-					<>
-						<strong>Key Decisions</strong>
-						<ol className={styles.list}>
-							{plan.keyDecisions.map((dec, idx) => (
-								<li key={idx}>
-									<MarkdownBlock content={dec} />
-								</li>
-							))}
-						</ol>
-						<strong>Files</strong>
-						<ul className={styles.list}>
-							{plan.fileStructure.map((entry, idx) => (
-								<li key={idx}>
-									<FileLink
-										path={entry.path}
-										rootDir={rootDir}
-										onOpenFile={onOpenFile}
-									/>
-									{` (${entry.action}: ${entry.reason})`}
-								</li>
-							))}
-						</ul>
-					</>
-				)}
+				{isCompact
+					? (
+							<MarkdownBlock
+								content={plan.overview}
+								rootDir={rootDir}
+								exportDir={exportDir}
+								onOpenFile={onOpenFile}
+							/>
+						)
+					: (
+							<PlanDocumentView
+								plan={plan}
+								rootDir={rootDir}
+								exportDir={exportDir}
+								onOpenFile={onOpenFile}
+							/>
+						)}
 			</div>
 		</SectionCard>
 	);

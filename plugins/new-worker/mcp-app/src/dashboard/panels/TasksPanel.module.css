@@ -17,18 +17,18 @@
         gap: 10px;
     }
 
-    > .list .summary {
+    & .summary {
         margin: 0 0 8px;
         color: var(--color-text-secondary);
     }
 
-    > .list .steps {
+    & .steps {
         display: flex;
         flex-direction: column;
         gap: 8px;
     }
 
-    > .list .step {
+    & .step {
         display: flex;
         flex-direction: column;
         gap: 4px;
@@ -37,7 +37,7 @@
         border-radius: 4px;
     }
 
-    > .list .step > .head {
+    & .step > .head {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
@@ -45,13 +45,13 @@
         gap: 6px;
     }
 
-    > .list .step > .outcome {
+    & .step > .outcome {
         margin: 0;
         color: var(--color-text-secondary);
         font-size: 12px;
     }
 
-    > .list .step > .items {
+    & .step > .items {
         display: flex;
         flex-direction: column;
         gap: 4px;
@@ -81,8 +81,16 @@
     > .archive > .item > .body {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 8px;
         padding-top: 8px;
+    }
+
+    > .archive > .item .summary {
+        margin: 0;
+    }
+
+    > .archive > .item .step {
+        background: var(--color-background-primary);
     }
 
     & .rowactions {

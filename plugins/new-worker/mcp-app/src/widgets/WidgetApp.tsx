@@ -226,6 +226,7 @@ export function WidgetApp() {
 				<PlanWidget
 					plan={payload.plan}
 					rootDir={payload.rootDir}
+					exportDir={payload.exportDir}
 					defaultDisplayMode={defaultMode}
 					onOpenFile={bridge.openWorkspaceFile}
 				/>
@@ -234,6 +235,7 @@ export function WidgetApp() {
 				<ReportWidget
 					report={payload.report}
 					rootDir={payload.rootDir}
+					exportDir={payload.exportDir}
 					defaultDisplayMode={defaultMode}
 					onOpenFile={bridge.openWorkspaceFile}
 				/>
