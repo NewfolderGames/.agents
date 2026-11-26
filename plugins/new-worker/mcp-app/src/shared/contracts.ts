@@ -539,7 +539,6 @@ export const DashboardTabSchema = z.enum([
 	"handoffs",
 	"questions",
 	"timeline",
-	"calls",
 ]);
 export type DashboardTab = z.infer<typeof DashboardTabSchema>;
 
@@ -548,7 +547,6 @@ export type DashboardScope = z.infer<typeof DashboardScopeSchema>;
 
 export const WidgetRouteSchema = z.enum([
 	"task",
-	"task-step",
 	"plan",
 	"report",
 	"handoff",

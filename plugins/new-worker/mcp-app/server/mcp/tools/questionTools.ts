@@ -5,6 +5,7 @@ import { QuestionBlockingModeSchema, QuestionItemSchema, QuestionSectionSchema, 
 import { formatPlainTextQuestions } from "@/shared/format.js";
 import type { AppDrizzleDb } from "../../db/client.js";
 import { createQuestionSet } from "../../repositories/questions.js";
+import { hasSession } from "../../repositories/sessions.js";
 import { recordToolCall } from "../../repositories/settings.js";
 import { buildWidgetPayload } from "../../repositories/workspace.js";
 import { WIDGET_RESOURCE_URIS } from "../resources.js";
@@ -44,6 +45,7 @@ export function registerQuestionTools(server: McpServer, db: AppDrizzleDb): void
 			},
 		},
 		args => runLoggedTool(db, { sessionId: args.sessionId, toolName: "ask_questions" }, () => {
+			const isNewSession = !hasSession(db, args.sessionId);
 			const { questionSet } = createQuestionSet(
 				db,
 				args.sessionId,
@@ -77,8 +79,15 @@ export function registerQuestionTools(server: McpServer, db: AppDrizzleDb): void
 				questionSetId: questionSet.id,
 			});
 
+			const sessionHint = isNewSession
+				? `\nNew session "${args.sessionId}" created — call open_workspace({ sessionId: "${args.sessionId}" }) to open the Dashboard UI.`
+				: "";
+
 			return {
-				content: [{ type: "text", text: formatPlainTextQuestions(questionSet) }],
+				content: [{
+					type: "text",
+					text: `${formatPlainTextQuestions(questionSet)}${sessionHint}`,
+				}],
 				structuredContent: payload,
 			};
 		}),

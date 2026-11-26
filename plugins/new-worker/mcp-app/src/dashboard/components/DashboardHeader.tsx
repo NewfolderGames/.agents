@@ -14,19 +14,22 @@ export interface DashboardHeaderProps {
 	rootDirFilter: string;
 	activeTab: DashboardTab;
 	tabCounts: Record<DashboardTab, number>;
+	isLogOpen: boolean;
+	logCount: number;
 	isBusy: boolean;
 	onChangeScope: (scope: DashboardScope) => void;
 	onSelectSession: (sessionId: string) => void;
 	onSelectGroup: (groupId: string) => void;
 	onChangeRootDirFilter: (rootDir: string) => void;
 	onSelectTab: (tab: DashboardTab) => void;
+	onToggleLog: () => void;
 	onOpenGroupDialog: (mode: "create" | "edit") => void;
 	onOpenSessionDialog: () => void;
 	onOpenSettings: () => void;
 	onRefresh: () => void;
 }
 
-/** Dashboard top bar hosting scope switchers, session/group selectors, `rootDir` filter, and tabs. */
+/** Sticky dashboard header hosting scope switchers, session/group selectors, Logs toggle, and tabs. */
 export function DashboardHeader({
 	scope,
 	session,
@@ -36,12 +39,15 @@ export function DashboardHeader({
 	rootDirFilter,
 	activeTab,
 	tabCounts,
+	isLogOpen,
+	logCount,
 	isBusy,
 	onChangeScope,
 	onSelectSession,
 	onSelectGroup,
 	onChangeRootDirFilter,
 	onSelectTab,
+	onToggleLog,
 	onOpenGroupDialog,
 	onOpenSessionDialog,
 	onOpenSettings,
@@ -58,11 +64,10 @@ export function DashboardHeader({
 		{ id: "handoffs", label: "Handoffs", count: tabCounts.handoffs },
 		{ id: "questions", label: "Questions", count: tabCounts.questions },
 		{ id: "timeline", label: "Timeline", count: tabCounts.timeline },
-		{ id: "calls", label: "Tool Calls", count: tabCounts.calls },
 	];
 
 	return (
-		<header className={styles["dashboard-header"]}>
+		<div className={styles["dashboard-header"]}>
 			<div className={styles.top}>
 				<div className={styles.brand}>
 					<span className={styles.title}>new-worker</span>
@@ -89,6 +94,14 @@ export function DashboardHeader({
 				</div>
 
 				<div className={styles.controls}>
+					<ActionButton
+						variant="subtle"
+						size="compact"
+						active={isLogOpen}
+						onClick={onToggleLog}
+					>
+						{`Logs (${logCount})`}
+					</ActionButton>
 					<ActionButton
 						variant="subtle"
 						size="compact"
@@ -225,6 +238,6 @@ export function DashboardHeader({
 				activeTab={activeTab}
 				onSelectTab={onSelectTab}
 			/>
-		</header>
+		</div>
 	);
 }

@@ -40,6 +40,7 @@
         align-items: center;
         justify-content: space-between;
         gap: 8px;
+        min-width: 0;
         padding: 6px 10px;
         border: 1px solid var(--color-border-primary);
         border-radius: 4px;
@@ -47,6 +48,7 @@
     }
 
     & .mintitle {
+        min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;

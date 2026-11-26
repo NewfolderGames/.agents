@@ -228,26 +228,38 @@ export function registerAppOnlyTools(server: McpServer, db: AppDrizzleDb): void 
 		"app_clear_tool_calls",
 		{
 			title: "App Clear Tool Calls",
-			description: "Clear stored tool call audit history for a session.",
+			description: "Clear stored tool call log entries for the active session, session group, or all logs.",
 			inputSchema: z.object({
-				sessionId: SessionIdSchema,
+				sessionId: SessionIdSchema.optional(),
 				scope: DashboardScopeSchema.optional(),
 				groupId: GroupIdSchema.optional(),
+				all: z.boolean().optional(),
+				activeTab: DashboardTabSchema.optional(),
+				activeItemId: z.string().optional(),
 			}),
 			_meta: APP_ONLY_META,
 		},
 		async (args) => {
-			clearToolCalls(db, args.sessionId);
+			clearToolCalls(db, {
+				sessionId: args.sessionId,
+				groupId: args.scope === "group" ? args.groupId : undefined,
+				all: args.all,
+			});
 			const payload = buildDashboardPayload(db, {
 				scope: args.scope,
 				sessionId: args.sessionId,
 				groupId: args.groupId,
-				activeTab: "calls",
+				activeTab: args.activeTab,
+				activeItemId: args.activeItemId,
 			});
 			return {
 				content: [{
 					type: "text",
-					text: `Cleared tool call history for "${args.sessionId}".`,
+					text: args.all
+						? "Cleared all tool call logs."
+						: args.scope === "group" && args.groupId
+							? `Cleared tool call logs for group "${args.groupId}".`
+							: `Cleared tool call logs for "${args.sessionId ?? "workspace"}".`,
 				}],
 				structuredContent: payload,
 			};

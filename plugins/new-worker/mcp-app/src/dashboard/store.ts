@@ -18,6 +18,7 @@ export interface DashboardStoreState {
 	rootDirFilter: string;
 	activeTab: DashboardTab;
 	activeItemId: string | undefined;
+	isLogOpen: boolean;
 	revision: string | undefined;
 	settings: UiSettings;
 	session: SessionRecord | null;
@@ -40,6 +41,8 @@ export interface DashboardStoreState {
 	setActiveTab: (tab: DashboardTab) => void;
 	setActiveItemId: (itemId: string | undefined) => void;
 	setRootDirFilter: (rootDir: string) => void;
+	setLogOpen: (open: boolean) => void;
+	toggleLogOpen: () => void;
 	setActiveDialog: (dialog: DashboardDialogKind) => void;
 	setBusy: (busy: boolean) => void;
 	setErrorMessage: (message: string | null) => void;
@@ -52,6 +55,7 @@ export const useDashboardStore = create<DashboardStoreState>(set => ({
 	rootDirFilter: "",
 	activeTab: "tasks",
 	activeItemId: undefined,
+	isLogOpen: false,
 	revision: undefined,
 	settings: DEFAULT_UI_SETTINGS,
 	session: null,
@@ -97,6 +101,7 @@ export const useDashboardStore = create<DashboardStoreState>(set => ({
 			scope: payload.scope,
 			sessionId: payload.sessionId,
 			groupId: payload.groupId,
+			activeTab: prev.activeTab,
 			activeItemId: prev.activeItemId ?? payload.activeItemId,
 			revision: payload.revision,
 			settings: payload.settings,
@@ -117,6 +122,8 @@ export const useDashboardStore = create<DashboardStoreState>(set => ({
 	setActiveTab: activeTab => set({ activeTab }),
 	setActiveItemId: activeItemId => set({ activeItemId }),
 	setRootDirFilter: rootDirFilter => set({ rootDirFilter }),
+	setLogOpen: isLogOpen => set({ isLogOpen }),
+	toggleLogOpen: () => set(prev => ({ isLogOpen: !prev.isLogOpen })),
 	setActiveDialog: activeDialog => set({ activeDialog }),
 	setBusy: isBusy => set({ isBusy }),
 	setErrorMessage: errorMessage => set({ errorMessage }),

@@ -3,10 +3,12 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { openDatabase } from "../db/client.js";
+import { toolCalls } from "../db/schema.js";
 import { getPlanByTaskId, recordHandoff, writePlan, writeReport } from "./artifacts.js";
 import { QuestionBlockerError, ReportImmutableError } from "./errors.js";
 import { createQuestionSet, saveQuestionDraft, submitQuestionAnswers } from "./questions.js";
-import { assignSessionGroup, getSession, listSessionGroups, listSessions, upsertSession, upsertSessionGroup } from "./sessions.js";
+import { assignSessionGroup, getSession, listSessionGroups, listSessions, MAX_TOOL_CALL_LOGS, upsertSession, upsertSessionGroup } from "./sessions.js";
+import { listToolCalls, recordToolCall } from "./settings.js";
 import { updateTaskItem, upsertTask } from "./tasks.js";
 import { queryTimelineEvents, recordTimelineEvent } from "./timeline.js";
 import { buildDashboardPayload } from "./workspace.js";
@@ -360,6 +362,29 @@ describe("SQLite repositories", () => {
 
 		const doneRes = await updateTaskItem(handle.db, "s-q", task.taskId, "1", "done");
 		expect(doneRes.task.status).toBe("done");
+		handle.close();
+	});
+
+	it("caps viewable tool call logs at 100 and prunes older rows in SQLite when a new session starts", () => {
+		const handle = openDatabase(":memory:");
+		upsertSession(handle.db, "s-old", { title: "Old Session" });
+
+		for (let i = 1; i <= 125; i++) {
+			recordToolCall(handle.db, "s-old", "update_task_item", "ok", `Call #${i}`);
+		}
+
+		// Viewable list is capped at 100 even before a new session starts.
+		expect(listToolCalls(handle.db, { sessionId: "s-old" })).toHaveLength(MAX_TOOL_CALL_LOGS);
+		expect(handle.db.select().from(toolCalls).all()).toHaveLength(125);
+
+		// Starting a new session prunes the global tool_calls table down to the newest 100 rows.
+		upsertSession(handle.db, "s-new", { title: "New Session" });
+		const remainingRows = handle.db.select().from(toolCalls).all();
+		expect(remainingRows).toHaveLength(MAX_TOOL_CALL_LOGS);
+		const summaries = remainingRows.map(r => r.summary);
+		expect(summaries).toContain("Call #125");
+		expect(summaries).not.toContain("Call #1");
+
 		handle.close();
 	});
 });

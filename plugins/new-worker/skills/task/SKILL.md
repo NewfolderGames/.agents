@@ -40,13 +40,18 @@ When `new-worker-ui` is connected, drive session artifacts through its MCP tools
 `rootDir` / `groupId`, and `exportDir: "<session-dir>"` so `tasks.md`, `NNN-<slug>.plan.md`, and
 `NNN-<slug>.report.md` stay exported on disk:
 
+- **Session initialization & Dashboard**: Whenever creating a new session (via
+  `manage_context(action: "upsert_session")`
+  or the first `write_plan` / `upsert_task` in a conversation), call `open_workspace({ sessionId })` (read-only) so the
+  host auto-opens the isolated Dashboard UI in the side pane. When `new-worker-ui` is unavailable, write and edit the
+  Markdown files directly using host file tools.
 - **Plan creation**: Call `write_plan` (omitting `taskId` allocates the next global integer `taskId` starting at `1` and
   returns `taskId` plus `planFilePath` for the generated `001-<slug>.plan.md`) so the harness can present or move it as
   a native plan artifact, and pass that `taskId` into `upsert_task` (`status: "planned"`). Do not include plan creation
   or workspace initialization as numbered steps inside `steps`.
 - **Live progress**: Call `update_task_item` with `sessionId`, global `taskId`, `itemId`, and `status` as items move
-  through `pending`, `in_progress`, and `done`; the inline step widget renders an immutable snapshot of only the active
-  step with read-only checklist items and emits timeline step transitions.
+  through `pending`, `in_progress`, and `done`; `update_task_item` updates Dashboard state and timeline transitions
+  silently without rendering an inline step progress widget in chat.
 - **Sessions, groups, and timeline notes**: Call `manage_context` to update session metadata (`title`, `rootDir`,
   `exportDir`, `groupId`), create or assign 1:N session groups for shared context across related sessions, or append
   `add_timeline_note` entries with polymorphic entity `links`.
@@ -57,8 +62,6 @@ When `new-worker-ui` is connected, drive session artifacts through its MCP tools
   optional `taskId`.
 - **Completion**: Call `write_report` (`implementation` or `audit`) and close the task via `upsert_task` or
   `update_task_item`.
-- **Dashboard**: Call `open_workspace` (read-only) to open the isolated Dashboard UI in the side pane or sidebar. When
-  `new-worker-ui` is unavailable, write and edit the Markdown files directly using host file tools.
 
 ---
 

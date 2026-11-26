@@ -30606,13 +30606,11 @@ var DashboardTabSchema = _enum([
 	"reports",
 	"handoffs",
 	"questions",
-	"timeline",
-	"calls"
+	"timeline"
 ]);
 var DashboardScopeSchema = _enum(["session", "group"]);
 var WidgetRouteSchema = _enum([
 	"task",
-	"task-step",
 	"plan",
 	"report",
 	"handoff",
@@ -31268,7 +31266,21 @@ function queryTimelineEvents(db, filter = {}) {
 		createdAt: row.createdAt
 	}));
 }
-// server/repositories/sessions.ts
+/**
+* Prune the `tool_calls` table globally so at most `keepCount` newest rows remain.
+* Invoked automatically when a new session is created to bound database growth.
+*/
+function pruneToolCallsGlobalTx(tx, keepCount = 100) {
+	const keepIds = tx.select({ id: toolCalls.id }).from(toolCalls).orderBy(desc(toolCalls.createdAt), desc(sql`rowid`)).limit(keepCount).all().map((row) => row.id);
+	if (keepIds.length < keepCount) return 0;
+	const result = tx.delete(toolCalls).where(notInArray(toolCalls.id, keepIds)).run();
+	return Number(result.changes ?? 0);
+}
+/** Check whether a session ID already exists in SQLite (strictly read-only). */
+function hasSession(db, sessionId) {
+	const row = db.select({ id: sessions.id }).from(sessions).where(eq(sessions.id, sessionId)).get();
+	return Boolean(row);
+}
 /** Validate an absolute local directory path without null bytes. */
 function validateAbsoluteDir(dirPath, fieldName) {
 	if (!dirPath || dirPath.includes("\0") || !path.isAbsolute(dirPath)) throw new ValidationError(`${fieldName} must be an absolute path without null bytes.`);
@@ -31337,6 +31349,7 @@ function ensureSessionTx(tx, sessionId, meta, now = (/* @__PURE__ */ new Date())
 			}] : []],
 			createdAt: now
 		});
+		pruneToolCallsGlobalTx(tx, 100);
 		return mapSessionRow(inserted);
 	}
 	const nextGroupId = meta?.groupId !== void 0 ? meta.groupId : existing.groupId;
@@ -31862,7 +31875,6 @@ function submitQuestionAnswers(db, sessionId, questionSetId, answers, otherTexts
 	});
 }
 // server/repositories/settings.ts
-var MAX_TOOL_CALLS_PER_SESSION = 200;
 /** Read singleton UI settings (strictly read-only). */
 function getUiSettings(db) {
 	const row = db.select().from(uiSettings).where(eq(uiSettings.id, 1)).get();
@@ -31905,7 +31917,7 @@ function updateUiSettings(db, patch) {
 		};
 	});
 }
-/** Log a tool call against a session, keeping at most the latest 200 entries per session. */
+/** Log a tool call against a session. New session creation prunes global `tool_calls` to 100 rows. */
 function recordToolCall(db, sessionId, toolName, status, summary, argsSummary) {
 	return db.transaction((tx) => {
 		const now = (/* @__PURE__ */ new Date()).toISOString();
@@ -31920,8 +31932,6 @@ function recordToolCall(db, sessionId, toolName, status, summary, argsSummary) {
 			argsSummary: argsSummary ?? null,
 			createdAt: now
 		}).returning().get();
-		const overflowIds = tx.select({ id: toolCalls.id }).from(toolCalls).where(eq(toolCalls.sessionId, sessionId)).orderBy(desc(toolCalls.createdAt)).limit(1e3).offset(MAX_TOOL_CALLS_PER_SESSION).all().map((row) => row.id);
-		if (overflowIds.length > 0) tx.delete(toolCalls).where(inArray(toolCalls.id, overflowIds)).run();
 		return {
 			id: inserted.id,
 			sessionId: inserted.sessionId,
@@ -31933,14 +31943,34 @@ function recordToolCall(db, sessionId, toolName, status, summary, argsSummary) {
 		};
 	});
 }
-/** Clear recorded tool calls for a session without affecting timeline or artifacts. */
-function clearToolCalls(db, sessionId) {
+/**
+* Clear recorded tool call logs for a session, a session group, or all stored logs
+* without affecting timeline events or task artifacts.
+*/
+function clearToolCalls(db, target) {
+	const resolved = typeof target === "string" ? { sessionId: target } : target;
 	db.transaction((tx) => {
-		tx.delete(toolCalls).where(eq(toolCalls.sessionId, sessionId)).run();
-		tx.update(sessions).set({ updatedAt: (/* @__PURE__ */ new Date()).toISOString() }).where(eq(sessions.id, sessionId)).run();
+		const now = (/* @__PURE__ */ new Date()).toISOString();
+		if (resolved.all) {
+			tx.delete(toolCalls).run();
+			if (resolved.sessionId) tx.update(sessions).set({ updatedAt: now }).where(eq(sessions.id, resolved.sessionId)).run();
+			return;
+		}
+		if (resolved.groupId) {
+			const memberIds = tx.select({ id: sessions.id }).from(sessions).where(eq(sessions.groupId, resolved.groupId)).all().map((r) => r.id);
+			if (memberIds.length > 0) {
+				tx.delete(toolCalls).where(inArray(toolCalls.sessionId, memberIds)).run();
+				tx.update(sessions).set({ updatedAt: now }).where(inArray(sessions.id, memberIds)).run();
+			}
+			return;
+		}
+		if (resolved.sessionId) {
+			tx.delete(toolCalls).where(eq(toolCalls.sessionId, resolved.sessionId)).run();
+			tx.update(sessions).set({ updatedAt: now }).where(eq(sessions.id, resolved.sessionId)).run();
+		}
 	});
 }
-/** List tool calls for a session or group (strictly read-only). */
+/** List up to {@link MAX_TOOL_CALL_LOGS} (100) newest tool calls for a session or group (strictly read-only). */
 function listToolCalls(db, filter) {
 	const conditions = [];
 	if (filter?.sessionId) conditions.push(eq(toolCalls.sessionId, filter.sessionId));
@@ -31949,7 +31979,8 @@ function listToolCalls(db, filter) {
 		if (sessionIds.length === 0) return [];
 		conditions.push(inArray(toolCalls.sessionId, sessionIds));
 	}
-	return db.select().from(toolCalls).where(conditions.length > 0 ? and(...conditions) : void 0).orderBy(desc(toolCalls.createdAt)).limit(filter?.limit ?? 200).all().map((row) => ({
+	const cappedLimit = Math.min(filter?.limit ?? 100, 100);
+	return db.select().from(toolCalls).where(conditions.length > 0 ? and(...conditions) : void 0).orderBy(desc(toolCalls.createdAt), desc(sql`rowid`)).limit(cappedLimit).all().map((row) => ({
 		id: row.id,
 		sessionId: row.sessionId,
 		toolName: row.toolName,
@@ -33166,7 +33197,7 @@ function buildDashboardPayload(db, options = {}) {
 	}) : [];
 	const toolCallList = filter ? listToolCalls(db, {
 		...filter,
-		limit: 200
+		limit: 100
 	}) : [];
 	const revision = computeRevision({
 		scope,
@@ -33179,6 +33210,7 @@ function buildDashboardPayload(db, options = {}) {
 		groups: groups.map((g) => `${g.id}:${g.updatedAt}`),
 		latestTimelineId: timeline[0]?.id ?? 0,
 		latestToolCallId: toolCallList[0]?.id ?? "",
+		toolCallCount: toolCallList.length,
 		taskCount: taskList.length
 	});
 	return {
@@ -33498,25 +33530,33 @@ function registerAppOnlyTools(server, db) {
 	});
 	j(server, "app_clear_tool_calls", {
 		title: "App Clear Tool Calls",
-		description: "Clear stored tool call audit history for a session.",
+		description: "Clear stored tool call log entries for the active session, session group, or all logs.",
 		inputSchema: object({
-			sessionId: SessionIdSchema,
+			sessionId: SessionIdSchema.optional(),
 			scope: DashboardScopeSchema.optional(),
-			groupId: GroupIdSchema.optional()
+			groupId: GroupIdSchema.optional(),
+			all: boolean().optional(),
+			activeTab: DashboardTabSchema.optional(),
+			activeItemId: string().optional()
 		}),
 		_meta: APP_ONLY_META
 	}, async (args) => {
-		clearToolCalls(db, args.sessionId);
+		clearToolCalls(db, {
+			sessionId: args.sessionId,
+			groupId: args.scope === "group" ? args.groupId : void 0,
+			all: args.all
+		});
 		const payload = buildDashboardPayload(db, {
 			scope: args.scope,
 			sessionId: args.sessionId,
 			groupId: args.groupId,
-			activeTab: "calls"
+			activeTab: args.activeTab,
+			activeItemId: args.activeItemId
 		});
 		return {
 			content: [{
 				type: "text",
-				text: `Cleared tool call history for "${args.sessionId}".`
+				text: args.all ? "Cleared all tool call logs." : args.scope === "group" && args.groupId ? `Cleared tool call logs for group "${args.groupId}".` : `Cleared tool call logs for "${args.sessionId ?? "workspace"}".`
 			}],
 			structuredContent: payload
 		};
@@ -33611,32 +33651,39 @@ function registerAppOnlyTools(server, db) {
 // server/mcp/resources.ts
 var DASHBOARD_RESOURCE_URI = "ui://new-worker/dashboard";
 var WIDGET_RESOURCE_URIS = {
-	"task": "ui://new-worker/widget/task",
-	"task-step": "ui://new-worker/widget/task-step",
-	"plan": "ui://new-worker/widget/plan",
-	"report": "ui://new-worker/widget/report",
-	"handoff": "ui://new-worker/widget/handoff",
-	"questions": "ui://new-worker/widget/questions"
+	task: "ui://new-worker/widget/task",
+	plan: "ui://new-worker/widget/plan",
+	report: "ui://new-worker/widget/report",
+	handoff: "ui://new-worker/widget/handoff",
+	questions: "ui://new-worker/widget/questions"
 };
 var WIDGET_LABELS = {
-	"task": "New Worker Task Widget",
-	"task-step": "New Worker Task Step Widget",
-	"plan": "New Worker Plan Widget",
-	"report": "New Worker Report Widget",
-	"handoff": "New Worker Handoff Widget",
-	"questions": "New Worker Questions Widget"
+	task: "New Worker Task Widget",
+	plan: "New Worker Plan Widget",
+	report: "New Worker Report Widget",
+	handoff: "New Worker Handoff Widget",
+	questions: "New Worker Questions Widget"
 };
-/** Inject `window.__NEW_WORKER_ROUTE__` into the single-file widget HTML before `</head>`. */
+/**
+* Inject `window.__NEW_WORKER_ROUTE__` immediately after `<head>` (or before the final
+* `</head>` fallback) so literal `</head>` strings inside bundled JS never corrupt script tags.
+*/
 function injectWidgetRoute(html, route) {
 	const routeTag = `<script>window.__NEW_WORKER_ROUTE__=${JSON.stringify(`/widget/${route}`)};<\/script>`;
-	if (html.includes("</head>")) return html.replace("</head>", `${routeTag}</head>`);
+	const headOpenMatch = /<head\b[^>]*>/i.exec(html);
+	if (headOpenMatch) {
+		const insertAt = headOpenMatch.index + headOpenMatch[0].length;
+		return `${html.slice(0, insertAt)}${routeTag}${html.slice(insertAt)}`;
+	}
+	const lastHeadClose = html.toLowerCase().lastIndexOf("</head>");
+	if (lastHeadClose !== -1) return `${html.slice(0, lastHeadClose)}${routeTag}${html.slice(lastHeadClose)}`;
 	return `${routeTag}${html}`;
 }
-/** Register the isolated Dashboard UI resource and all 6 route-tagged inline Widget UI resources. */
+/** Register the isolated Dashboard UI resource and all 5 route-tagged inline Widget UI resources. */
 function registerUiResources(server, options) {
 	const { loadDashboardHtml, loadWidgetHtml } = options;
 	G(server, "New Worker Dashboard", DASHBOARD_RESOURCE_URI, {
-		description: "Interactive Dashboard UI for multi-session groups, tasks, plans, reports, handoffs, questions, timeline, and tool calls.",
+		description: "Interactive Dashboard UI for multi-session groups, tasks, plans, reports, handoffs, questions, timeline, and logs.",
 		mimeType: L,
 		_meta: { ui: { prefersBorder: false } }
 	}, async () => {
@@ -33711,6 +33758,7 @@ function registerArtifactTools(server, db) {
 		sessionId: args.sessionId,
 		toolName: "write_plan"
 	}, async () => {
+		const isNewSession = !hasSession(db, args.sessionId);
 		const { plan, planFilePath } = await writePlan(db, args.sessionId, {
 			taskId: args.taskId,
 			slug: args.slug,
@@ -33745,10 +33793,11 @@ function registerArtifactTools(server, db) {
 			sessionId: args.sessionId,
 			taskId: plan.taskId
 		});
+		const sessionHint = isNewSession ? ` New session "${args.sessionId}" created — call open_workspace({ sessionId: "${args.sessionId}" }) to open the Dashboard UI.` : "";
 		return {
 			content: [{
 				type: "text",
-				text: `Saved Plan ${formatTaskId(plan.taskId)} "${plan.title}" (taskId: ${plan.taskId}, file: ${planFilePath}).`
+				text: `Saved Plan ${formatTaskId(plan.taskId)} "${plan.title}" (taskId: ${plan.taskId}, file: ${planFilePath}).${sessionHint}`
 			}],
 			structuredContent: {
 				...payload,
@@ -33789,6 +33838,7 @@ function registerArtifactTools(server, db) {
 		sessionId: args.sessionId,
 		toolName: "write_report"
 	}, async () => {
+		const isNewSession = !hasSession(db, args.sessionId);
 		const { report, reportFilePath } = await writeReport(db, args.sessionId, {
 			taskId: args.taskId,
 			slug: args.slug,
@@ -33817,10 +33867,11 @@ function registerArtifactTools(server, db) {
 			sessionId: args.sessionId,
 			taskId: report.taskId
 		});
+		const sessionHint = isNewSession ? ` New session "${args.sessionId}" created — call open_workspace({ sessionId: "${args.sessionId}" }) to open the Dashboard UI.` : "";
 		return {
 			content: [{
 				type: "text",
-				text: `Delivered ${report.mode} Report ${formatTaskId(report.taskId)} "${report.title}" (${report.outcome}, file: ${reportFilePath}).`
+				text: `Delivered ${report.mode} Report ${formatTaskId(report.taskId)} "${report.title}" (${report.outcome}, file: ${reportFilePath}).${sessionHint}`
 			}],
 			structuredContent: {
 				...payload,
@@ -33852,6 +33903,7 @@ function registerArtifactTools(server, db) {
 		sessionId: args.sessionId,
 		toolName: "record_handoff"
 	}, () => {
+		const isNewSession = !hasSession(db, args.sessionId);
 		const { handoff } = recordHandoff(db, args.sessionId, {
 			id: args.id,
 			taskId: args.taskId,
@@ -33872,10 +33924,11 @@ function registerArtifactTools(server, db) {
 			taskId: handoff.taskId,
 			handoffId: handoff.id
 		});
+		const sessionHint = isNewSession ? ` New session "${args.sessionId}" created — call open_workspace({ sessionId: "${args.sessionId}" }) to open the Dashboard UI.` : "";
 		return {
 			content: [{
 				type: "text",
-				text: `Recorded ${handoff.kind} handoff "${handoff.title}" (id: ${handoff.id}).`
+				text: `Recorded ${handoff.kind} handoff "${handoff.title}" (id: ${handoff.id}).${sessionHint}`
 			}],
 			structuredContent: payload
 		};
@@ -33911,6 +33964,7 @@ function registerQuestionTools(server, db) {
 		sessionId: args.sessionId,
 		toolName: "ask_questions"
 	}, () => {
+		const isNewSession = !hasSession(db, args.sessionId);
 		const { questionSet } = createQuestionSet(db, args.sessionId, {
 			id: args.id,
 			title: args.title,
@@ -33929,10 +33983,11 @@ function registerQuestionTools(server, db) {
 			taskId: questionSet.taskId,
 			questionSetId: questionSet.id
 		});
+		const sessionHint = isNewSession ? `\nNew session "${args.sessionId}" created — call open_workspace({ sessionId: "${args.sessionId}" }) to open the Dashboard UI.` : "";
 		return {
 			content: [{
 				type: "text",
-				text: formatPlainTextQuestions(questionSet)
+				text: `${formatPlainTextQuestions(questionSet)}${sessionHint}`
 			}],
 			structuredContent: payload
 		};
@@ -33949,8 +34004,8 @@ var ToolStepInputSchema = object({
 	})).min(1)
 });
 /**
-* Register the `upsert_task` and `update_task_item` tools backed by SQLite task storage
-* and bound to the isolated task and task-step widgets.
+* Register `upsert_task` (single-row task link widget) and `update_task_item` (data-only)
+* backed by SQLite task storage.
 *
 * @param server - Target MCP server instance.
 * @param db - Active Drizzle SQLite database connection.
@@ -33976,6 +34031,7 @@ function registerTaskTools(server, db) {
 		sessionId: args.sessionId,
 		toolName: "upsert_task"
 	}, async () => {
+		const isNewSession = !hasSession(db, args.sessionId);
 		const { task } = await upsertTask(db, args.sessionId, {
 			taskId: args.taskId,
 			slug: args.slug,
@@ -34000,43 +34056,43 @@ function registerTaskTools(server, db) {
 			sessionId: args.sessionId,
 			taskId: task.taskId
 		});
+		const sessionHint = isNewSession ? ` New session "${args.sessionId}" created — call open_workspace({ sessionId: "${args.sessionId}" }) to open the Dashboard UI.` : "";
 		return {
 			content: [{
 				type: "text",
-				text: `Saved Task ${formatTaskId(task.taskId)} "${task.title}" (${task.status}, ${task.steps.length} steps).`
+				text: `Saved Task ${formatTaskId(task.taskId)} "${task.title}" (${task.status}, ${task.steps.length} steps).${sessionHint}`
 			}],
 			structuredContent: payload
 		};
 	}));
-	j(server, "update_task_item", {
+	server.registerTool("update_task_item", {
 		title: "Update Task Item",
-		description: "Update one checklist item's status (pending, in_progress, done) by global taskId and itemId. Enforces single in-progress item and immediate/before_step_finish question blockers, emits step transition timeline events, and returns an immutable step snapshot for inline chat display.",
+		description: "Update one checklist item's status (pending, in_progress, done) by global taskId and itemId. Enforces single in-progress item and immediate/before_step_finish question blockers, emits step transition timeline events, and updates Dashboard state without rendering an inline step widget.",
 		inputSchema: object({
 			sessionId: SessionIdSchema,
 			taskId: TaskIdSchema,
 			itemId: string().min(1).describe("Checklist itemKey defined in upsert_task."),
 			status: TaskItemStatusSchema,
 			taskStatus: TaskLifecycleStatusSchema.optional()
-		}),
-		_meta: { ui: { resourceUri: WIDGET_RESOURCE_URIS["task-step"] } }
+		})
 	}, (args) => runLoggedTool(db, {
 		sessionId: args.sessionId,
 		toolName: "update_task_item"
 	}, async () => {
 		const { task, updatedStepIndex, stepSnapshot } = await updateTaskItem(db, args.sessionId, args.taskId, args.itemId, args.status, args.taskStatus);
 		recordToolCall(db, args.sessionId, "update_task_item", "ok", `Task ${formatTaskId(task.taskId)} item ${args.itemId} -> ${args.status}`, `taskId=${task.taskId}, step=${updatedStepIndex + 1}`);
-		const payload = buildWidgetPayload(db, {
-			widget: "task-step",
-			sessionId: args.sessionId,
-			taskId: task.taskId,
-			stepSnapshot
-		});
 		return {
 			content: [{
 				type: "text",
 				text: `Task ${formatTaskId(task.taskId)} Step ${updatedStepIndex + 1} item "${args.itemId}" -> ${args.status} (task status: ${task.status}).`
 			}],
-			structuredContent: payload
+			structuredContent: {
+				taskId: task.taskId,
+				stepIndex: updatedStepIndex,
+				totalSteps: task.steps.length,
+				stepSnapshot,
+				task
+			}
 		};
 	}));
 }
@@ -34339,7 +34395,7 @@ function registerWorkspaceTools(server, db) {
 			scope: DashboardScopeSchema.optional().describe("View scope: 'session' (default) or 'group'."),
 			sessionId: SessionIdSchema.optional().describe("Target session ID; defaults to the most recently updated session."),
 			groupId: GroupIdSchema.optional().describe("Target group ID when viewing group scope."),
-			activeTab: DashboardTabSchema.optional().describe("Initial dashboard tab: tasks, plans, reports, handoffs, questions, timeline, or calls."),
+			activeTab: DashboardTabSchema.optional().describe("Initial dashboard tab: tasks, plans, reports, handoffs, questions, or timeline."),
 			activeItemId: string().min(1).optional().describe("Optional task ID, handoff ID, or question set ID to focus.")
 		}),
 		_meta: {
@@ -34413,6 +34469,7 @@ function registerWorkspaceTools(server, db) {
 		switch (args.action) {
 			case "upsert_session": {
 				if (!args.sessionId) throw new ValidationError("upsert_session requires sessionId.");
+				const isNewSession = !hasSession(db, args.sessionId);
 				const session = upsertSession(db, args.sessionId, {
 					title: args.title,
 					rootDir: args.rootDir,
@@ -34420,14 +34477,16 @@ function registerWorkspaceTools(server, db) {
 					groupId: args.groupId
 				});
 				recordToolCall(db, session.sessionId, "manage_context", "ok", `Updated session "${session.title ?? session.sessionId}"`, "action=upsert_session");
+				const openUiHint = isNewSession ? ` New session "${session.sessionId}" created — call open_workspace({ sessionId: "${session.sessionId}" }) to open the Dashboard UI.` : "";
 				return {
 					content: [{
 						type: "text",
-						text: `Session "${session.sessionId}" saved (title: ${session.title ?? "-"}, rootDir: ${session.rootDir ?? "-"}, groupId: ${session.groupId ?? "none"}).`
+						text: `Session "${session.sessionId}" saved (title: ${session.title ?? "-"}, rootDir: ${session.rootDir ?? "-"}, groupId: ${session.groupId ?? "none"}).${openUiHint}`
 					}],
 					structuredContent: {
 						action: args.action,
-						session
+						session,
+						isNewSession
 					}
 				};
 			}

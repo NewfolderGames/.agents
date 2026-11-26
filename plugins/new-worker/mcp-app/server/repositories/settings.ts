@@ -1,12 +1,12 @@
 import crypto from "node:crypto";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import type { AppDrizzleDb } from "../db/client.js";
 import { sessions, toolCalls, uiSettings } from "../db/schema.js";
 import { DEFAULT_UI_SETTINGS, type ToolCallRecord, type UiSettings } from "@/shared/contracts.js";
-import { ensureSessionTx } from "./sessions.js";
+import { ensureSessionTx, MAX_TOOL_CALL_LOGS } from "./sessions.js";
 import type { DbExecutor } from "./timeline.js";
 
-const MAX_TOOL_CALLS_PER_SESSION = 200;
+export { MAX_TOOL_CALL_LOGS };
 
 /** Read singleton UI settings (strictly read-only). */
 export function getUiSettings(db: DbExecutor): UiSettings {
@@ -69,7 +69,7 @@ export function updateUiSettings(
 	});
 }
 
-/** Log a tool call against a session, keeping at most the latest 200 entries per session. */
+/** Log a tool call against a session. New session creation prunes global `tool_calls` to 100 rows. */
 export function recordToolCall(
 	db: AppDrizzleDb,
 	sessionId: string,
@@ -97,20 +97,6 @@ export function recordToolCall(
 			.returning()
 			.get();
 
-		const overflowIds = tx
-			.select({ id: toolCalls.id })
-			.from(toolCalls)
-			.where(eq(toolCalls.sessionId, sessionId))
-			.orderBy(desc(toolCalls.createdAt))
-			.limit(1000)
-			.offset(MAX_TOOL_CALLS_PER_SESSION)
-			.all()
-			.map(row => row.id);
-
-		if (overflowIds.length > 0) {
-			tx.delete(toolCalls).where(inArray(toolCalls.id, overflowIds)).run();
-		}
-
 		return {
 			id: inserted.id,
 			sessionId: inserted.sessionId,
@@ -123,18 +109,65 @@ export function recordToolCall(
 	});
 }
 
-/** Clear recorded tool calls for a session without affecting timeline or artifacts. */
-export function clearToolCalls(db: AppDrizzleDb, sessionId: string): void {
+export interface ClearToolCallsTarget {
+	sessionId?: string;
+	groupId?: string;
+	all?: boolean;
+}
+
+/**
+ * Clear recorded tool call logs for a session, a session group, or all stored logs
+ * without affecting timeline events or task artifacts.
+ */
+export function clearToolCalls(
+	db: AppDrizzleDb,
+	target: string | ClearToolCallsTarget,
+): void {
+	const resolved: ClearToolCallsTarget = typeof target === "string"
+		? { sessionId: target }
+		: target;
+
 	db.transaction((tx) => {
-		tx.delete(toolCalls).where(eq(toolCalls.sessionId, sessionId)).run();
-		tx.update(sessions)
-			.set({ updatedAt: new Date().toISOString() })
-			.where(eq(sessions.id, sessionId))
-			.run();
+		const now = new Date().toISOString();
+		if (resolved.all) {
+			tx.delete(toolCalls).run();
+			if (resolved.sessionId) {
+				tx.update(sessions)
+					.set({ updatedAt: now })
+					.where(eq(sessions.id, resolved.sessionId))
+					.run();
+			}
+			return;
+		}
+
+		if (resolved.groupId) {
+			const memberIds = tx
+				.select({ id: sessions.id })
+				.from(sessions)
+				.where(eq(sessions.groupId, resolved.groupId))
+				.all()
+				.map(r => r.id);
+			if (memberIds.length > 0) {
+				tx.delete(toolCalls).where(inArray(toolCalls.sessionId, memberIds)).run();
+				tx.update(sessions)
+					.set({ updatedAt: now })
+					.where(inArray(sessions.id, memberIds))
+					.run();
+			}
+			return;
+		}
+
+		if (resolved.sessionId) {
+			tx.delete(toolCalls).where(eq(toolCalls.sessionId, resolved.sessionId)).run();
+			tx.update(sessions)
+				.set({ updatedAt: now })
+				.where(eq(sessions.id, resolved.sessionId))
+				.run();
+		}
 	});
 }
 
-/** List tool calls for a session or group (strictly read-only). */
+/** List up to {@link MAX_TOOL_CALL_LOGS} (100) newest tool calls for a session or group (strictly read-only). */
 export function listToolCalls(
 	db: DbExecutor,
 	filter?: { sessionId?: string; groupId?: string; limit?: number },
@@ -156,12 +189,13 @@ export function listToolCalls(
 		conditions.push(inArray(toolCalls.sessionId, sessionIds));
 	}
 
+	const cappedLimit = Math.min(filter?.limit ?? MAX_TOOL_CALL_LOGS, MAX_TOOL_CALL_LOGS);
 	const rows = db
 		.select()
 		.from(toolCalls)
 		.where(conditions.length > 0 ? and(...conditions) : undefined)
-		.orderBy(desc(toolCalls.createdAt))
-		.limit(filter?.limit ?? 200)
+		.orderBy(desc(toolCalls.createdAt), desc(sql`rowid`))
+		.limit(cappedLimit)
 		.all();
 
 	return rows.map(row => ({

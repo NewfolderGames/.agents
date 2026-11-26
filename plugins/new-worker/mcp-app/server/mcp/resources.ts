@@ -5,28 +5,35 @@ import type { WidgetRoute } from "@/shared/contracts.js";
 export const DASHBOARD_RESOURCE_URI = "ui://new-worker/dashboard";
 
 export const WIDGET_RESOURCE_URIS: Record<WidgetRoute, string> = {
-	"task": "ui://new-worker/widget/task",
-	"task-step": "ui://new-worker/widget/task-step",
-	"plan": "ui://new-worker/widget/plan",
-	"report": "ui://new-worker/widget/report",
-	"handoff": "ui://new-worker/widget/handoff",
-	"questions": "ui://new-worker/widget/questions",
+	task: "ui://new-worker/widget/task",
+	plan: "ui://new-worker/widget/plan",
+	report: "ui://new-worker/widget/report",
+	handoff: "ui://new-worker/widget/handoff",
+	questions: "ui://new-worker/widget/questions",
 };
 
 const WIDGET_LABELS: Record<WidgetRoute, string> = {
-	"task": "New Worker Task Widget",
-	"task-step": "New Worker Task Step Widget",
-	"plan": "New Worker Plan Widget",
-	"report": "New Worker Report Widget",
-	"handoff": "New Worker Handoff Widget",
-	"questions": "New Worker Questions Widget",
+	task: "New Worker Task Widget",
+	plan: "New Worker Plan Widget",
+	report: "New Worker Report Widget",
+	handoff: "New Worker Handoff Widget",
+	questions: "New Worker Questions Widget",
 };
 
-/** Inject `window.__NEW_WORKER_ROUTE__` into the single-file widget HTML before `</head>`. */
+/**
+ * Inject `window.__NEW_WORKER_ROUTE__` immediately after `<head>` (or before the final
+ * `</head>` fallback) so literal `</head>` strings inside bundled JS never corrupt script tags.
+ */
 export function injectWidgetRoute(html: string, route: WidgetRoute): string {
 	const routeTag = `<script>window.__NEW_WORKER_ROUTE__=${JSON.stringify(`/widget/${route}`)};</script>`;
-	if (html.includes("</head>")) {
-		return html.replace("</head>", `${routeTag}</head>`);
+	const headOpenMatch = /<head\b[^>]*>/i.exec(html);
+	if (headOpenMatch) {
+		const insertAt = headOpenMatch.index + headOpenMatch[0].length;
+		return `${html.slice(0, insertAt)}${routeTag}${html.slice(insertAt)}`;
+	}
+	const lastHeadClose = html.toLowerCase().lastIndexOf("</head>");
+	if (lastHeadClose !== -1) {
+		return `${html.slice(0, lastHeadClose)}${routeTag}${html.slice(lastHeadClose)}`;
 	}
 	return `${routeTag}${html}`;
 }
@@ -36,7 +43,7 @@ export interface RegisterResourcesOptions {
 	loadWidgetHtml: () => Promise<string>;
 }
 
-/** Register the isolated Dashboard UI resource and all 6 route-tagged inline Widget UI resources. */
+/** Register the isolated Dashboard UI resource and all 5 route-tagged inline Widget UI resources. */
 export function registerUiResources(
 	server: McpServer,
 	options: RegisterResourcesOptions,
@@ -49,7 +56,7 @@ export function registerUiResources(
 		DASHBOARD_RESOURCE_URI,
 		{
 			description:
-				"Interactive Dashboard UI for multi-session groups, tasks, plans, reports, handoffs, questions, timeline, and tool calls.",
+				"Interactive Dashboard UI for multi-session groups, tasks, plans, reports, handoffs, questions, timeline, and logs.",
 			mimeType: RESOURCE_MIME_TYPE,
 			_meta: {
 				ui: {

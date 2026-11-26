@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { parseCliArgs } from "../config.js";
 import { openDatabase } from "../db/client.js";
 import { sessions, tasks, timelineEvents, toolCalls } from "../db/schema.js";
+import { injectWidgetRoute } from "./resources.js";
 import { registerNewWorkerServer } from "./server.js";
 
 async function createConnectedServer() {
@@ -16,7 +17,7 @@ async function createConnectedServer() {
 	registerNewWorkerServer(server, {
 		db: handle.db,
 		loadDashboardHtml: async () => "<!doctype html><html lang=\"en\"><head></head><body>DASHBOARD</body></html>",
-		loadWidgetHtml: async () => "<!doctype html><html lang=\"en\"><head></head><body>WIDGET</body></html>",
+		loadWidgetHtml: async () => "<!doctype html><html lang=\"en\"><head><script type=\"module\">const tpl=\"<head></head>\";</script></head><body>WIDGET</body></html>",
 	});
 
 	const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
@@ -60,7 +61,15 @@ describe("MCP server resources, CLI parsing, and consolidated 10+6 tools", () =>
 		expect(custom.widgetHtmlPath).toBe("/tmp/widget.html");
 	});
 
-	it("exposes 10 model-visible tools, 6 app-only tools, and 7 route-tagged UI resources", async () => {
+	it("injects widget route right after <head> without corrupting </head> literals inside bundled JS", () => {
+		const html = "<!doctype html><html><head><script type=\"module\">const s=\"<head></head>\";</script></head><body></body></html>";
+		const injected = injectWidgetRoute(html, "questions");
+		expect(injected).toBe(
+			"<!doctype html><html><head><script>window.__NEW_WORKER_ROUTE__=\"/widget/questions\";</script><script type=\"module\">const s=\"<head></head>\";</script></head><body></body></html>",
+		);
+	});
+
+	it("exposes 10 model-visible tools, 6 app-only tools, and 6 route-tagged UI resources", async () => {
 		const ctx = await createConnectedServer();
 		try {
 			const { tools } = await ctx.client.listTools();
@@ -92,6 +101,12 @@ describe("MCP server resources, CLI parsing, and consolidated 10+6 tools", () =>
 				"app_update_settings",
 			]);
 
+			// update_task_item must stay data-only (no step progress widget).
+			const updateItemTool = tools.find(t => t.name === "update_task_item");
+			expect((updateItemTool?._meta as {
+				ui?: { resourceUri?: string };
+			} | undefined)?.ui?.resourceUri).toBeUndefined();
+
 			const { resources } = await ctx.client.listResources();
 			expect(resources.map(r => r.uri).sort()).toEqual([
 				"ui://new-worker/dashboard",
@@ -100,17 +115,16 @@ describe("MCP server resources, CLI parsing, and consolidated 10+6 tools", () =>
 				"ui://new-worker/widget/questions",
 				"ui://new-worker/widget/report",
 				"ui://new-worker/widget/task",
-				"ui://new-worker/widget/task-step",
 			]);
 
 			const dashRes = await ctx.client.readResource({ uri: "ui://new-worker/dashboard" });
 			expect(dashRes.contents[0]?.mimeType).toBe("text/html;profile=mcp-app");
 			expect((dashRes.contents[0] as { text?: string }).text).toContain("DASHBOARD");
 
-			const stepRes = await ctx.client.readResource({ uri: "ui://new-worker/widget/task-step" });
-			const stepText = (stepRes.contents[0] as { text?: string }).text ?? "";
-			expect(stepText).toContain("window.__NEW_WORKER_ROUTE__=\"/widget/task-step\"");
-			expect(stepText).toContain("WIDGET");
+			const planRes = await ctx.client.readResource({ uri: "ui://new-worker/widget/plan" });
+			const planText = (planRes.contents[0] as { text?: string }).text ?? "";
+			expect(planText).toContain("<head><script>window.__NEW_WORKER_ROUTE__=\"/widget/plan\";</script><script type=\"module\">");
+			expect(planText).toContain("const tpl=\"<head></head>\";");
 		}
 		finally {
 			await ctx.close();
@@ -247,7 +261,7 @@ describe("MCP server resources, CLI parsing, and consolidated 10+6 tools", () =>
 				task: { taskId: number };
 			}).task.taskId).toBe(2);
 
-			// update_task_item embeds stepSnapshot
+			// update_task_item is data-only and returns stepSnapshot without a widget route
 			const itemCall = await ctx.client.callTool({
 				name: "update_task_item",
 				arguments: {
@@ -258,10 +272,10 @@ describe("MCP server resources, CLI parsing, and consolidated 10+6 tools", () =>
 				},
 			});
 			const itemStructured = itemCall.structuredContent as {
-				widget: string;
+				taskId: number;
 				stepSnapshot?: { taskId: number };
 			};
-			expect(itemStructured.widget).toBe("task-step");
+			expect(itemStructured.taskId).toBe(1);
 			expect(itemStructured.stepSnapshot?.taskId).toBe(1);
 
 			// query_workspace: plan with and without includeMarkdown

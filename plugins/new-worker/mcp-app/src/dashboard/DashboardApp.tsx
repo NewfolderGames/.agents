@@ -6,6 +6,7 @@ import { ActionButton } from "@/ui/primitives/ActionButton.js";
 import { EmptyState } from "@/ui/primitives/EmptyState.js";
 import { ConfirmDialog } from "./components/ConfirmDialog.js";
 import { DashboardHeader } from "./components/DashboardHeader.js";
+import { LogFooter } from "./components/LogFooter.js";
 import { SessionGroupDialog } from "./components/SessionGroupDialog.js";
 import { SessionMetaDialog } from "./components/SessionMetaDialog.js";
 import { SettingsDialog } from "./components/SettingsDialog.js";
@@ -16,7 +17,6 @@ import { QuestionsPanel } from "./panels/QuestionsPanel.js";
 import { ReportsPanel } from "./panels/ReportsPanel.js";
 import { TasksPanel } from "./panels/TasksPanel.js";
 import { TimelinePanel } from "./panels/TimelinePanel.js";
-import { ToolCallsPanel } from "./panels/ToolCallsPanel.js";
 import { useDashboardStore } from "./store.js";
 import { useDashboardController } from "./useDashboardController.js";
 import styles from "./DashboardApp.module.css";
@@ -46,7 +46,8 @@ function TabPanel({
 
 /**
  * Root view for the isolated New Worker Dashboard (`ui://new-worker/dashboard`),
- * managing single-session and 1:N group views, settings modals, and panel navigation.
+ * structured as a 3-row CSS Grid with a sticky header, scrollable panel body, and
+ * toggleable scrollable Log footer.
  */
 export function DashboardApp() {
 	const state = useDashboardStore(
@@ -57,6 +58,7 @@ export function DashboardApp() {
 			rootDirFilter: s.rootDirFilter,
 			activeTab: s.activeTab,
 			activeItemId: s.activeItemId,
+			isLogOpen: s.isLogOpen,
 			settings: s.settings,
 			session: s.session,
 			group: s.group,
@@ -77,6 +79,7 @@ export function DashboardApp() {
 			setActiveTab: s.setActiveTab,
 			setActiveItemId: s.setActiveItemId,
 			setRootDirFilter: s.setRootDirFilter,
+			toggleLogOpen: s.toggleLogOpen,
 			setActiveDialog: s.setActiveDialog,
 			setErrorMessage: s.setErrorMessage,
 		})),
@@ -95,28 +98,32 @@ export function DashboardApp() {
 
 	if (!state.hasLoaded && !state.session && !state.group) {
 		return (
-			<main className={styles["dashboard-app"]}>
-				{bridge.connectionError
-					? (
-							<EmptyState
-								title="Dashboard opened outside an active MCP App host."
-								detail={bridge.connectionError}
-								actions={(
-									<ActionButton
-										onClick={() => state.applyPayload(createSampleDashboardPayload())}
-									>
-										Load Sample Workspace
-									</ActionButton>
+			<div className={styles["dashboard-app"]}>
+				<main className={styles.content}>
+					<div className={styles.container}>
+						{bridge.connectionError
+							? (
+									<EmptyState
+										title="Dashboard opened outside an active MCP App host."
+										detail={bridge.connectionError}
+										actions={(
+											<ActionButton
+												onClick={() => state.applyPayload(createSampleDashboardPayload())}
+											>
+												Load Sample Workspace
+											</ActionButton>
+										)}
+									/>
+								)
+							: (
+									<EmptyState
+										title={bridge.isToolStreaming ? "Loading dashboard state..." : "Connecting to MCP host..."}
+										detail="Waiting for SQLite workspace state."
+									/>
 								)}
-							/>
-						)
-					: (
-							<EmptyState
-								title={bridge.isToolStreaming ? "Loading dashboard state..." : "Connecting to MCP host..."}
-								detail="Waiting for SQLite workspace state."
-							/>
-						)}
-			</main>
+					</div>
+				</main>
+			</div>
 		);
 	}
 
@@ -127,175 +134,193 @@ export function DashboardApp() {
 		handoffs: state.handoffs.length,
 		questions: state.questionSets.length,
 		timeline: state.timeline.length,
-		calls: state.toolCalls.length,
 	};
 
+	const clearScopeLabel = state.scope === "group" && state.group
+		? `group "${state.group.name}"`
+		: state.sessionId
+			? `session "${state.sessionId}"`
+			: "all sessions";
+
 	return (
-		<main className={styles["dashboard-app"]}>
-			<DashboardHeader
-				scope={state.scope}
-				session={state.session}
-				group={state.group}
-				sessions={state.sessions}
-				groups={state.groups}
-				rootDirFilter={state.rootDirFilter}
-				activeTab={state.activeTab}
-				tabCounts={tabCounts}
-				isBusy={state.isBusy}
-				onChangeScope={nextScope => void fetchDashboard({ scope: nextScope })}
-				onSelectSession={nextId => void fetchDashboard({
-					scope: "session",
-					sessionId: nextId,
-				})}
-				onSelectGroup={nextGroupId => void fetchDashboard({
-					scope: "group",
-					groupId: nextGroupId,
-				})}
-				onChangeRootDirFilter={(dir) => {
-					state.setRootDirFilter(dir);
-					void fetchDashboard({ rootDirFilter: dir });
-				}}
-				onSelectTab={tab => state.setActiveTab(tab)}
-				onOpenGroupDialog={mode => state.setActiveDialog(mode === "create" ? "group_create" : "group_edit")}
-				onOpenSessionDialog={() => state.setActiveDialog("session_edit")}
-				onOpenSettings={() => state.setActiveDialog("settings")}
-				onRefresh={() => void fetchDashboard()}
-			/>
-
-			{state.errorMessage && (
-				<div className={styles.error} role="alert">
-					<span>{state.errorMessage}</span>
-					<ActionButton
-						variant="subtle"
-						size="compact"
-						onClick={() => state.setErrorMessage(null)}
-					>
-						Dismiss
-					</ActionButton>
+		<div className={styles["dashboard-app"]}>
+			<header className={styles["header-slot"]}>
+				<div className={styles.container}>
+					<DashboardHeader
+						scope={state.scope}
+						session={state.session}
+						group={state.group}
+						sessions={state.sessions}
+						groups={state.groups}
+						rootDirFilter={state.rootDirFilter}
+						activeTab={state.activeTab}
+						tabCounts={tabCounts}
+						isLogOpen={state.isLogOpen}
+						logCount={Math.min(state.toolCalls.length, 100)}
+						isBusy={state.isBusy}
+						onChangeScope={nextScope => void fetchDashboard({ scope: nextScope })}
+						onSelectSession={nextId => void fetchDashboard({
+							scope: "session",
+							sessionId: nextId,
+						})}
+						onSelectGroup={nextGroupId => void fetchDashboard({
+							scope: "group",
+							groupId: nextGroupId,
+						})}
+						onChangeRootDirFilter={(dir) => {
+							state.setRootDirFilter(dir);
+							void fetchDashboard({ rootDirFilter: dir });
+						}}
+						onSelectTab={tab => state.setActiveTab(tab)}
+						onToggleLog={state.toggleLogOpen}
+						onOpenGroupDialog={mode => state.setActiveDialog(mode === "create" ? "group_create" : "group_edit")}
+						onOpenSessionDialog={() => state.setActiveDialog("session_edit")}
+						onOpenSettings={() => state.setActiveDialog("settings")}
+						onRefresh={() => void fetchDashboard()}
+					/>
 				</div>
-			)}
+			</header>
 
-			{!state.session && !state.group
-				? (
-						<EmptyState
-							title="No sessions or groups recorded yet."
-							detail="Sessions, tasks, plans, reports, handoffs, and timeline events appear here once created."
-						/>
-					)
-				: (
-						<div className={styles.panels}>
-							<TabPanel id="tasks" active={state.activeTab}>
-								<TasksPanel
-									scope={state.scope}
-									tasks={state.tasks}
-									sessions={state.sessions}
-									activeTaskId={state.activeItemId}
-									onSelectSession={id => void fetchDashboard({
-										scope: "session",
-										sessionId: id,
-									})}
-									onOpenPlan={(taskId) => {
-										state.setActiveItemId(String(taskId));
-										state.setActiveTab("plans");
-									}}
-									onOpenReport={(taskId) => {
-										state.setActiveItemId(String(taskId));
-										state.setActiveTab("reports");
-									}}
-								/>
-							</TabPanel>
-
-							<TabPanel id="plans" active={state.activeTab}>
-								<PlansPanel
-									scope={state.scope}
-									plans={state.plans}
-									sessions={state.sessions}
-									activeTaskId={state.activeItemId}
-									rootDir={state.session?.rootDir}
-									exportDir={state.session?.exportDir}
-									onSelectPlan={id => state.setActiveItemId(id)}
-									onSelectSession={id => void fetchDashboard({
-										scope: "session",
-										sessionId: id,
-									})}
-									onOpenFile={bridge.openWorkspaceFile}
-								/>
-							</TabPanel>
-
-							<TabPanel id="reports" active={state.activeTab}>
-								<ReportsPanel
-									scope={state.scope}
-									reports={state.reports}
-									sessions={state.sessions}
-									activeTaskId={state.activeItemId}
-									rootDir={state.session?.rootDir}
-									exportDir={state.session?.exportDir}
-									onSelectReport={id => state.setActiveItemId(id)}
-									onSelectSession={id => void fetchDashboard({
-										scope: "session",
-										sessionId: id,
-									})}
-									onOpenPlan={(taskId) => {
-										state.setActiveItemId(String(taskId));
-										state.setActiveTab("plans");
-									}}
-									onOpenFile={bridge.openWorkspaceFile}
-								/>
-							</TabPanel>
-
-							<TabPanel id="handoffs" active={state.activeTab}>
-								<HandoffsPanel
-									scope={state.scope}
-									handoffs={state.handoffs}
-									sessions={state.sessions}
-									rootDir={state.session?.rootDir}
-									onSelectSession={id => void fetchDashboard({
-										scope: "session",
-										sessionId: id,
-									})}
-									onOpenFile={bridge.openWorkspaceFile}
-								/>
-							</TabPanel>
-
-							<TabPanel id="questions" active={state.activeTab}>
-								<QuestionsPanel
-									scope={state.scope}
-									questionSets={state.questionSets}
-									sessions={state.sessions}
-									activeQuestionSetId={state.activeItemId}
-									isBusy={state.isBusy}
-									canSendMessage={bridge.capabilities.canSendMessage}
-									onSelectQuestionSet={id => state.setActiveItemId(id)}
-									onSelectSession={id => void fetchDashboard({
-										scope: "session",
-										sessionId: id,
-									})}
-									onOpenFile={bridge.openWorkspaceFile}
-									onSaveDraft={handleSaveDraft}
-									onSubmit={handleSubmitQuestions}
-								/>
-							</TabPanel>
-
-							<TabPanel id="timeline" active={state.activeTab}>
-								<TimelinePanel
-									scope={state.scope}
-									events={state.timeline}
-									sessions={state.sessions}
-									onOpenNoteDialog={() => state.setActiveDialog("timeline_note")}
-									onNavigateLink={handleNavigateLink}
-								/>
-							</TabPanel>
-
-							<TabPanel id="calls" active={state.activeTab}>
-								<ToolCallsPanel
-									toolCalls={state.toolCalls}
-									isBusy={state.isBusy}
-									canClear={Boolean(state.sessionId && bridge.capabilities.canCallServerTools)}
-									onRequestClear={() => state.setActiveDialog("confirm_clear_calls")}
-								/>
-							</TabPanel>
+			<main className={styles.content}>
+				<div className={styles.container}>
+					{state.errorMessage && (
+						<div className={styles.error} role="alert">
+							<span>{state.errorMessage}</span>
+							<ActionButton
+								variant="subtle"
+								size="compact"
+								onClick={() => state.setErrorMessage(null)}
+							>
+								Dismiss
+							</ActionButton>
 						</div>
 					)}
+
+					{!state.session && !state.group
+						? (
+								<EmptyState
+									title="No sessions or groups recorded yet."
+									detail="Sessions, tasks, plans, reports, handoffs, and timeline events appear here once created."
+								/>
+							)
+						: (
+								<div className={styles.panels}>
+									<TabPanel id="tasks" active={state.activeTab}>
+										<TasksPanel
+											scope={state.scope}
+											tasks={state.tasks}
+											sessions={state.sessions}
+											activeTaskId={state.activeItemId}
+											onSelectSession={id => void fetchDashboard({
+												scope: "session",
+												sessionId: id,
+											})}
+											onOpenPlan={(taskId) => {
+												state.setActiveItemId(String(taskId));
+												state.setActiveTab("plans");
+											}}
+											onOpenReport={(taskId) => {
+												state.setActiveItemId(String(taskId));
+												state.setActiveTab("reports");
+											}}
+										/>
+									</TabPanel>
+
+									<TabPanel id="plans" active={state.activeTab}>
+										<PlansPanel
+											scope={state.scope}
+											plans={state.plans}
+											sessions={state.sessions}
+											activeTaskId={state.activeItemId}
+											rootDir={state.session?.rootDir}
+											exportDir={state.session?.exportDir}
+											onSelectPlan={id => state.setActiveItemId(id)}
+											onSelectSession={id => void fetchDashboard({
+												scope: "session",
+												sessionId: id,
+											})}
+											onOpenFile={bridge.openWorkspaceFile}
+										/>
+									</TabPanel>
+
+									<TabPanel id="reports" active={state.activeTab}>
+										<ReportsPanel
+											scope={state.scope}
+											reports={state.reports}
+											sessions={state.sessions}
+											activeTaskId={state.activeItemId}
+											rootDir={state.session?.rootDir}
+											exportDir={state.session?.exportDir}
+											onSelectReport={id => state.setActiveItemId(id)}
+											onSelectSession={id => void fetchDashboard({
+												scope: "session",
+												sessionId: id,
+											})}
+											onOpenPlan={(taskId) => {
+												state.setActiveItemId(String(taskId));
+												state.setActiveTab("plans");
+											}}
+											onOpenFile={bridge.openWorkspaceFile}
+										/>
+									</TabPanel>
+
+									<TabPanel id="handoffs" active={state.activeTab}>
+										<HandoffsPanel
+											scope={state.scope}
+											handoffs={state.handoffs}
+											sessions={state.sessions}
+											rootDir={state.session?.rootDir}
+											onSelectSession={id => void fetchDashboard({
+												scope: "session",
+												sessionId: id,
+											})}
+											onOpenFile={bridge.openWorkspaceFile}
+										/>
+									</TabPanel>
+
+									<TabPanel id="questions" active={state.activeTab}>
+										<QuestionsPanel
+											scope={state.scope}
+											questionSets={state.questionSets}
+											sessions={state.sessions}
+											activeQuestionSetId={state.activeItemId}
+											isBusy={state.isBusy}
+											canSendMessage={bridge.capabilities.canSendMessage}
+											onSelectQuestionSet={id => state.setActiveItemId(id)}
+											onSelectSession={id => void fetchDashboard({
+												scope: "session",
+												sessionId: id,
+											})}
+											onOpenFile={bridge.openWorkspaceFile}
+											onSaveDraft={handleSaveDraft}
+											onSubmit={handleSubmitQuestions}
+										/>
+									</TabPanel>
+
+									<TabPanel id="timeline" active={state.activeTab}>
+										<TimelinePanel
+											scope={state.scope}
+											events={state.timeline}
+											sessions={state.sessions}
+											onOpenNoteDialog={() => state.setActiveDialog("timeline_note")}
+											onNavigateLink={handleNavigateLink}
+										/>
+									</TabPanel>
+								</div>
+							)}
+				</div>
+			</main>
+
+			<footer className={styles["footer-slot"]}>
+				<LogFooter
+					isOpen={state.isLogOpen}
+					toolCalls={state.toolCalls}
+					isBusy={state.isBusy}
+					canClear={Boolean((state.sessionId || state.groupId) && bridge.capabilities.canCallServerTools)}
+					onToggle={state.toggleLogOpen}
+					onRequestClear={() => state.setActiveDialog("confirm_clear_calls")}
+				/>
+			</footer>
 
 			<SettingsDialog
 				open={state.activeDialog === "settings"}
@@ -379,9 +404,9 @@ export function DashboardApp() {
 
 			<ConfirmDialog
 				open={state.activeDialog === "confirm_clear_calls"}
-				title="Clear Tool Call History?"
-				message={`Delete all recorded tool calls for session "${state.sessionId ?? ""}"? Timeline events and artifacts are preserved.`}
-				confirmLabel="Clear History"
+				title="Clear Tool Call Logs?"
+				message={`Delete all recorded tool call logs for ${clearScopeLabel}? Timeline events and artifacts are preserved.`}
+				confirmLabel="Clear All"
 				isBusy={state.isBusy}
 				onConfirm={handleClearToolCalls}
 				onClose={() => state.setActiveDialog(null)}
@@ -404,6 +429,6 @@ export function DashboardApp() {
 				}}
 				onClose={() => state.setActiveDialog(null)}
 			/>
-		</main>
+		</div>
 	);
 }

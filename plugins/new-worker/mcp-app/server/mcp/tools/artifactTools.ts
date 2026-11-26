@@ -5,6 +5,7 @@ import { AuditFindingSchema, AuditVerificationRowSchema, FileRefSchema, HandoffK
 import { formatTaskId } from "@/shared/format.js";
 import type { AppDrizzleDb } from "../../db/client.js";
 import { recordHandoff, writePlan, writeReport } from "../../repositories/artifacts.js";
+import { hasSession } from "../../repositories/sessions.js";
 import { recordToolCall } from "../../repositories/settings.js";
 import { buildWidgetPayload } from "../../repositories/workspace.js";
 import { WIDGET_RESOURCE_URIS } from "../resources.js";
@@ -64,6 +65,7 @@ export function registerArtifactTools(server: McpServer, db: AppDrizzleDb): void
 			sessionId: args.sessionId,
 			toolName: "write_plan",
 		}, async () => {
+			const isNewSession = !hasSession(db, args.sessionId);
 			const { plan, planFilePath } = await writePlan(
 				db,
 				args.sessionId,
@@ -113,11 +115,15 @@ export function registerArtifactTools(server: McpServer, db: AppDrizzleDb): void
 				taskId: plan.taskId,
 			});
 
+			const sessionHint = isNewSession
+				? ` New session "${args.sessionId}" created — call open_workspace({ sessionId: "${args.sessionId}" }) to open the Dashboard UI.`
+				: "";
+
 			return {
 				content: [
 					{
 						type: "text",
-						text: `Saved Plan ${formatTaskId(plan.taskId)} "${plan.title}" (taskId: ${plan.taskId}, file: ${planFilePath}).`,
+						text: `Saved Plan ${formatTaskId(plan.taskId)} "${plan.title}" (taskId: ${plan.taskId}, file: ${planFilePath}).${sessionHint}`,
 					},
 				],
 				structuredContent: {
@@ -169,6 +175,7 @@ export function registerArtifactTools(server: McpServer, db: AppDrizzleDb): void
 			sessionId: args.sessionId,
 			toolName: "write_report",
 		}, async () => {
+			const isNewSession = !hasSession(db, args.sessionId);
 			const { report, reportFilePath } = await writeReport(
 				db,
 				args.sessionId,
@@ -212,11 +219,15 @@ export function registerArtifactTools(server: McpServer, db: AppDrizzleDb): void
 				taskId: report.taskId,
 			});
 
+			const sessionHint = isNewSession
+				? ` New session "${args.sessionId}" created — call open_workspace({ sessionId: "${args.sessionId}" }) to open the Dashboard UI.`
+				: "";
+
 			return {
 				content: [
 					{
 						type: "text",
-						text: `Delivered ${report.mode} Report ${formatTaskId(report.taskId)} "${report.title}" (${report.outcome}, file: ${reportFilePath}).`,
+						text: `Delivered ${report.mode} Report ${formatTaskId(report.taskId)} "${report.title}" (${report.outcome}, file: ${reportFilePath}).${sessionHint}`,
 					},
 				],
 				structuredContent: {
@@ -256,6 +267,7 @@ export function registerArtifactTools(server: McpServer, db: AppDrizzleDb): void
 			},
 		},
 		args => runLoggedTool(db, { sessionId: args.sessionId, toolName: "record_handoff" }, () => {
+			const isNewSession = !hasSession(db, args.sessionId);
 			const { handoff } = recordHandoff(
 				db,
 				args.sessionId,
@@ -291,11 +303,15 @@ export function registerArtifactTools(server: McpServer, db: AppDrizzleDb): void
 				handoffId: handoff.id,
 			});
 
+			const sessionHint = isNewSession
+				? ` New session "${args.sessionId}" created — call open_workspace({ sessionId: "${args.sessionId}" }) to open the Dashboard UI.`
+				: "";
+
 			return {
 				content: [
 					{
 						type: "text",
-						text: `Recorded ${handoff.kind} handoff "${handoff.title}" (id: ${handoff.id}).`,
+						text: `Recorded ${handoff.kind} handoff "${handoff.title}" (id: ${handoff.id}).${sessionHint}`,
 					},
 				],
 				structuredContent: payload,

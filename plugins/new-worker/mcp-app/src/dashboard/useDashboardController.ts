@@ -258,17 +258,17 @@ export function useDashboardController(hasLoaded: boolean): DashboardController 
 
 	const handleClearToolCalls = useCallback(async () => {
 		const cur = useDashboardStore.getState();
-		if (!cur.sessionId) {
-			return;
-		}
 		await runDashboardTool(
 			"app_clear_tool_calls",
 			{
-				sessionId: cur.sessionId,
+				sessionId: cur.sessionId ?? undefined,
 				scope: cur.scope,
 				groupId: cur.groupId ?? undefined,
+				all: !cur.sessionId && !cur.groupId ? true : undefined,
+				activeTab: cur.activeTab,
+				activeItemId: cur.activeItemId,
 			},
-			"Failed to clear tool calls.",
+			"Failed to clear tool call logs.",
 		);
 	}, [runDashboardTool]);
 

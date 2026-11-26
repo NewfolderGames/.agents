@@ -8,7 +8,7 @@ import type { AppDrizzleDb } from "../../db/client.js";
 import { getPlanByTaskId, getReportByTaskId, listHandoffs, listPlans, listReports } from "../../repositories/artifacts.js";
 import { ValidationError } from "../../repositories/errors.js";
 import { getUnresolvedQuestions, listQuestionSets } from "../../repositories/questions.js";
-import { assignSessionGroup, deleteSessionGroup, getLatestSession, getSession, getSessionGroup, listSessionGroups, listSessions, upsertSession, upsertSessionGroup } from "../../repositories/sessions.js";
+import { assignSessionGroup, deleteSessionGroup, getLatestSession, getSession, getSessionGroup, hasSession, listSessionGroups, listSessions, upsertSession, upsertSessionGroup } from "../../repositories/sessions.js";
 import { recordToolCall } from "../../repositories/settings.js";
 import { getCurrentTaskForSession, getTaskById, listTasks } from "../../repositories/tasks.js";
 import { queryTimelineEvents, recordTimelineEvent } from "../../repositories/timeline.js";
@@ -406,7 +406,7 @@ export function registerWorkspaceTools(server: McpServer, db: AppDrizzleDb): voi
 				scope: DashboardScopeSchema.optional().describe("View scope: 'session' (default) or 'group'."),
 				sessionId: SessionIdSchema.optional().describe("Target session ID; defaults to the most recently updated session."),
 				groupId: GroupIdSchema.optional().describe("Target group ID when viewing group scope."),
-				activeTab: DashboardTabSchema.optional().describe("Initial dashboard tab: tasks, plans, reports, handoffs, questions, timeline, or calls."),
+				activeTab: DashboardTabSchema.optional().describe("Initial dashboard tab: tasks, plans, reports, handoffs, questions, or timeline."),
 				activeItemId: z.string().min(1).optional().describe("Optional task ID, handoff ID, or question set ID to focus."),
 			}),
 			_meta: {
@@ -497,6 +497,7 @@ export function registerWorkspaceTools(server: McpServer, db: AppDrizzleDb): voi
 					if (!args.sessionId) {
 						throw new ValidationError("upsert_session requires sessionId.");
 					}
+					const isNewSession = !hasSession(db, args.sessionId);
 					const session = upsertSession(db, args.sessionId, {
 						title: args.title,
 						rootDir: args.rootDir,
@@ -511,14 +512,17 @@ export function registerWorkspaceTools(server: McpServer, db: AppDrizzleDb): voi
 						`Updated session "${session.title ?? session.sessionId}"`,
 						"action=upsert_session",
 					);
+					const openUiHint = isNewSession
+						? ` New session "${session.sessionId}" created — call open_workspace({ sessionId: "${session.sessionId}" }) to open the Dashboard UI.`
+						: "";
 					return {
 						content: [
 							{
 								type: "text",
-								text: `Session "${session.sessionId}" saved (title: ${session.title ?? "-"}, rootDir: ${session.rootDir ?? "-"}, groupId: ${session.groupId ?? "none"}).`,
+								text: `Session "${session.sessionId}" saved (title: ${session.title ?? "-"}, rootDir: ${session.rootDir ?? "-"}, groupId: ${session.groupId ?? "none"}).${openUiHint}`,
 							},
 						],
-						structuredContent: { action: args.action, session },
+						structuredContent: { action: args.action, session, isNewSession },
 					};
 				}
 

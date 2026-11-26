@@ -8,7 +8,6 @@ import { HandoffWidget } from "./HandoffWidget.js";
 import { PlanWidget } from "./PlanWidget.js";
 import { QuestionsWidget } from "./QuestionsWidget.js";
 import { ReportWidget } from "./ReportWidget.js";
-import { TaskStepWidget } from "./TaskStepWidget.js";
 import { TaskWidget } from "./TaskWidget.js";
 import { WidgetShell } from "./WidgetShell.js";
 
@@ -198,28 +197,23 @@ export function WidgetApp() {
 	}
 
 	const activeRoute = payload.widget ?? route;
-	const defaultMode = resolveWidgetDisplayMode(
-		payload.settings,
-		activeRoute === "task-step" ? "step" : "widget",
-	);
+	const isSingleRowWidget = activeRoute === "task" || activeRoute === "plan" || activeRoute === "report";
+	const defaultMode = resolveWidgetDisplayMode(payload.settings, "widget");
 
 	return (
 		<WidgetShell
 			sessionId={payload.sessionId}
 			sessionTitle={payload.sessionTitle}
-			displayMode={defaultMode}
+			displayMode={isSingleRowWidget ? "minimized" : defaultMode}
 			errorMessage={errorMessage}
 			onDismissError={() => setErrorMessage(null)}
 		>
 			{activeRoute === "task" && (
-				<TaskWidget task={payload.task} defaultDisplayMode={defaultMode} />
-			)}
-			{activeRoute === "task-step" && (
-				<TaskStepWidget
-					snapshot={payload.stepSnapshot}
+				<TaskWidget
 					task={payload.task}
-					questionSets={payload.questionSets}
-					defaultDisplayMode={defaultMode}
+					rootDir={payload.rootDir}
+					exportDir={payload.exportDir}
+					onOpenFile={bridge.openWorkspaceFile}
 				/>
 			)}
 			{activeRoute === "plan" && (
@@ -227,7 +221,6 @@ export function WidgetApp() {
 					plan={payload.plan}
 					rootDir={payload.rootDir}
 					exportDir={payload.exportDir}
-					defaultDisplayMode={defaultMode}
 					onOpenFile={bridge.openWorkspaceFile}
 				/>
 			)}
@@ -236,7 +229,6 @@ export function WidgetApp() {
 					report={payload.report}
 					rootDir={payload.rootDir}
 					exportDir={payload.exportDir}
-					defaultDisplayMode={defaultMode}
 					onOpenFile={bridge.openWorkspaceFile}
 				/>
 			)}

@@ -1,11 +1,48 @@
 import crypto from "node:crypto";
 import path from "node:path";
-import { and, desc, eq, inArray, ne } from "drizzle-orm";
+import { and, desc, eq, inArray, ne, notInArray, sql } from "drizzle-orm";
 import type { AppDrizzleDb } from "../db/client.js";
-import { questionSets, sessionGroups, sessions, tasks } from "../db/schema.js";
+import { questionSets, sessionGroups, sessions, tasks, toolCalls } from "../db/schema.js";
 import { GroupIdSchema, type SessionGroup, type SessionGroupSummary, SessionIdSchema, type SessionRecord, type SessionSummary } from "@/shared/contracts.js";
 import { NotFoundError, ValidationError } from "./errors.js";
 import { type DbExecutor, recordTimelineEvent } from "./timeline.js";
+
+/** Maximum number of tool call log entries kept in DB on new session start and displayed in the Log footer. */
+export const MAX_TOOL_CALL_LOGS = 100;
+
+/**
+ * Prune the `tool_calls` table globally so at most `keepCount` newest rows remain.
+ * Invoked automatically when a new session is created to bound database growth.
+ */
+export function pruneToolCallsGlobalTx(tx: DbExecutor, keepCount = MAX_TOOL_CALL_LOGS): number {
+	const keepIds = tx
+		.select({ id: toolCalls.id })
+		.from(toolCalls)
+		.orderBy(desc(toolCalls.createdAt), desc(sql`rowid`))
+		.limit(keepCount)
+		.all()
+		.map(row => row.id);
+
+	if (keepIds.length < keepCount) {
+		return 0;
+	}
+
+	const result = tx
+		.delete(toolCalls)
+		.where(notInArray(toolCalls.id, keepIds))
+		.run();
+	return Number(result.changes ?? 0);
+}
+
+/** Check whether a session ID already exists in SQLite (strictly read-only). */
+export function hasSession(db: DbExecutor, sessionId: string): boolean {
+	const row = db
+		.select({ id: sessions.id })
+		.from(sessions)
+		.where(eq(sessions.id, sessionId))
+		.get();
+	return Boolean(row);
+}
 
 export interface SessionMetaInput {
 	title?: string;
@@ -125,6 +162,7 @@ export function ensureSessionTx(
 			],
 			createdAt: now,
 		});
+		pruneToolCallsGlobalTx(tx, MAX_TOOL_CALL_LOGS);
 		return mapSessionRow(inserted);
 	}
 

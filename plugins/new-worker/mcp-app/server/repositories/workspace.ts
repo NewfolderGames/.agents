@@ -3,7 +3,7 @@ import type { DashboardPayload, DashboardScope, DashboardTab, TaskStepSnapshot, 
 import { getPlanByTaskId, getReportByTaskId, listHandoffs, listPlans, listReports } from "./artifacts.js";
 import { listQuestionSets } from "./questions.js";
 import { getLatestSession, getSession, getSessionGroup, listSessionGroups, listSessions } from "./sessions.js";
-import { computeRevision, getUiSettings, listToolCalls } from "./settings.js";
+import { computeRevision, getUiSettings, listToolCalls, MAX_TOOL_CALL_LOGS } from "./settings.js";
 import { getCurrentTaskForSession, getTaskById, listTasks } from "./tasks.js";
 import { queryTimelineEvents } from "./timeline.js";
 
@@ -68,7 +68,7 @@ export function buildDashboardPayload(
 	const handoffList = filter ? listHandoffs(db, filter) : [];
 	const questionSetList = filter ? listQuestionSets(db, filter) : [];
 	const timeline = filter ? queryTimelineEvents(db, { ...filter, limit: 150 }) : [];
-	const toolCallList = filter ? listToolCalls(db, { ...filter, limit: 200 }) : [];
+	const toolCallList = filter ? listToolCalls(db, { ...filter, limit: MAX_TOOL_CALL_LOGS }) : [];
 
 	const revision = computeRevision({
 		scope,
@@ -81,6 +81,7 @@ export function buildDashboardPayload(
 		groups: groups.map(g => `${g.id}:${g.updatedAt}`),
 		latestTimelineId: timeline[0]?.id ?? 0,
 		latestToolCallId: toolCallList[0]?.id ?? "",
+		toolCallCount: toolCallList.length,
 		taskCount: taskList.length,
 	});
 

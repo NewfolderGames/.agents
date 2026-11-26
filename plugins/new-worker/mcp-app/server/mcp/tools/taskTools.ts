@@ -4,6 +4,7 @@ import { z } from "zod";
 import { SessionIdSchema, SlugSchema, TaskIdSchema, TaskItemStatusSchema, TaskLifecycleStatusSchema } from "@/shared/contracts.js";
 import { formatTaskId } from "@/shared/format.js";
 import type { AppDrizzleDb } from "../../db/client.js";
+import { hasSession } from "../../repositories/sessions.js";
 import { recordToolCall } from "../../repositories/settings.js";
 import { updateTaskItem, upsertTask } from "../../repositories/tasks.js";
 import { buildWidgetPayload } from "../../repositories/workspace.js";
@@ -25,8 +26,8 @@ const ToolStepInputSchema = z.object({
 });
 
 /**
- * Register the `upsert_task` and `update_task_item` tools backed by SQLite task storage
- * and bound to the isolated task and task-step widgets.
+ * Register `upsert_task` (single-row task link widget) and `update_task_item` (data-only)
+ * backed by SQLite task storage.
  *
  * @param server - Target MCP server instance.
  * @param db - Active Drizzle SQLite database connection.
@@ -60,6 +61,7 @@ export function registerTaskTools(server: McpServer, db: AppDrizzleDb): void {
 			sessionId: args.sessionId,
 			toolName: "upsert_task",
 		}, async () => {
+			const isNewSession = !hasSession(db, args.sessionId);
 			const { task } = await upsertTask(
 				db,
 				args.sessionId,
@@ -99,11 +101,15 @@ export function registerTaskTools(server: McpServer, db: AppDrizzleDb): void {
 				taskId: task.taskId,
 			});
 
+			const sessionHint = isNewSession
+				? ` New session "${args.sessionId}" created — call open_workspace({ sessionId: "${args.sessionId}" }) to open the Dashboard UI.`
+				: "";
+
 			return {
 				content: [
 					{
 						type: "text",
-						text: `Saved Task ${formatTaskId(task.taskId)} "${task.title}" (${task.status}, ${task.steps.length} steps).`,
+						text: `Saved Task ${formatTaskId(task.taskId)} "${task.title}" (${task.status}, ${task.steps.length} steps).${sessionHint}`,
 					},
 				],
 				structuredContent: payload,
@@ -111,14 +117,13 @@ export function registerTaskTools(server: McpServer, db: AppDrizzleDb): void {
 		}),
 	);
 
-	// update_task_item -> /widget/task-step
-	registerAppTool(
-		server,
+	// update_task_item — data-only (step progress widget intentionally omitted from chat)
+	server.registerTool(
 		"update_task_item",
 		{
 			title: "Update Task Item",
 			description:
-				"Update one checklist item's status (pending, in_progress, done) by global taskId and itemId. Enforces single in-progress item and immediate/before_step_finish question blockers, emits step transition timeline events, and returns an immutable step snapshot for inline chat display.",
+				"Update one checklist item's status (pending, in_progress, done) by global taskId and itemId. Enforces single in-progress item and immediate/before_step_finish question blockers, emits step transition timeline events, and updates Dashboard state without rendering an inline step widget.",
 			inputSchema: z.object({
 				sessionId: SessionIdSchema,
 				taskId: TaskIdSchema,
@@ -126,9 +131,6 @@ export function registerTaskTools(server: McpServer, db: AppDrizzleDb): void {
 				status: TaskItemStatusSchema,
 				taskStatus: TaskLifecycleStatusSchema.optional(),
 			}),
-			_meta: {
-				ui: { resourceUri: WIDGET_RESOURCE_URIS["task-step"] },
-			},
 		},
 		args => runLoggedTool(db, {
 			sessionId: args.sessionId,
@@ -152,13 +154,6 @@ export function registerTaskTools(server: McpServer, db: AppDrizzleDb): void {
 				`taskId=${task.taskId}, step=${updatedStepIndex + 1}`,
 			);
 
-			const payload = buildWidgetPayload(db, {
-				widget: "task-step",
-				sessionId: args.sessionId,
-				taskId: task.taskId,
-				stepSnapshot,
-			});
-
 			return {
 				content: [
 					{
@@ -166,7 +161,13 @@ export function registerTaskTools(server: McpServer, db: AppDrizzleDb): void {
 						text: `Task ${formatTaskId(task.taskId)} Step ${updatedStepIndex + 1} item "${args.itemId}" -> ${args.status} (task status: ${task.status}).`,
 					},
 				],
-				structuredContent: payload,
+				structuredContent: {
+					taskId: task.taskId,
+					stepIndex: updatedStepIndex,
+					totalSteps: task.steps.length,
+					stepSnapshot,
+					task,
+				},
 			};
 		}),
 	);
