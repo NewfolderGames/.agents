@@ -32783,7 +32783,7 @@ function mapHandoffRow(row) {
 		createdAt: row.createdAt
 	};
 }
-/** Look up an immutable plan by global `taskId`, returning `null` if absent. */
+/** Look up a plan by global `taskId`, returning `null` if absent. */
 function getPlanByTaskId(db, taskId) {
 	const row = db.select().from(plans).where(eq(plans.taskId, taskId)).get();
 	return row ? mapPlanRow(row) : null;
@@ -32827,19 +32827,144 @@ function listHandoffs(db, filter) {
 	if (filter?.taskId !== void 0) conditions.push(eq(handoffs.taskId, filter.taskId));
 	return db.select().from(handoffs).where(conditions.length > 0 ? and(...conditions) : void 0).orderBy(desc(handoffs.createdAt)).limit(filter?.limit ?? 100).all().map(mapHandoffRow);
 }
+function resolveNullableField(patch, current) {
+	if (patch === void 0) return current;
+	return patch === null ? void 0 : patch;
+}
+function serializePlanBody(input) {
+	return JSON.stringify({
+		expectedOutcomes: input.expectedOutcomes,
+		scope: input.scope,
+		openQuestions: input.openQuestions,
+		userStories: input.userStories,
+		functionalRequirements: input.functionalRequirements,
+		nonFunctionalRequirements: input.nonFunctionalRequirements,
+		currentImplementation: input.currentImplementation,
+		keyDecisions: input.keyDecisions,
+		proposedChanges: input.proposedChanges,
+		dataModels: input.dataModels,
+		components: input.components,
+		fileStructure: input.fileStructure,
+		architectureDiagram: input.architectureDiagram,
+		risks: input.risks,
+		apiReference: input.apiReference,
+		migrationPlan: input.migrationPlan,
+		alternatives: input.alternatives,
+		calibration: input.calibration,
+		testing: input.testing
+	});
+}
+function persistPlanMutation(tx, opts) {
+	const fileName = formatTaskFilename(opts.taskId, opts.data.slug, "plan");
+	const generatedPlanPath = opts.exportDir ? path.join(opts.exportDir, fileName) : void 0;
+	tx.update(tasks).set({
+		planFile: fileName,
+		updatedAt: opts.now
+	}).where(eq(tasks.id, opts.taskId)).run();
+	const bodyJson = serializePlanBody(opts.data);
+	let savedRow;
+	if (opts.existingPlan) savedRow = tx.update(plans).set({
+		slug: opts.data.slug,
+		title: opts.data.title,
+		targetRepo: opts.data.target.repo,
+		targetBranch: opts.data.target.branch,
+		targetCommit: opts.data.target.commit,
+		follows: opts.data.follows ?? null,
+		overview: opts.data.overview,
+		language: opts.data.language ?? "en",
+		reviewStatus: opts.reviewStatus,
+		reviewComment: opts.reviewComment,
+		generatedPlanPath: generatedPlanPath ?? opts.existingPlan.generatedPlanPath,
+		approvedVia: opts.approvedVia,
+		bodyJson,
+		reviewedAt: opts.reviewedAt
+	}).where(eq(plans.taskId, opts.taskId)).returning().get();
+	else savedRow = tx.insert(plans).values({
+		taskId: opts.taskId,
+		sessionId: opts.sessionId,
+		slug: opts.data.slug,
+		title: opts.data.title,
+		targetRepo: opts.data.target.repo,
+		targetBranch: opts.data.target.branch,
+		targetCommit: opts.data.target.commit,
+		follows: opts.data.follows ?? null,
+		overview: opts.data.overview,
+		language: opts.data.language ?? "en",
+		reviewStatus: opts.reviewStatus,
+		reviewComment: opts.reviewComment,
+		generatedPlanPath: generatedPlanPath ?? null,
+		approvedVia: opts.approvedVia,
+		bodyJson,
+		createdAt: opts.now,
+		reviewedAt: opts.reviewedAt
+	}).returning().get();
+	const plan = mapPlanRow(savedRow);
+	recordTimelineEvent(tx, {
+		sessionId: opts.sessionId,
+		groupId: opts.groupId,
+		eventType: opts.existingPlan ? "plan_updated" : "plan_written",
+		actor: "agent",
+		title: `${opts.existingPlan ? "Updated" : "Wrote"} Plan ${formatTaskId(opts.taskId)}: ${plan.title}`,
+		summary: opts.timelineSummary?.trim() || fileName,
+		links: [
+			{
+				entityType: "plan",
+				entityId: String(opts.taskId),
+				role: "subject",
+				label: fileName
+			},
+			{
+				entityType: "task",
+				entityId: String(opts.taskId),
+				role: "parent",
+				label: `Task ${formatTaskId(opts.taskId)}`
+			},
+			{
+				entityType: "session",
+				entityId: opts.sessionId,
+				role: "parent",
+				label: opts.sessionTitle ?? opts.sessionId
+			}
+		],
+		createdAt: opts.now
+	});
+	return {
+		plan,
+		exportDir: opts.exportDir ?? null,
+		fileName,
+		previousFileName: opts.previousFileName
+	};
+}
+async function exportPlanArtifacts(db, sessionId, saved) {
+	const planMarkdown = renderPlanMarkdown(saved.plan);
+	if (saved.exportDir) {
+		await writeFileAtomic(path.join(saved.exportDir, saved.fileName), planMarkdown);
+		if (saved.previousFileName && saved.previousFileName !== saved.fileName) try {
+			await fs$1.unlink(path.join(saved.exportDir, saved.previousFileName));
+		} catch {}
+		await exportTasksMarkdownIfConfigured(db, sessionId);
+	}
+	return {
+		plan: saved.plan,
+		planFilePath: saved.exportDir ? path.join(saved.exportDir, saved.fileName) : saved.fileName,
+		planMarkdown
+	};
+}
 /**
 * Persist a technical plan, auto-allocating a global `taskId` if omitted, and
 * optionally export `NNN-<slug>.plan.md` + `tasks.md` to `exportDir`.
 */
 async function writePlan(db, sessionId, input, meta) {
-	const result = db.transaction((tx) => {
+	return exportPlanArtifacts(db, sessionId, db.transaction((tx) => {
 		const now = (/* @__PURE__ */ new Date()).toISOString();
 		const session = ensureSessionTx(tx, sessionId, meta, now);
 		let taskId = input.taskId;
+		let previousFileName = null;
 		if (taskId !== void 0) {
 			const existingTask = getTaskById(tx, taskId);
 			if (!existingTask) throw new NotFoundError("Task", taskId);
 			if (existingTask.sessionId !== sessionId) throw new ValidationError(`Task ${formatTaskId(taskId)} belongs to session "${existingTask.sessionId}", not "${sessionId}".`);
+			previousFileName = existingTask.planFile ?? null;
 		} else {
 			taskId = tx.insert(tasks).values({
 				sessionId,
@@ -32871,118 +32996,98 @@ async function writePlan(db, sessionId, input, meta) {
 				createdAt: now
 			});
 		}
-		const fileName = formatTaskFilename(taskId, input.slug, "plan");
-		const generatedPlanPath = session.exportDir ? path.join(session.exportDir, fileName) : void 0;
-		tx.update(tasks).set({
-			planFile: fileName,
-			updatedAt: now
-		}).where(eq(tasks.id, taskId)).run();
-		const bodyJson = JSON.stringify({
-			expectedOutcomes: input.expectedOutcomes,
-			scope: input.scope,
-			openQuestions: input.openQuestions,
-			userStories: input.userStories,
-			functionalRequirements: input.functionalRequirements,
-			nonFunctionalRequirements: input.nonFunctionalRequirements,
-			currentImplementation: input.currentImplementation,
-			keyDecisions: input.keyDecisions,
-			proposedChanges: input.proposedChanges,
-			dataModels: input.dataModels,
-			components: input.components,
-			fileStructure: input.fileStructure,
-			architectureDiagram: input.architectureDiagram,
-			risks: input.risks,
-			apiReference: input.apiReference,
-			migrationPlan: input.migrationPlan,
-			alternatives: input.alternatives,
-			calibration: input.calibration,
-			testing: input.testing
-		});
 		const existingPlan = tx.select().from(plans).where(eq(plans.taskId, taskId)).get();
 		const reviewStatus = input.reviewStatus ?? existingPlan?.reviewStatus ?? "pending_review";
 		const reviewedAt = reviewStatus === "approved" || reviewStatus === "changes_requested" ? existingPlan?.reviewedAt ?? now : existingPlan?.reviewedAt ?? null;
-		let savedRow;
-		if (existingPlan) savedRow = tx.update(plans).set({
-			slug: input.slug,
-			title: input.title,
-			targetRepo: input.target.repo,
-			targetBranch: input.target.branch,
-			targetCommit: input.target.commit,
-			follows: input.follows ?? null,
-			overview: input.overview,
-			language: input.language ?? "en",
-			reviewStatus,
-			reviewComment: input.reviewComment ?? existingPlan.reviewComment,
-			generatedPlanPath: generatedPlanPath ?? existingPlan.generatedPlanPath,
-			approvedVia: input.approvedVia ?? existingPlan.approvedVia,
-			bodyJson,
-			reviewedAt
-		}).where(eq(plans.taskId, taskId)).returning().get();
-		else savedRow = tx.insert(plans).values({
-			taskId,
-			sessionId,
-			slug: input.slug,
-			title: input.title,
-			targetRepo: input.target.repo,
-			targetBranch: input.target.branch,
-			targetCommit: input.target.commit,
-			follows: input.follows ?? null,
-			overview: input.overview,
-			language: input.language ?? "en",
-			reviewStatus,
-			reviewComment: input.reviewComment ?? null,
-			generatedPlanPath: generatedPlanPath ?? null,
-			approvedVia: input.approvedVia ?? null,
-			bodyJson,
-			createdAt: now,
-			reviewedAt
-		}).returning().get();
-		const plan = mapPlanRow(savedRow);
-		recordTimelineEvent(tx, {
+		return persistPlanMutation(tx, {
 			sessionId,
 			groupId: session.groupId,
-			eventType: existingPlan ? "plan_updated" : "plan_written",
-			actor: "agent",
-			title: `${existingPlan ? "Updated" : "Wrote"} Plan ${formatTaskId(taskId)}: ${plan.title}`,
-			summary: fileName,
-			links: [
-				{
-					entityType: "plan",
-					entityId: String(taskId),
-					role: "subject",
-					label: fileName
-				},
-				{
-					entityType: "task",
-					entityId: String(taskId),
-					role: "parent",
-					label: `Task ${formatTaskId(taskId)}`
-				},
-				{
-					entityType: "session",
-					entityId: sessionId,
-					role: "parent",
-					label: session.title ?? sessionId
-				}
-			],
-			createdAt: now
-		});
-		return {
-			plan,
+			sessionTitle: session.title,
 			exportDir: session.exportDir,
-			fileName
+			taskId,
+			previousFileName,
+			existingPlan,
+			data: input,
+			reviewStatus,
+			reviewComment: input.reviewComment ?? existingPlan?.reviewComment ?? null,
+			approvedVia: input.approvedVia ?? existingPlan?.approvedVia ?? null,
+			reviewedAt,
+			now
+		});
+	}));
+}
+/**
+* Partially update an existing technical plan for `taskId` across any lifecycle
+* stage (pre-approval review, mid-execution sync, or post-completion reconfiguration)
+* and re-export `NNN-<slug>.plan.md` + `tasks.md` when `exportDir` is configured.
+*/
+async function updatePlan(db, sessionId, input, meta) {
+	return exportPlanArtifacts(db, sessionId, db.transaction((tx) => {
+		const now = (/* @__PURE__ */ new Date()).toISOString();
+		const session = ensureSessionTx(tx, sessionId, meta, now);
+		const existingTask = getTaskById(tx, input.taskId);
+		if (!existingTask) throw new NotFoundError("Task", input.taskId);
+		if (existingTask.sessionId !== sessionId) throw new ValidationError(`Task ${formatTaskId(input.taskId)} belongs to session "${existingTask.sessionId}", not "${sessionId}".`);
+		const existingPlanRow = tx.select().from(plans).where(eq(plans.taskId, input.taskId)).get();
+		if (!existingPlanRow) throw new NotFoundError("Plan", input.taskId);
+		const existingPlan = mapPlanRow(existingPlanRow);
+		const merged = {
+			taskId: input.taskId,
+			slug: input.slug ?? existingPlan.slug,
+			title: input.title ?? existingPlan.title,
+			target: input.target ?? existingPlan.target,
+			follows: resolveNullableField(input.follows, existingPlan.follows),
+			overview: input.overview ?? existingPlan.overview,
+			expectedOutcomes: input.expectedOutcomes ?? existingPlan.expectedOutcomes,
+			scope: {
+				inScope: input.scope?.inScope ?? existingPlan.scope.inScope,
+				outOfScope: input.scope?.outOfScope ?? existingPlan.scope.outOfScope
+			},
+			openQuestions: resolveNullableField(input.openQuestions, existingPlan.openQuestions),
+			userStories: resolveNullableField(input.userStories, existingPlan.userStories),
+			functionalRequirements: resolveNullableField(input.functionalRequirements, existingPlan.functionalRequirements),
+			nonFunctionalRequirements: resolveNullableField(input.nonFunctionalRequirements, existingPlan.nonFunctionalRequirements),
+			currentImplementation: input.currentImplementation ?? existingPlan.currentImplementation,
+			keyDecisions: input.keyDecisions ?? existingPlan.keyDecisions,
+			proposedChanges: input.proposedChanges ?? existingPlan.proposedChanges,
+			dataModels: resolveNullableField(input.dataModels, existingPlan.dataModels),
+			components: resolveNullableField(input.components, existingPlan.components),
+			fileStructure: input.fileStructure ?? existingPlan.fileStructure,
+			architectureDiagram: resolveNullableField(input.architectureDiagram, existingPlan.architectureDiagram),
+			risks: resolveNullableField(input.risks, existingPlan.risks),
+			apiReference: resolveNullableField(input.apiReference, existingPlan.apiReference),
+			migrationPlan: resolveNullableField(input.migrationPlan, existingPlan.migrationPlan),
+			alternatives: resolveNullableField(input.alternatives, existingPlan.alternatives),
+			calibration: resolveNullableField(input.calibration, existingPlan.calibration),
+			testing: {
+				validationCommands: input.testing?.validationCommands ?? existingPlan.testing.validationCommands,
+				keyScenarios: input.testing?.keyScenarios ?? existingPlan.testing.keyScenarios,
+				edgeCases: resolveNullableField(input.testing?.edgeCases, existingPlan.testing.edgeCases),
+				testChanges: input.testing?.testChanges ?? existingPlan.testing.testChanges
+			},
+			language: input.language ?? existingPlan.language
 		};
-	});
-	const planMarkdown = renderPlanMarkdown(result.plan);
-	if (result.exportDir) {
-		await writeFileAtomic(path.join(result.exportDir, result.fileName), planMarkdown);
-		await exportTasksMarkdownIfConfigured(db, sessionId);
-	}
-	return {
-		plan: result.plan,
-		planFilePath: result.exportDir ? path.join(result.exportDir, result.fileName) : result.fileName,
-		planMarkdown
-	};
+		const reviewStatus = input.reviewStatus ?? existingPlanRow.reviewStatus ?? "pending_review";
+		const reviewedAt = input.reviewStatus !== void 0 ? reviewStatus === "approved" || reviewStatus === "changes_requested" ? now : null : existingPlanRow.reviewedAt;
+		const reviewComment = input.reviewComment === void 0 ? existingPlanRow.reviewComment : input.reviewComment;
+		const approvedVia = input.approvedVia === void 0 ? existingPlanRow.approvedVia : input.approvedVia;
+		return persistPlanMutation(tx, {
+			sessionId,
+			groupId: session.groupId,
+			sessionTitle: session.title,
+			exportDir: session.exportDir,
+			taskId: input.taskId,
+			previousFileName: existingTask.planFile ?? null,
+			existingPlan: existingPlanRow,
+			data: merged,
+			reviewStatus,
+			reviewComment,
+			approvedVia,
+			reviewedAt,
+			timelineSummary: input.changeSummary,
+			now
+		});
+	}));
 }
 /**
 * Persist an immutable implementation or audit report (`NNN-<slug>.report.md`).
@@ -33268,11 +33373,32 @@ function buildWidgetPayload(db, options) {
 // server/mcp/tools/shared.ts
 /** Visibility metadata restricting UI callback tools to MCP App webviews. */
 var APP_ONLY_META = { ui: { visibility: ["app"] } };
+/**
+* Normalize `null` placeholders sent by lazy MCP callers into `undefined` while
+* preserving the inner Zod schema for JSON Schema generation.
+*/
+function optionalInput(schema) {
+	return preprocess((val) => val === null ? void 0 : val, schema.optional());
+}
+/**
+* Normalize `null` or null-containing optional arrays (`[null]`) into `undefined`
+* (or a filtered array) so placeholder arrays do not fail MCP input validation.
+*/
+function optionalArrayInput(itemSchema) {
+	return preprocess((val) => {
+		if (val === null || val === void 0) return;
+		if (Array.isArray(val)) {
+			const filtered = val.filter((item) => item !== null && item !== void 0);
+			return filtered.length === 0 ? void 0 : filtered;
+		}
+		return val;
+	}, array(itemSchema).optional());
+}
 /** Optional session metadata fields shared across model-facing mutating tools. */
 var SessionMetaZodFields = {
-	sessionTitle: string().optional().describe("Optional human-readable title for the session."),
-	rootDir: string().optional().describe("Optional absolute root directory path associated with this session."),
-	exportDir: string().optional().describe("Optional absolute directory path for Markdown artifact export."),
+	sessionTitle: optionalInput(string()).describe("Optional human-readable title for the session."),
+	rootDir: optionalInput(string()).describe("Optional absolute root directory path associated with this session."),
+	exportDir: optionalInput(string()).describe("Optional absolute directory path for Markdown artifact export."),
 	groupId: GroupIdSchema.nullable().optional().describe("Optional 1:N session group ID.")
 };
 /** Schema for polymorphic entity associations attached to timeline notes. */
@@ -33713,8 +33839,8 @@ function registerUiResources(server, options) {
 }
 // server/mcp/tools/artifactTools.ts
 /**
-* Register `write_plan`, `write_report`, and `record_handoff` tools for structured
-* Markdown-backed deliverables and mid-session handoffs.
+* Register `write_plan`, `update_plan`, `write_report`, and `record_handoff` tools
+* for structured Markdown-backed deliverables and mid-session handoffs.
 *
 * @param server - Target MCP server instance.
 * @param db - Active Drizzle SQLite database connection.
@@ -33722,35 +33848,40 @@ function registerUiResources(server, options) {
 function registerArtifactTools(server, db) {
 	j(server, "write_plan", {
 		title: "Write Plan",
-		description: "Persist a structured technical plan. If taskId is omitted, automatically allocates a new global taskId starting from 1 and returns taskId plus planFilePath (001-<slug>.plan.md exported when exportDir is configured).",
+		description: "Persist a structured technical plan. If taskId is omitted, automatically allocates a new global taskId starting from 1 and returns taskId plus planFilePath (001-<slug>.plan.md exported when exportDir is configured). Use update_plan for partial edits to an existing plan.",
 		inputSchema: object({
 			sessionId: SessionIdSchema,
-			taskId: TaskIdSchema.optional().describe("Existing global taskId to attach this plan to; omit to allocate a new global taskId."),
+			taskId: optionalInput(TaskIdSchema).describe("Existing global taskId to attach this plan to; omit to allocate a new global taskId."),
 			slug: SlugSchema,
 			title: string().min(1),
 			target: TargetRepoSchema,
-			follows: string().optional(),
+			follows: optionalInput(string()),
 			overview: string().min(1),
 			expectedOutcomes: array(string().min(1)).min(1),
 			scope: PlanScopeSchema,
-			openQuestions: array(string().min(1)).optional(),
-			userStories: array(string().min(1)).optional(),
-			functionalRequirements: array(string().min(1)).optional(),
-			nonFunctionalRequirements: array(string().min(1)).optional(),
+			openQuestions: optionalArrayInput(string().min(1)),
+			userStories: optionalArrayInput(string().min(1)),
+			functionalRequirements: optionalArrayInput(string().min(1)),
+			nonFunctionalRequirements: optionalArrayInput(string().min(1)),
 			currentImplementation: array(string().min(1)).min(1),
 			keyDecisions: array(string().min(1)).min(1),
 			proposedChanges: array(string().min(1)).min(1),
-			dataModels: string().optional(),
-			components: array(PlanComponentRowSchema).optional(),
+			dataModels: optionalInput(string()),
+			components: optionalArrayInput(PlanComponentRowSchema),
 			fileStructure: array(PlanFileEntrySchema).min(1),
-			architectureDiagram: string().optional(),
-			risks: array(PlanRiskRowSchema).optional(),
-			apiReference: string().optional(),
-			migrationPlan: string().optional(),
-			alternatives: string().optional(),
-			calibration: PlanCalibrationSchema.optional(),
-			testing: PlanTestingSchema,
-			language: LanguageSchema.optional(),
+			architectureDiagram: optionalInput(string()),
+			risks: optionalArrayInput(PlanRiskRowSchema),
+			apiReference: optionalInput(string()),
+			migrationPlan: optionalInput(string()),
+			alternatives: optionalInput(string()),
+			calibration: optionalInput(PlanCalibrationSchema),
+			testing: object({
+				validationCommands: array(string().min(1)).min(1),
+				keyScenarios: array(string().min(1)).min(1),
+				edgeCases: optionalArrayInput(string().min(1)),
+				testChanges: array(string().min(1)).min(1)
+			}),
+			language: optionalInput(LanguageSchema),
 			...SessionMetaZodFields
 		}),
 		_meta: { ui: { resourceUri: WIDGET_RESOURCE_URIS.plan } }
@@ -33806,31 +33937,131 @@ function registerArtifactTools(server, db) {
 			}
 		};
 	}));
+	j(server, "update_plan", {
+		title: "Update Plan",
+		description: "Partially update an existing technical plan by global taskId without resending unchanged sections. Works during plan review, mid-execution sync, or post-completion reconfiguration, and re-exports NNN-<slug>.plan.md and tasks.md when exportDir is configured.",
+		inputSchema: object({
+			sessionId: SessionIdSchema,
+			taskId: TaskIdSchema.describe("Existing global taskId whose plan should be updated."),
+			slug: optionalInput(SlugSchema),
+			title: optionalInput(string().min(1)),
+			target: optionalInput(TargetRepoSchema),
+			follows: string().min(1).nullable().optional(),
+			overview: optionalInput(string().min(1)),
+			expectedOutcomes: optionalArrayInput(string().min(1)),
+			scope: optionalInput(object({
+				inScope: optionalArrayInput(string().min(1)),
+				outOfScope: optionalArrayInput(string().min(1))
+			})),
+			openQuestions: array(string().min(1)).nullable().optional(),
+			userStories: array(string().min(1)).nullable().optional(),
+			functionalRequirements: array(string().min(1)).nullable().optional(),
+			nonFunctionalRequirements: array(string().min(1)).nullable().optional(),
+			currentImplementation: optionalArrayInput(string().min(1)),
+			keyDecisions: optionalArrayInput(string().min(1)),
+			proposedChanges: optionalArrayInput(string().min(1)),
+			dataModels: string().nullable().optional(),
+			components: array(PlanComponentRowSchema).nullable().optional(),
+			fileStructure: optionalArrayInput(PlanFileEntrySchema),
+			architectureDiagram: string().nullable().optional(),
+			risks: array(PlanRiskRowSchema).nullable().optional(),
+			apiReference: string().nullable().optional(),
+			migrationPlan: string().nullable().optional(),
+			alternatives: string().nullable().optional(),
+			calibration: PlanCalibrationSchema.nullable().optional(),
+			testing: optionalInput(object({
+				validationCommands: optionalArrayInput(string().min(1)),
+				keyScenarios: optionalArrayInput(string().min(1)),
+				edgeCases: array(string().min(1)).nullable().optional(),
+				testChanges: optionalArrayInput(string().min(1))
+			})),
+			language: optionalInput(LanguageSchema),
+			reviewStatus: optionalInput(PlanReviewStatusSchema),
+			reviewComment: string().nullable().optional(),
+			approvedVia: PlanApprovalSourceSchema.nullable().optional(),
+			changeSummary: optionalInput(string().min(1)).describe("Concise summary of the plan change for timeline tracking."),
+			...SessionMetaZodFields
+		}),
+		_meta: { ui: { resourceUri: WIDGET_RESOURCE_URIS.plan } }
+	}, (args) => runLoggedTool(db, {
+		sessionId: args.sessionId,
+		toolName: "update_plan"
+	}, async () => {
+		const { plan, planFilePath } = await updatePlan(db, args.sessionId, {
+			taskId: args.taskId,
+			slug: args.slug,
+			title: args.title,
+			target: args.target,
+			follows: args.follows,
+			overview: args.overview,
+			expectedOutcomes: args.expectedOutcomes,
+			scope: args.scope,
+			openQuestions: args.openQuestions,
+			userStories: args.userStories,
+			functionalRequirements: args.functionalRequirements,
+			nonFunctionalRequirements: args.nonFunctionalRequirements,
+			currentImplementation: args.currentImplementation,
+			keyDecisions: args.keyDecisions,
+			proposedChanges: args.proposedChanges,
+			dataModels: args.dataModels,
+			components: args.components,
+			fileStructure: args.fileStructure,
+			architectureDiagram: args.architectureDiagram,
+			risks: args.risks,
+			apiReference: args.apiReference,
+			migrationPlan: args.migrationPlan,
+			alternatives: args.alternatives,
+			calibration: args.calibration,
+			testing: args.testing,
+			language: args.language,
+			reviewStatus: args.reviewStatus,
+			reviewComment: args.reviewComment,
+			approvedVia: args.approvedVia,
+			changeSummary: args.changeSummary
+		}, buildSessionMeta(args));
+		recordToolCall(db, args.sessionId, "update_plan", "ok", `Updated Plan ${formatTaskId(plan.taskId)}: ${args.changeSummary ?? plan.title}`, `taskId=${plan.taskId}`);
+		const payload = buildWidgetPayload(db, {
+			widget: "plan",
+			sessionId: args.sessionId,
+			taskId: plan.taskId
+		});
+		return {
+			content: [{
+				type: "text",
+				text: `Updated Plan ${formatTaskId(plan.taskId)} "${plan.title}" (taskId: ${plan.taskId}, file: ${planFilePath}).`
+			}],
+			structuredContent: {
+				...payload,
+				taskId: plan.taskId,
+				planFilePath
+			}
+		};
+	}));
 	j(server, "write_report", {
 		title: "Write Report",
 		description: "Deliver an immutable implementation or audit report. Rejects overwrites if a report already exists for taskId. Auto-allocates a global taskId when omitted (useful for standalone audits) and exports NNN-<slug>.report.md when exportDir is set.",
 		inputSchema: object({
 			sessionId: SessionIdSchema,
-			taskId: TaskIdSchema.optional(),
+			taskId: optionalInput(TaskIdSchema),
 			slug: SlugSchema,
 			title: string().min(1),
 			mode: ReportModeSchema,
 			outcome: string().min(1),
 			target: TargetRepoSchema,
-			planRef: string().optional(),
+			planRef: optionalInput(string()),
 			summary: string().min(1),
-			actionsCompleted: array(string().min(1)).optional(),
-			filesChanged: array(ReportFileChangeSchema).optional(),
-			diffStat: string().optional(),
-			planDeviations: array(string().min(1)).optional(),
-			verification: array(ReportVerificationRowSchema).optional(),
-			tryCommand: string().optional(),
-			unverifiedLimitations: string().optional(),
-			operationalNotes: array(string().min(1)).optional(),
-			verificationMatrix: array(AuditVerificationRowSchema).optional(),
-			findings: array(AuditFindingSchema).optional(),
-			followUps: array(ReportFollowUpSchema).optional(),
-			language: LanguageSchema.optional(),
+			actionsCompleted: optionalArrayInput(string().min(1)),
+			filesChanged: optionalArrayInput(ReportFileChangeSchema),
+			diffStat: optionalInput(string()),
+			planDeviations: optionalArrayInput(string().min(1)),
+			verification: optionalArrayInput(ReportVerificationRowSchema),
+			tryCommand: optionalInput(string()),
+			unverifiedLimitations: optionalInput(string()),
+			operationalNotes: optionalArrayInput(string().min(1)),
+			verificationMatrix: optionalArrayInput(AuditVerificationRowSchema),
+			findings: optionalArrayInput(AuditFindingSchema),
+			followUps: optionalArrayInput(ReportFollowUpSchema),
+			language: optionalInput(LanguageSchema),
 			...SessionMetaZodFields
 		}),
 		_meta: { ui: { resourceUri: WIDGET_RESOURCE_URIS.report } }
@@ -33885,17 +34116,17 @@ function registerArtifactTools(server, db) {
 		description: "Record a structured mid-session pause, plan approval request, subagent scout summary, or completion handoff linked to the session and optional global taskId.",
 		inputSchema: object({
 			sessionId: SessionIdSchema,
-			id: string().min(1).optional(),
-			taskId: TaskIdSchema.optional(),
+			id: optionalInput(string().min(1)),
+			taskId: optionalInput(TaskIdSchema),
 			kind: HandoffKindSchema,
 			title: string().min(1),
 			summary: string().min(1),
-			workingNow: string().optional(),
-			verifyCommand: string().optional(),
-			entryPoint: string().optional(),
-			nextStep: string().optional(),
-			artifactLinks: array(FileRefSchema).optional(),
-			structuredData: record(string(), unknown()).optional(),
+			workingNow: optionalInput(string()),
+			verifyCommand: optionalInput(string()),
+			entryPoint: optionalInput(string()),
+			nextStep: optionalInput(string()),
+			artifactLinks: optionalArrayInput(FileRefSchema),
+			structuredData: optionalInput(record(string(), unknown())),
 			...SessionMetaZodFields
 		}),
 		_meta: { ui: { resourceUri: WIDGET_RESOURCE_URIS.handoff } }
@@ -33948,14 +34179,14 @@ function registerQuestionTools(server, db) {
 		description: "Present a structured interactive question set supporting immediate, before_step_finish, and anytime blocking modes, optional global taskId + stepNumber binding, and grouped sections.",
 		inputSchema: object({
 			sessionId: SessionIdSchema,
-			id: string().min(1).optional(),
+			id: optionalInput(string().min(1)),
 			title: string().min(1),
-			description: string().optional(),
-			submitLabel: string().optional(),
-			blockingMode: QuestionBlockingModeSchema.optional(),
-			taskId: TaskIdSchema.optional(),
-			stepNumber: number$1().int().positive().optional(),
-			sections: array(QuestionSectionSchema).optional(),
+			description: optionalInput(string()),
+			submitLabel: optionalInput(string()),
+			blockingMode: optionalInput(QuestionBlockingModeSchema),
+			taskId: optionalInput(TaskIdSchema),
+			stepNumber: optionalInput(number$1().int().positive()),
+			sections: optionalArrayInput(QuestionSectionSchema),
 			questions: array(QuestionItemSchema).min(1),
 			...SessionMetaZodFields
 		}),
@@ -34016,14 +34247,14 @@ function registerTaskTools(server, db) {
 		description: "Create a new global task (auto-incremented integer taskId starting at 1 across all sessions when taskId is omitted) or replace/update an existing task's title, status, summary, and step checklists. Automatically records timeline events and exports tasks.md when exportDir is configured.",
 		inputSchema: object({
 			sessionId: SessionIdSchema,
-			taskId: TaskIdSchema.optional().describe("Existing global task ID to update; omit to allocate the next global task ID."),
+			taskId: optionalInput(TaskIdSchema).describe("Existing global task ID to update; omit to allocate the next global task ID."),
 			slug: SlugSchema,
 			title: string().min(1),
 			status: TaskLifecycleStatusSchema,
 			summary: string().min(1),
 			steps: array(ToolStepInputSchema).min(1),
-			planFile: string().optional(),
-			reportFile: string().optional(),
+			planFile: optionalInput(string()),
+			reportFile: optionalInput(string()),
 			...SessionMetaZodFields
 		}),
 		_meta: { ui: { resourceUri: WIDGET_RESOURCE_URIS.task } }
@@ -34073,7 +34304,7 @@ function registerTaskTools(server, db) {
 			taskId: TaskIdSchema,
 			itemId: string().min(1).describe("Checklist itemKey defined in upsert_task."),
 			status: TaskItemStatusSchema,
-			taskStatus: TaskLifecycleStatusSchema.optional()
+			taskStatus: optionalInput(TaskLifecycleStatusSchema)
 		})
 	}, (args) => runLoggedTool(db, {
 		sessionId: args.sessionId,
@@ -34652,7 +34883,7 @@ function registerWorkspaceTools(server, db) {
 }
 // server/mcp/registerTools.ts
 /**
-* Register all 10 model-visible tools and 6 app-only UI callback tools on the
+* Register all 11 model-visible tools and 6 app-only UI callback tools on the
 * given MCP server instance.
 *
 * @param server - Target MCP server receiving tool registrations.

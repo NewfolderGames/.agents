@@ -11,11 +11,42 @@ export const APP_ONLY_META = {
 	},
 };
 
+/**
+ * Normalize `null` placeholders sent by lazy MCP callers into `undefined` while
+ * preserving the inner Zod schema for JSON Schema generation.
+ */
+export function optionalInput<T extends z.ZodTypeAny>(schema: T) {
+	return z.preprocess(
+		val => (val === null ? undefined : val),
+		schema.optional(),
+	);
+}
+
+/**
+ * Normalize `null` or null-containing optional arrays (`[null]`) into `undefined`
+ * (or a filtered array) so placeholder arrays do not fail MCP input validation.
+ */
+export function optionalArrayInput<T extends z.ZodTypeAny>(itemSchema: T) {
+	return z.preprocess(
+		(val) => {
+			if (val === null || val === undefined) {
+				return undefined;
+			}
+			if (Array.isArray(val)) {
+				const filtered = val.filter(item => item !== null && item !== undefined);
+				return filtered.length === 0 ? undefined : filtered;
+			}
+			return val;
+		},
+		z.array(itemSchema).optional(),
+	);
+}
+
 /** Optional session metadata fields shared across model-facing mutating tools. */
 export const SessionMetaZodFields = {
-	sessionTitle: z.string().optional().describe("Optional human-readable title for the session."),
-	rootDir: z.string().optional().describe("Optional absolute root directory path associated with this session."),
-	exportDir: z.string().optional().describe("Optional absolute directory path for Markdown artifact export."),
+	sessionTitle: optionalInput(z.string()).describe("Optional human-readable title for the session."),
+	rootDir: optionalInput(z.string()).describe("Optional absolute root directory path associated with this session."),
+	exportDir: optionalInput(z.string()).describe("Optional absolute directory path for Markdown artifact export."),
 	groupId: GroupIdSchema.nullable().optional().describe("Optional 1:N session group ID."),
 };
 

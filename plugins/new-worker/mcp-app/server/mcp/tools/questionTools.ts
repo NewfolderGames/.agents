@@ -9,7 +9,7 @@ import { hasSession } from "../../repositories/sessions.js";
 import { recordToolCall } from "../../repositories/settings.js";
 import { buildWidgetPayload } from "../../repositories/workspace.js";
 import { WIDGET_RESOURCE_URIS } from "../resources.js";
-import { buildSessionMeta, runLoggedTool, SessionMetaZodFields } from "./shared.js";
+import { buildSessionMeta, optionalArrayInput, optionalInput, runLoggedTool, SessionMetaZodFields } from "./shared.js";
 
 /**
  * Register the `ask_questions` interactive elicitation tool bound to the
@@ -29,14 +29,14 @@ export function registerQuestionTools(server: McpServer, db: AppDrizzleDb): void
 				"Present a structured interactive question set supporting immediate, before_step_finish, and anytime blocking modes, optional global taskId + stepNumber binding, and grouped sections.",
 			inputSchema: z.object({
 				sessionId: SessionIdSchema,
-				id: z.string().min(1).optional(),
+				id: optionalInput(z.string().min(1)),
 				title: z.string().min(1),
-				description: z.string().optional(),
-				submitLabel: z.string().optional(),
-				blockingMode: QuestionBlockingModeSchema.optional(),
-				taskId: TaskIdSchema.optional(),
-				stepNumber: z.number().int().positive().optional(),
-				sections: z.array(QuestionSectionSchema).optional(),
+				description: optionalInput(z.string()),
+				submitLabel: optionalInput(z.string()),
+				blockingMode: optionalInput(QuestionBlockingModeSchema),
+				taskId: optionalInput(TaskIdSchema),
+				stepNumber: optionalInput(z.number().int().positive()),
+				sections: optionalArrayInput(QuestionSectionSchema),
 				questions: z.array(QuestionItemSchema).min(1),
 				...SessionMetaZodFields,
 			}),

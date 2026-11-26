@@ -9,7 +9,7 @@ import { recordToolCall } from "../../repositories/settings.js";
 import { updateTaskItem, upsertTask } from "../../repositories/tasks.js";
 import { buildWidgetPayload } from "../../repositories/workspace.js";
 import { WIDGET_RESOURCE_URIS } from "../resources.js";
-import { buildSessionMeta, runLoggedTool, SessionMetaZodFields } from "./shared.js";
+import { buildSessionMeta, optionalInput, runLoggedTool, SessionMetaZodFields } from "./shared.js";
 
 const ToolStepInputSchema = z.object({
 	title: z.string().min(1),
@@ -43,14 +43,14 @@ export function registerTaskTools(server: McpServer, db: AppDrizzleDb): void {
 				"Create a new global task (auto-incremented integer taskId starting at 1 across all sessions when taskId is omitted) or replace/update an existing task's title, status, summary, and step checklists. Automatically records timeline events and exports tasks.md when exportDir is configured.",
 			inputSchema: z.object({
 				sessionId: SessionIdSchema,
-				taskId: TaskIdSchema.optional().describe("Existing global task ID to update; omit to allocate the next global task ID."),
+				taskId: optionalInput(TaskIdSchema).describe("Existing global task ID to update; omit to allocate the next global task ID."),
 				slug: SlugSchema,
 				title: z.string().min(1),
 				status: TaskLifecycleStatusSchema,
 				summary: z.string().min(1),
 				steps: z.array(ToolStepInputSchema).min(1),
-				planFile: z.string().optional(),
-				reportFile: z.string().optional(),
+				planFile: optionalInput(z.string()),
+				reportFile: optionalInput(z.string()),
 				...SessionMetaZodFields,
 			}),
 			_meta: {
@@ -129,7 +129,7 @@ export function registerTaskTools(server: McpServer, db: AppDrizzleDb): void {
 				taskId: TaskIdSchema,
 				itemId: z.string().min(1).describe("Checklist itemKey defined in upsert_task."),
 				status: TaskItemStatusSchema,
-				taskStatus: TaskLifecycleStatusSchema.optional(),
+				taskStatus: optionalInput(TaskLifecycleStatusSchema),
 			}),
 		},
 		args => runLoggedTool(db, {

@@ -60,10 +60,15 @@ Use this adapter when running inside Google Antigravity (`<Artifact Directory Pa
   titles, `rootDir`, 1:N session groups (`session_groups`), and manual timeline notes with polymorphic links.
   `query_workspace` and `query_timeline` let agents inspect session/group metadata, task steps, plans, reports,
   handoffs, questions, and timeline events on demand.
-- For plans, reports, and tasks: `write_plan`, `write_report`, and `upsert_task` render a single-row inline summary with
-  a clickable file link to the exported Markdown artifact (`tasks.md`, `NNN-<slug>.plan.md`, `NNN-<slug>.report.md`).
-  `write_plan` generates `NNN-<slug>.plan.md` and returns `taskId` plus `planFilePath` so Antigravity can present it
-  as a plan artifact (`ArtifactMetadata`) for approval in Antigravity's native UI.
+- For plans, reports, and tasks: `write_plan`, `update_plan`, `write_report`, and `upsert_task` render a single-row
+  inline summary with a clickable file link to the exported Markdown artifact (`tasks.md`, `NNN-<slug>.plan.md`,
+  `NNN-<slug>.report.md`). `write_plan` generates `NNN-<slug>.plan.md` and returns `taskId` plus `planFilePath` so
+  Antigravity can present it as a plan artifact (`ArtifactMetadata`) for approval in Antigravity's native UI.
+- For Plan Mode sync and reconfiguration: Prefer `update_plan` (passing `sessionId`, `taskId`, only changed fields, and
+  optional `changeSummary` or `reviewStatus`) instead of raw `edit_file` or `write_file` on `NNN-<slug>.plan.md`. If
+  Antigravity Plan Mode edits `NNN-<slug>.plan.md` directly on disk after generating it, call `update_plan` right after
+  starting the task in Execution Mode to sync the final Markdown back into SQLite without toggling back into Plan Mode
+  (preserving the prompt prefix cache). `update_plan` also works after task completion when a plan is reconfigured.
 - For questions, logs, and Dashboard layout: `ask_questions` supports `blockingMode` (`immediate`, `before_step_finish`,
   `anytime`) and optional global `taskId` + `stepNumber`. Task checklists in the Dashboard UI are read-only with
   automatic task/step/item time tracking and show steps for archived tasks as well. The Dashboard uses a CSS Grid layout

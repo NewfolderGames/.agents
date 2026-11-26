@@ -41,10 +41,12 @@ scratch outputs across all skills and subagents.
       `<details>` blocks can keep only `Docs` and `Summary` instead of every historical checkbox.
     - Keep only active tasks expanded under `## Task #<id> - <Title>` (or `## Task NN - <Title>` in manual fallback)
       using standard GFM `- [ ]` and `- [x]` checkboxes, with at most one item marked `- [ ] **(in progress)**`.
-2. **`NNN-<slug>.plan.md`**: Immutable once approved in the harness UI. Record mid-execution adjustments in the report's
-   `Plan Deviations` section instead of editing the approved plan. When `new-worker-ui` is connected, `write_plan`
-   generates the plan Markdown file on disk when `exportDir` is set and returns `taskId` plus `planFilePath` so the
-   harness can present or move it as a native plan artifact.
+2. **`NNN-<slug>.plan.md`**: Updatable via `update_plan` (or `write_plan` with `taskId`) during pre-approval review,
+   mid-execution or post-completion reconfiguration, and when reconciling host Plan Mode disk edits back into SQLite.
+   Record minor unscheduled implementation drift in the report's `Plan Deviations` section; update the plan directly
+   when scope, architecture, or requirements change. When `new-worker-ui` is connected, `write_plan` generates the plan
+   Markdown file on disk when `exportDir` is set and returns `taskId` plus `planFilePath` so the harness can present or
+   move it as a native plan artifact.
 3. **`NNN-<slug>.report.md`**: Immutable once delivered. The `new-worker-ui` server rejects `write_report` overwrites
    for an existing `taskId`.
 

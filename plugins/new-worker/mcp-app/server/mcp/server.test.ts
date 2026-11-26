@@ -38,7 +38,7 @@ async function createConnectedServer() {
 	};
 }
 
-describe("MCP server resources, CLI parsing, and consolidated 10+6 tools", () => {
+describe("MCP server resources, CLI parsing, and consolidated 11+6 tools", () => {
 	it("guards parseCliArgs against blank or unexpanded ${...} template values", () => {
 		const parsed = parseCliArgs([
 			"--data-dir=${PLUGIN_DATA}",
@@ -69,11 +69,11 @@ describe("MCP server resources, CLI parsing, and consolidated 10+6 tools", () =>
 		);
 	});
 
-	it("exposes 10 model-visible tools, 6 app-only tools, and 6 route-tagged UI resources", async () => {
+	it("exposes 11 model-visible tools, 6 app-only tools, and 6 route-tagged UI resources", async () => {
 		const ctx = await createConnectedServer();
 		try {
 			const { tools } = await ctx.client.listTools();
-			expect(tools).toHaveLength(16);
+			expect(tools).toHaveLength(17);
 
 			const appOnly = tools.filter(t =>
 				((t._meta as {
@@ -87,6 +87,7 @@ describe("MCP server resources, CLI parsing, and consolidated 10+6 tools", () =>
 				"query_timeline",
 				"query_workspace",
 				"record_handoff",
+				"update_plan",
 				"update_task_item",
 				"upsert_task",
 				"write_plan",
@@ -278,6 +279,19 @@ describe("MCP server resources, CLI parsing, and consolidated 10+6 tools", () =>
 			expect(itemStructured.taskId).toBe(1);
 			expect(itemStructured.stepSnapshot?.taskId).toBe(1);
 
+			// update_plan partially patches task #1 and emits plan_updated
+			const updatePlanCall = await ctx.client.callTool({
+				name: "update_plan",
+				arguments: {
+					sessionId: "sess-1",
+					taskId: 1,
+					overview: "Rewrite on SQLite (updated after Plan Mode sync).",
+					reviewStatus: "approved",
+					changeSummary: "Synced Plan Mode overview edits",
+				},
+			});
+			expect(updatePlanCall.isError, JSON.stringify(updatePlanCall)).toBeFalsy();
+
 			// query_workspace: plan with and without includeMarkdown
 			const planQueryCompact = await ctx.client.callTool({
 				name: "query_workspace",
@@ -291,9 +305,11 @@ describe("MCP server resources, CLI parsing, and consolidated 10+6 tools", () =>
 				name: "query_workspace",
 				arguments: { target: "plan", taskId: 1, includeMarkdown: true },
 			});
-			expect((planQueryFull.structuredContent as {
+			const planFullText = (planQueryFull.structuredContent as {
 				planMarkdown?: string;
-			}).planMarkdown).toContain("# Plan 001: MCP Rewrite");
+			}).planMarkdown;
+			expect(planFullText).toContain("# Plan 001: MCP Rewrite");
+			expect(planFullText).toContain("Rewrite on SQLite (updated after Plan Mode sync).");
 
 			// query_workspace: session_context exposes group & sibling sessions
 			const ctxQuery = await ctx.client.callTool({
@@ -329,6 +345,7 @@ describe("MCP server resources, CLI parsing, and consolidated 10+6 tools", () =>
 			}).events;
 			expect(tlEvents.some(e => e.eventType === "note")).toBe(true);
 			expect(tlEvents.some(e => e.eventType === "plan_written")).toBe(true);
+			expect(tlEvents.some(e => e.eventType === "plan_updated")).toBe(true);
 
 			// app_get_dashboard_state revision short-circuit
 			const dash1 = await ctx.client.callTool({
@@ -350,6 +367,54 @@ describe("MCP server resources, CLI parsing, and consolidated 10+6 tools", () =>
 			expect((cleared.structuredContent as {
 				toolCalls: unknown[];
 			}).toolCalls).toHaveLength(0);
+
+			// Lazy-MCP null and [null] placeholders on optional fields are normalized instead of failing validation
+			const nullishPlanCall = await ctx.client.callTool({
+				name: "write_plan",
+				arguments: {
+					sessionId: "sess-1",
+					slug: "nullish-plan",
+					title: "Nullish Plan",
+					target: { repo: "my-agents", branch: "main", commit: "abc1234" },
+					follows: null,
+					overview: "Ensure null optional placeholders succeed.",
+					expectedOutcomes: ["Validation tolerates null optional placeholders."],
+					scope: { inScope: ["tools"], outOfScope: ["none"] },
+					openQuestions: [null],
+					currentImplementation: ["Strict optional fields."],
+					keyDecisions: ["Strip null optional placeholders."],
+					proposedChanges: ["Add optionalInput helpers."],
+					calibration: null,
+					fileStructure: [{ path: "shared.ts", action: "modified", reason: "Helpers" }],
+					testing: {
+						validationCommands: ["pnpm test"],
+						keyScenarios: ["Null placeholder normalization"],
+						edgeCases: [null],
+						testChanges: ["server.test.ts"],
+					},
+				},
+			});
+			expect(nullishPlanCall.isError, JSON.stringify(nullishPlanCall)).toBeFalsy();
+			const nullishTaskId = (nullishPlanCall.structuredContent as { taskId: number }).taskId;
+
+			const nullishReportCall = await ctx.client.callTool({
+				name: "write_report",
+				arguments: {
+					sessionId: "sess-1",
+					taskId: nullishTaskId,
+					slug: "nullish-plan",
+					title: "Nullish Report",
+					mode: "implementation",
+					outcome: "Completed",
+					target: { repo: "my-agents", branch: "main", commit: "abc1234" },
+					summary: "Delivered null normalization.",
+					planDeviations: [null],
+					operationalNotes: [null],
+					followUps: [null],
+					tryCommand: null,
+				},
+			});
+			expect(nullishReportCall.isError, JSON.stringify(nullishReportCall)).toBeFalsy();
 		}
 		finally {
 			await ctx.close();

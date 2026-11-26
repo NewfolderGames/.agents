@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import fs from "node:fs/promises";
 import path from "node:path";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
@@ -52,6 +53,51 @@ export interface WritePlanInput {
 	reviewStatus?: PlanReviewStatus;
 	reviewComment?: string;
 	approvedVia?: PlanApprovalSource;
+}
+
+export interface UpdatePlanScopeInput {
+	inScope?: string[];
+	outOfScope?: string[];
+}
+
+export interface UpdatePlanTestingInput {
+	validationCommands?: string[];
+	keyScenarios?: string[];
+	edgeCases?: string[] | null;
+	testChanges?: string[];
+}
+
+export interface UpdatePlanInput {
+	taskId: number;
+	slug?: string;
+	title?: string;
+	target?: TargetRepo;
+	follows?: string | null;
+	overview?: string;
+	expectedOutcomes?: string[];
+	scope?: UpdatePlanScopeInput;
+	openQuestions?: string[] | null;
+	userStories?: string[] | null;
+	functionalRequirements?: string[] | null;
+	nonFunctionalRequirements?: string[] | null;
+	currentImplementation?: string[];
+	keyDecisions?: string[];
+	proposedChanges?: string[];
+	dataModels?: string | null;
+	components?: PlanComponentRow[] | null;
+	fileStructure?: PlanFileEntry[];
+	architectureDiagram?: string | null;
+	risks?: PlanRiskRow[] | null;
+	apiReference?: string | null;
+	migrationPlan?: string | null;
+	alternatives?: string | null;
+	calibration?: { cadence: string; familiarity: string; structureStance: string } | null;
+	testing?: UpdatePlanTestingInput;
+	language?: "en" | "ko";
+	reviewStatus?: PlanReviewStatus;
+	reviewComment?: string | null;
+	approvedVia?: PlanApprovalSource | null;
+	changeSummary?: string;
 }
 
 export interface WriteReportInput {
@@ -184,7 +230,7 @@ function mapHandoffRow(row: typeof handoffs.$inferSelect): HandoffRecord {
 	};
 }
 
-/** Look up an immutable plan by global `taskId`, returning `null` if absent. */
+/** Look up a plan by global `taskId`, returning `null` if absent. */
 export function getPlanByTaskId(db: DbExecutor, taskId: number): PlanRecord | null {
 	const row = db.select().from(plans).where(eq(plans.taskId, taskId)).get();
 	return row ? mapPlanRow(row) : null;
@@ -292,6 +338,210 @@ export function listHandoffs(
 	return rows.map(mapHandoffRow);
 }
 
+function resolveNullableField<T>(patch: T | null | undefined, current: T | undefined): T | undefined {
+	if (patch === undefined) {
+		return current;
+	}
+	return patch === null ? undefined : patch;
+}
+
+function serializePlanBody(input: Pick<
+	WritePlanInput,
+	| "expectedOutcomes"
+	| "scope"
+	| "openQuestions"
+	| "userStories"
+	| "functionalRequirements"
+	| "nonFunctionalRequirements"
+	| "currentImplementation"
+	| "keyDecisions"
+	| "proposedChanges"
+	| "dataModels"
+	| "components"
+	| "fileStructure"
+	| "architectureDiagram"
+	| "risks"
+	| "apiReference"
+	| "migrationPlan"
+	| "alternatives"
+	| "calibration"
+	| "testing"
+>): string {
+	return JSON.stringify({
+		expectedOutcomes: input.expectedOutcomes,
+		scope: input.scope,
+		openQuestions: input.openQuestions,
+		userStories: input.userStories,
+		functionalRequirements: input.functionalRequirements,
+		nonFunctionalRequirements: input.nonFunctionalRequirements,
+		currentImplementation: input.currentImplementation,
+		keyDecisions: input.keyDecisions,
+		proposedChanges: input.proposedChanges,
+		dataModels: input.dataModels,
+		components: input.components,
+		fileStructure: input.fileStructure,
+		architectureDiagram: input.architectureDiagram,
+		risks: input.risks,
+		apiReference: input.apiReference,
+		migrationPlan: input.migrationPlan,
+		alternatives: input.alternatives,
+		calibration: input.calibration,
+		testing: input.testing,
+	});
+}
+
+function persistPlanMutation(
+	tx: DbExecutor,
+	opts: {
+		sessionId: string;
+		groupId?: string | null;
+		sessionTitle?: string | null;
+		exportDir?: string | null;
+		taskId: number;
+		previousFileName: string | null;
+		existingPlan: typeof plans.$inferSelect | undefined;
+		data: WritePlanInput;
+		reviewStatus: PlanReviewStatus;
+		reviewComment: string | null;
+		approvedVia: PlanApprovalSource | null;
+		reviewedAt: string | null;
+		timelineSummary?: string;
+		now: string;
+	},
+): {
+	plan: PlanRecord;
+	exportDir: string | null;
+	fileName: string;
+	previousFileName: string | null;
+} {
+	const fileName = formatTaskFilename(opts.taskId, opts.data.slug, "plan");
+	const generatedPlanPath = opts.exportDir
+		? path.join(opts.exportDir, fileName)
+		: undefined;
+
+	tx.update(tasks)
+		.set({ planFile: fileName, updatedAt: opts.now })
+		.where(eq(tasks.id, opts.taskId))
+		.run();
+
+	const bodyJson = serializePlanBody(opts.data);
+	let savedRow: typeof plans.$inferSelect;
+	if (opts.existingPlan) {
+		savedRow = tx
+			.update(plans)
+			.set({
+				slug: opts.data.slug,
+				title: opts.data.title,
+				targetRepo: opts.data.target.repo,
+				targetBranch: opts.data.target.branch,
+				targetCommit: opts.data.target.commit,
+				follows: opts.data.follows ?? null,
+				overview: opts.data.overview,
+				language: opts.data.language ?? "en",
+				reviewStatus: opts.reviewStatus,
+				reviewComment: opts.reviewComment,
+				generatedPlanPath: generatedPlanPath ?? opts.existingPlan.generatedPlanPath,
+				approvedVia: opts.approvedVia,
+				bodyJson,
+				reviewedAt: opts.reviewedAt,
+			})
+			.where(eq(plans.taskId, opts.taskId))
+			.returning()
+			.get()!;
+	}
+	else {
+		savedRow = tx
+			.insert(plans)
+			.values({
+				taskId: opts.taskId,
+				sessionId: opts.sessionId,
+				slug: opts.data.slug,
+				title: opts.data.title,
+				targetRepo: opts.data.target.repo,
+				targetBranch: opts.data.target.branch,
+				targetCommit: opts.data.target.commit,
+				follows: opts.data.follows ?? null,
+				overview: opts.data.overview,
+				language: opts.data.language ?? "en",
+				reviewStatus: opts.reviewStatus,
+				reviewComment: opts.reviewComment,
+				generatedPlanPath: generatedPlanPath ?? null,
+				approvedVia: opts.approvedVia,
+				bodyJson,
+				createdAt: opts.now,
+				reviewedAt: opts.reviewedAt,
+			})
+			.returning()
+			.get();
+	}
+
+	const plan = mapPlanRow(savedRow);
+	recordTimelineEvent(tx, {
+		sessionId: opts.sessionId,
+		groupId: opts.groupId,
+		eventType: opts.existingPlan ? "plan_updated" : "plan_written",
+		actor: "agent",
+		title: `${opts.existingPlan ? "Updated" : "Wrote"} Plan ${formatTaskId(opts.taskId)}: ${plan.title}`,
+		summary: opts.timelineSummary?.trim() || fileName,
+		links: [
+			{ entityType: "plan", entityId: String(opts.taskId), role: "subject", label: fileName },
+			{
+				entityType: "task",
+				entityId: String(opts.taskId),
+				role: "parent",
+				label: `Task ${formatTaskId(opts.taskId)}`,
+			},
+			{
+				entityType: "session",
+				entityId: opts.sessionId,
+				role: "parent",
+				label: opts.sessionTitle ?? opts.sessionId,
+			},
+		],
+		createdAt: opts.now,
+	});
+
+	return {
+		plan,
+		exportDir: opts.exportDir ?? null,
+		fileName,
+		previousFileName: opts.previousFileName,
+	};
+}
+
+async function exportPlanArtifacts(
+	db: AppDrizzleDb,
+	sessionId: string,
+	saved: {
+		plan: PlanRecord;
+		exportDir: string | null;
+		fileName: string;
+		previousFileName: string | null;
+	},
+): Promise<{ plan: PlanRecord; planFilePath: string; planMarkdown: string }> {
+	const planMarkdown = renderPlanMarkdown(saved.plan);
+	if (saved.exportDir) {
+		await writeFileAtomic(path.join(saved.exportDir, saved.fileName), planMarkdown);
+		if (saved.previousFileName && saved.previousFileName !== saved.fileName) {
+			try {
+				await fs.unlink(path.join(saved.exportDir, saved.previousFileName));
+			}
+			catch {
+				// Ignore missing prior plan file when renaming slug.
+			}
+		}
+		await exportTasksMarkdownIfConfigured(db, sessionId);
+	}
+
+	return {
+		plan: saved.plan,
+		planFilePath: saved.exportDir
+			? path.join(saved.exportDir, saved.fileName)
+			: saved.fileName,
+		planMarkdown,
+	};
+}
+
 /**
  * Persist a technical plan, auto-allocating a global `taskId` if omitted, and
  * optionally export `NNN-<slug>.plan.md` + `tasks.md` to `exportDir`.
@@ -307,6 +557,7 @@ export async function writePlan(
 		const session = ensureSessionTx(tx, sessionId, meta, now);
 
 		let taskId = input.taskId;
+		let previousFileName: string | null = null;
 		if (taskId !== undefined) {
 			const existingTask = getTaskById(tx, taskId);
 			if (!existingTask) {
@@ -317,6 +568,7 @@ export async function writePlan(
 					`Task ${formatTaskId(taskId)} belongs to session "${existingTask.sessionId}", not "${sessionId}".`,
 				);
 			}
+			previousFileName = existingTask.planFile ?? null;
 		}
 		else {
 			const createdTask = tx
@@ -358,38 +610,6 @@ export async function writePlan(
 			});
 		}
 
-		const fileName = formatTaskFilename(taskId, input.slug, "plan");
-		const generatedPlanPath = session.exportDir
-			? path.join(session.exportDir, fileName)
-			: undefined;
-
-		tx.update(tasks)
-			.set({ planFile: fileName, updatedAt: now })
-			.where(eq(tasks.id, taskId))
-			.run();
-
-		const bodyJson = JSON.stringify({
-			expectedOutcomes: input.expectedOutcomes,
-			scope: input.scope,
-			openQuestions: input.openQuestions,
-			userStories: input.userStories,
-			functionalRequirements: input.functionalRequirements,
-			nonFunctionalRequirements: input.nonFunctionalRequirements,
-			currentImplementation: input.currentImplementation,
-			keyDecisions: input.keyDecisions,
-			proposedChanges: input.proposedChanges,
-			dataModels: input.dataModels,
-			components: input.components,
-			fileStructure: input.fileStructure,
-			architectureDiagram: input.architectureDiagram,
-			risks: input.risks,
-			apiReference: input.apiReference,
-			migrationPlan: input.migrationPlan,
-			alternatives: input.alternatives,
-			calibration: input.calibration,
-			testing: input.testing,
-		});
-
 		const existingPlan = tx.select().from(plans).where(eq(plans.taskId, taskId)).get();
 		const reviewStatus = input.reviewStatus ?? existingPlan?.reviewStatus ?? "pending_review";
 		const reviewedAt
@@ -397,102 +617,135 @@ export async function writePlan(
 				? (existingPlan?.reviewedAt ?? now)
 				: existingPlan?.reviewedAt ?? null;
 
-		let savedRow: typeof plans.$inferSelect;
-		if (existingPlan) {
-			savedRow = tx
-				.update(plans)
-				.set({
-					slug: input.slug,
-					title: input.title,
-					targetRepo: input.target.repo,
-					targetBranch: input.target.branch,
-					targetCommit: input.target.commit,
-					follows: input.follows ?? null,
-					overview: input.overview,
-					language: input.language ?? "en",
-					reviewStatus,
-					reviewComment: input.reviewComment ?? existingPlan.reviewComment,
-					generatedPlanPath: generatedPlanPath ?? existingPlan.generatedPlanPath,
-					approvedVia: input.approvedVia ?? existingPlan.approvedVia,
-					bodyJson,
-					reviewedAt,
-				})
-				.where(eq(plans.taskId, taskId))
-				.returning()
-				.get()!;
-		}
-		else {
-			savedRow = tx
-				.insert(plans)
-				.values({
-					taskId,
-					sessionId,
-					slug: input.slug,
-					title: input.title,
-					targetRepo: input.target.repo,
-					targetBranch: input.target.branch,
-					targetCommit: input.target.commit,
-					follows: input.follows ?? null,
-					overview: input.overview,
-					language: input.language ?? "en",
-					reviewStatus,
-					reviewComment: input.reviewComment ?? null,
-					generatedPlanPath: generatedPlanPath ?? null,
-					approvedVia: input.approvedVia ?? null,
-					bodyJson,
-					createdAt: now,
-					reviewedAt,
-				})
-				.returning()
-				.get();
-		}
-
-		const plan = mapPlanRow(savedRow);
-		recordTimelineEvent(tx, {
+		return persistPlanMutation(tx, {
 			sessionId,
 			groupId: session.groupId,
-			eventType: existingPlan ? "plan_updated" : "plan_written",
-			actor: "agent",
-			title: `${existingPlan ? "Updated" : "Wrote"} Plan ${formatTaskId(taskId)}: ${plan.title}`,
-			summary: fileName,
-			links: [
-				{ entityType: "plan", entityId: String(taskId), role: "subject", label: fileName },
-				{
-					entityType: "task",
-					entityId: String(taskId),
-					role: "parent",
-					label: `Task ${formatTaskId(taskId)}`,
-				},
-				{
-					entityType: "session",
-					entityId: sessionId,
-					role: "parent",
-					label: session.title ?? sessionId,
-				},
-			],
-			createdAt: now,
-		});
-
-		return {
-			plan,
+			sessionTitle: session.title,
 			exportDir: session.exportDir,
-			fileName,
-		};
+			taskId,
+			previousFileName,
+			existingPlan,
+			data: input,
+			reviewStatus,
+			reviewComment: input.reviewComment ?? existingPlan?.reviewComment ?? null,
+			approvedVia: input.approvedVia ?? existingPlan?.approvedVia ?? null,
+			reviewedAt,
+			now,
+		});
 	});
 
-	const planMarkdown = renderPlanMarkdown(result.plan);
-	if (result.exportDir) {
-		await writeFileAtomic(path.join(result.exportDir, result.fileName), planMarkdown);
-		await exportTasksMarkdownIfConfigured(db, sessionId);
-	}
+	return exportPlanArtifacts(db, sessionId, result);
+}
 
-	return {
-		plan: result.plan,
-		planFilePath: result.exportDir
-			? path.join(result.exportDir, result.fileName)
-			: result.fileName,
-		planMarkdown,
-	};
+/**
+ * Partially update an existing technical plan for `taskId` across any lifecycle
+ * stage (pre-approval review, mid-execution sync, or post-completion reconfiguration)
+ * and re-export `NNN-<slug>.plan.md` + `tasks.md` when `exportDir` is configured.
+ */
+export async function updatePlan(
+	db: AppDrizzleDb,
+	sessionId: string,
+	input: UpdatePlanInput,
+	meta?: SessionMetaInput,
+): Promise<{ plan: PlanRecord; planFilePath: string; planMarkdown: string }> {
+	const result = db.transaction((tx) => {
+		const now = new Date().toISOString();
+		const session = ensureSessionTx(tx, sessionId, meta, now);
+
+		const existingTask = getTaskById(tx, input.taskId);
+		if (!existingTask) {
+			throw new NotFoundError("Task", input.taskId);
+		}
+		if (existingTask.sessionId !== sessionId) {
+			throw new ValidationError(
+				`Task ${formatTaskId(input.taskId)} belongs to session "${existingTask.sessionId}", not "${sessionId}".`,
+			);
+		}
+
+		const existingPlanRow = tx.select().from(plans).where(eq(plans.taskId, input.taskId)).get();
+		if (!existingPlanRow) {
+			throw new NotFoundError("Plan", input.taskId);
+		}
+		const existingPlan = mapPlanRow(existingPlanRow);
+
+		const merged: WritePlanInput = {
+			taskId: input.taskId,
+			slug: input.slug ?? existingPlan.slug,
+			title: input.title ?? existingPlan.title,
+			target: input.target ?? existingPlan.target,
+			follows: resolveNullableField(input.follows, existingPlan.follows),
+			overview: input.overview ?? existingPlan.overview,
+			expectedOutcomes: input.expectedOutcomes ?? existingPlan.expectedOutcomes,
+			scope: {
+				inScope: input.scope?.inScope ?? existingPlan.scope.inScope,
+				outOfScope: input.scope?.outOfScope ?? existingPlan.scope.outOfScope,
+			},
+			openQuestions: resolveNullableField(input.openQuestions, existingPlan.openQuestions),
+			userStories: resolveNullableField(input.userStories, existingPlan.userStories),
+			functionalRequirements: resolveNullableField(
+				input.functionalRequirements,
+				existingPlan.functionalRequirements,
+			),
+			nonFunctionalRequirements: resolveNullableField(
+				input.nonFunctionalRequirements,
+				existingPlan.nonFunctionalRequirements,
+			),
+			currentImplementation: input.currentImplementation ?? existingPlan.currentImplementation,
+			keyDecisions: input.keyDecisions ?? existingPlan.keyDecisions,
+			proposedChanges: input.proposedChanges ?? existingPlan.proposedChanges,
+			dataModels: resolveNullableField(input.dataModels, existingPlan.dataModels),
+			components: resolveNullableField(input.components, existingPlan.components),
+			fileStructure: input.fileStructure ?? existingPlan.fileStructure,
+			architectureDiagram: resolveNullableField(
+				input.architectureDiagram,
+				existingPlan.architectureDiagram,
+			),
+			risks: resolveNullableField(input.risks, existingPlan.risks),
+			apiReference: resolveNullableField(input.apiReference, existingPlan.apiReference),
+			migrationPlan: resolveNullableField(input.migrationPlan, existingPlan.migrationPlan),
+			alternatives: resolveNullableField(input.alternatives, existingPlan.alternatives),
+			calibration: resolveNullableField(input.calibration, existingPlan.calibration),
+			testing: {
+				validationCommands:
+					input.testing?.validationCommands ?? existingPlan.testing.validationCommands,
+				keyScenarios: input.testing?.keyScenarios ?? existingPlan.testing.keyScenarios,
+				edgeCases: resolveNullableField(input.testing?.edgeCases, existingPlan.testing.edgeCases),
+				testChanges: input.testing?.testChanges ?? existingPlan.testing.testChanges,
+			},
+			language: input.language ?? existingPlan.language,
+		};
+
+		const reviewStatus = input.reviewStatus ?? existingPlanRow.reviewStatus ?? "pending_review";
+		const reviewedAt = input.reviewStatus !== undefined
+			? (reviewStatus === "approved" || reviewStatus === "changes_requested" ? now : null)
+			: existingPlanRow.reviewedAt;
+
+		const reviewComment = input.reviewComment === undefined
+			? existingPlanRow.reviewComment
+			: input.reviewComment;
+		const approvedVia = input.approvedVia === undefined
+			? existingPlanRow.approvedVia
+			: input.approvedVia;
+
+		return persistPlanMutation(tx, {
+			sessionId,
+			groupId: session.groupId,
+			sessionTitle: session.title,
+			exportDir: session.exportDir,
+			taskId: input.taskId,
+			previousFileName: existingTask.planFile ?? null,
+			existingPlan: existingPlanRow,
+			data: merged,
+			reviewStatus,
+			reviewComment,
+			approvedVia,
+			reviewedAt,
+			timelineSummary: input.changeSummary,
+			now,
+		});
+	});
+
+	return exportPlanArtifacts(db, sessionId, result);
 }
 
 /**

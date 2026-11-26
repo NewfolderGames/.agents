@@ -7,7 +7,7 @@ import { registerTaskTools } from "./tools/taskTools.js";
 import { registerWorkspaceTools } from "./tools/workspaceTools.js";
 
 /**
- * Register all 10 model-visible tools and 6 app-only UI callback tools on the
+ * Register all 11 model-visible tools and 6 app-only UI callback tools on the
  * given MCP server instance.
  *
  * @param server - Target MCP server receiving tool registrations.

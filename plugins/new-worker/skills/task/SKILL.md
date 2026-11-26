@@ -2,7 +2,7 @@
 name: new::task
 description: >-
   Plan, track, execute, and report single or multi-task engineering sessions using a
-  unified session hub (tasks.md), sequential immutable technical plans (NN-<slug>.plan.md),
+  unified session hub (tasks.md), sequential updatable technical plans (NN-<slug>.plan.md),
   calibrated scaffold-first phases, atomic Git commits, and dual-mode completion or audit
   reports (NN-<slug>.report.md). Activate this skill when /plan is invoked, preparing or
   executing multi-step changes, tracking task progress, auditing codebases, debugging
@@ -11,7 +11,7 @@ description: >-
 
 # Session Planning, Multi-Task Tracking, Phased Execution, and Reporting
 
-Run engineering sessions with clear scope boundaries, scannable immutable plans, one live task hub (`tasks.md`), and
+Run engineering sessions with clear scope boundaries, scannable updatable plans, one live task hub (`tasks.md`), and
 structured implementation or audit reports. Developers can then review decisions quickly, chain follow-up tasks without
 losing history, or take over the keyboard at any step.
 
@@ -32,7 +32,8 @@ Follow [../../references/session-contract.md](../../references/session-contract.
 in [../../harnesses/README.md](../../harnesses/README.md) for `<session-dir>`, file-write metadata, link formatting,
 global integer `taskId` / zero-padded artifact allocation (`NNN-<kebab-slug>.<role>.md` starting at `001` via
 `new-worker-ui`, or `NN` starting at `01` in manual fallback), mutability boundaries (`tasks.md` mutable, plan files
-immutable after approval, report files immutable after delivery), VCS exclusion, and one-language parity per task.
+updatable via `update_plan` or `write_plan` when revised or reconfigured, report files immutable after delivery), VCS
+exclusion, and one-language parity per task.
 
 ### 1.3 `new-worker-ui` Structured MCP Tools (Preferred When Connected)
 
@@ -49,6 +50,12 @@ When `new-worker-ui` is connected, drive session artifacts through its MCP tools
   returns `taskId` plus `planFilePath` for the generated `001-<slug>.plan.md`) so the harness can present or move it as
   a native plan artifact, and pass that `taskId` into `upsert_task` (`status: "planned"`). Do not include plan creation
   or workspace initialization as numbered steps inside `steps`.
+- **Plan updates and sync**: Call `update_plan` (passing `sessionId`, `taskId`, only changed fields, and optional
+  `changeSummary` or `reviewStatus`) to revise a plan during review, apply mid-execution or post-completion
+  reconfigurations, or reconcile direct disk edits back into SQLite and `NNN-<slug>.plan.md`. Avoid raw `edit_file` or
+  `write_file` edits to `NNN-<slug>.plan.md` when `new-worker-ui` is connected. If host Plan Mode edited the plan file
+  directly on disk before approval, sync those edits with `update_plan` as your first action after starting execution
+  so you do not toggle back into Plan Mode and break the prompt cache.
 - **Live progress**: Call `update_task_item` with `sessionId`, global `taskId`, `itemId`, and `status` as items move
   through `pending`, `in_progress`, and `done`; `update_task_item` updates Dashboard state and timeline transitions
   silently without rendering an inline step progress widget in chat.

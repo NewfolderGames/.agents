@@ -4,8 +4,8 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { openDatabase } from "../db/client.js";
 import { toolCalls } from "../db/schema.js";
-import { getPlanByTaskId, recordHandoff, writePlan, writeReport } from "./artifacts.js";
-import { QuestionBlockerError, ReportImmutableError } from "./errors.js";
+import { getPlanByTaskId, recordHandoff, updatePlan, writePlan, writeReport } from "./artifacts.js";
+import { NotFoundError, QuestionBlockerError, ReportImmutableError, ValidationError } from "./errors.js";
 import { createQuestionSet, saveQuestionDraft, submitQuestionAnswers } from "./questions.js";
 import { assignSessionGroup, getSession, listSessionGroups, listSessions, MAX_TOOL_CALL_LOGS, upsertSession, upsertSessionGroup } from "./sessions.js";
 import { listToolCalls, recordToolCall } from "./settings.js";
@@ -384,6 +384,101 @@ describe("SQLite repositories", () => {
 		const summaries = remainingRows.map(r => r.summary);
 		expect(summaries).toContain("Call #125");
 		expect(summaries).not.toContain("Call #1");
+
+		handle.close();
+	});
+
+	it("partially updates plans before and after task completion and cleans up renamed exports", async () => {
+		const handle = openDatabase(":memory:");
+		const exportDir = makeTempDir();
+
+		const created = await writePlan(
+			handle.db,
+			"s-plan-upd",
+			{
+				slug: "initial-plan",
+				title: "Initial Plan",
+				target: { repo: "my-agents", branch: "main", commit: "111aaaa" },
+				overview: "Original overview.",
+				expectedOutcomes: ["Initial outcome."],
+				scope: { inScope: ["server"], outOfScope: ["ui"] },
+				currentImplementation: ["Original code."],
+				keyDecisions: ["Keep SQLite."],
+				proposedChanges: ["Add endpoint."],
+				apiReference: "| Endpoint | Purpose |\n|---|---|\n| `old` | Old |",
+				fileStructure: [{ path: "server/a.ts", action: "added", reason: "Initial" }],
+				testing: {
+					validationCommands: ["pnpm test"],
+					keyScenarios: ["Initial scenario"],
+					edgeCases: ["Empty input"],
+					testChanges: ["a.test.ts"],
+				},
+			},
+			{ title: "Plan Update Session", exportDir },
+		);
+
+		expect(fs.existsSync(path.join(exportDir, "001-initial-plan.plan.md"))).toBe(true);
+
+		const patched = await updatePlan(handle.db, "s-plan-upd", {
+			taskId: created.plan.taskId,
+			slug: "reconfigured-plan",
+			overview: "Synced Plan Mode edits.",
+			scope: { inScope: ["server", "docs"] },
+			apiReference: null,
+			reviewStatus: "approved",
+			changeSummary: "Synced Plan Mode edits and cleared stale API table",
+		});
+
+		expect(patched.plan.slug).toBe("reconfigured-plan");
+		expect(patched.plan.overview).toBe("Synced Plan Mode edits.");
+		expect(patched.plan.scope).toEqual({ inScope: ["server", "docs"], outOfScope: ["ui"] });
+		expect(patched.plan.keyDecisions).toEqual(["Keep SQLite."]);
+		expect(patched.plan.apiReference).toBeUndefined();
+		expect(patched.plan.reviewStatus).toBe("approved");
+		expect(patched.plan.reviewedAt).toBeTruthy();
+		expect(fs.existsSync(path.join(exportDir, "001-initial-plan.plan.md"))).toBe(false);
+		expect(fs.existsSync(path.join(exportDir, "001-reconfigured-plan.plan.md"))).toBe(true);
+
+		// Complete task with immutable report, then verify post-completion plan reconfiguration still works.
+		await writeReport(handle.db, "s-plan-upd", {
+			taskId: created.plan.taskId,
+			slug: "reconfigured-plan",
+			title: "Reconfigured Plan",
+			mode: "implementation",
+			outcome: "Completed",
+			target: { repo: "my-agents", branch: "main", commit: "111aaaa" },
+			summary: "Delivered initial scope.",
+		});
+
+		const postDone = await updatePlan(handle.db, "s-plan-upd", {
+			taskId: created.plan.taskId,
+			proposedChanges: ["Add endpoint.", "Reconfigured post-completion follow-up."],
+			testing: { edgeCases: null },
+			changeSummary: "Post-completion reconfiguration",
+		});
+
+		expect(postDone.plan.proposedChanges).toEqual([
+			"Add endpoint.",
+			"Reconfigured post-completion follow-up.",
+		]);
+		expect(postDone.plan.testing.edgeCases).toBeUndefined();
+		expect(postDone.plan.testing.validationCommands).toEqual(["pnpm test"]);
+
+		const tl = queryTimelineEvents(handle.db, {
+			entityType: "plan",
+			entityId: String(created.plan.taskId),
+		});
+		expect(tl.some(e => e.eventType === "plan_updated" && e.summary === "Post-completion reconfiguration")).toBe(true);
+
+		await expect(
+			updatePlan(handle.db, "s-plan-upd", { taskId: 999, overview: "Missing" }),
+		).rejects.toThrow(NotFoundError);
+		await expect(
+			updatePlan(handle.db, "other-session", {
+				taskId: created.plan.taskId,
+				overview: "Wrong session",
+			}),
+		).rejects.toThrow(ValidationError);
 
 		handle.close();
 	});
