@@ -1,11 +1,11 @@
 ---
 name: new::code
 description: >-
-  Design, write, refactor, untangle, and document human-readable, removable code
-  and caller-focused error types while respecting project-local conventions. Activate this
-  skill when writing or reviewing code, designing error types, structuring modules, chunking
-  functional pipelines, documenting regexes, macros, or reflection, curating tests, or
-  untangling coupled codebases.
+  ALWAYS activate whenever writing, editing, refactoring, debugging, or reviewing code
+  in any language. Defines coding style, readable removable architecture, native language
+  doc comments (JSDoc/TSDoc, Rustdoc, Javadoc, Go doc, Python docstrings), caller-focused
+  error types, functional pipeline chunking, test curation, and codebase untangling while
+  respecting project-local conventions first.
 ---
 
 # Code Architecture, Readable Clarity, and Deletable Design
@@ -49,7 +49,8 @@ Simplicity means low reading and maintenance cost, **not** fear of expressive la
    reflection dispatchers, bitwise packing, and compact domain algorithms are welcome whenever they replace hundreds of
    lines of repetitive boilerplate or hand-rolled state machines.
 2. **Isolate and explain *why* + *how***: Encapsulate the dense mechanism behind one clear function, type, or macro
-   boundary, and pair it with a thorough comment block explaining:
+   boundary, and attach the explanation in the language's native doc comment (`/** ... */`, `///`, Go doc comment, or
+   docstring) with symbol links and concrete input/output examples so IDE hover tooltips surface it at call sites:
     - **Why** this mechanism is used (for example, eliminating 200 lines of duplicate packet decoders or avoiding
       hot-path allocations).
     - **How** it works step by step (capture-group breakdown for a regex, expansion sketch for a macro, lookup contract
@@ -190,26 +191,42 @@ Replace error-prone manual repetition with deterministic `python3` scripts and f
 ## 5. Signal-Scaled Comments and Documentation
 
 Keep short comments literal, direct, and free of filler, and activate `new::docs` (when available) when drafting
-substantive
-documentation, boundary API docblocks, Korean documentation (공식 문어체 평서형 사용, 명령조 금지), or dense-code rationale blocks.
+substantive documentation, boundary API docblocks, Korean documentation (공식 문어체 평서형 사용, 명령조 금지), or
+dense-code rationale blocks.
 
-1. **Zero code-restating comments**: Never write comments that repeat what the identifier name or static type already
-   says (`// increment counter`). When you delete a workaround, delete its comment too.
-2. **Phase headers in longer functions**: Use short title-case headers (`// Input Validation`, `// Ledger Settlement`)
-   only when a function spans distinct procedural stages.
-3. **Deep *why* and *how* blocks for non-obvious code**: Write multi-paragraph comments on external protocol quirks,
-   concurrency/lock ordering, non-obvious failure modes, and compact mechanisms (regexes, macros, reflection, bitwise
-   logic).
-4. **Scale public docblocks to complexity**:
-    - **Simple, obvious functions**: A concise one-sentence summary is sufficient when parameter names and types already
-      express the full contract (unless project linters require full tags).
-    - **Boundary APIs and complex contracts**: Document the summary, non-obvious parameter invariants/ranges, return
-      semantics, error/panic triggers, side effects/idempotency, and a short usage example.
+1. **Prefer native doc comments on declarations**: Document modules, exported or public symbols, domain types,
+   constants, macros, and non-obvious internal helpers with the host language's native doc-comment format (JSDoc/TSDoc,
+   Rustdoc, Javadoc, KDoc, Go doc comments, Python docstrings, C# XML docs, or PHPDoc) rather than
+   detached plain comments so IDE hover previews, navigation links, and doc generators surface full context at every
+   call site.
+2. **Use each language's structured doc features for context**: Use native tags, headings, and cross-references
+   (`@param`, `@returns`, `@throws`, `{@link}`, `# Errors`, `# Panics`, `# Safety`, `# Examples`, `` [`Symbol`] ``,
+   `[Symbol]`, `Args:` / `Raises:`, `<see cref="..."/>`) to record what signatures omit: units, valid ranges,
+   invariants, side effects, idempotency, concurrency assumptions, failure triggers, and clickable links to related
+   types or specs. Read [references/doc-comments.md](references/doc-comments.md) for language-specific syntax, tag
+   mappings, and worked examples.
+3. **Zero code-restating comments or tag boilerplate**: Never write comments or doc tags that repeat the identifier
+   name or static type (`// increment counter`, `@param id - The id`, `@returns The result`). Omit redundant parameter
+   types in statically typed languages unless a project linter requires them. When you delete a workaround, delete its
+   comment too.
+4. **Phase headers and deep *why*/*how* rationale blocks**: Reserve plain comments (`//` or `#`) inside function bodies
+   for short title-case phase headers (`// Input Validation`, `// Ledger Settlement`) and multi-paragraph rationale on
+   external protocol quirks, concurrency or lock ordering, and non-obvious failure modes.
+5. **Scale docblocks to complexity**:
+    - **Simple, obvious functions**: Use native doc-comment syntax with a crisp one-sentence summary (plus cross-links
+      when helpful) when parameter names and types already express the full contract, unless project linters require
+      full tags.
+    - **Boundary APIs and complex contracts**: Document the summary, non-obvious parameter invariants and units, return
+      semantics, error/panic triggers, side effects or idempotency, clickable links to related types or errors, and a
+      short usage example.
 
 ---
 
 ## 6. Reference Guides and Sources
 
+- [references/doc-comments.md](references/doc-comments.md): Language feature matrix, structured tag usage, symbol
+  linking,
+  and worked doc-comment examples for TypeScript/JavaScript, Rust, Java, Kotlin, Go, Python, C#, and PHP.
 - [references/error-design.md](references/error-design.md): Goals for caller-focused error design, before/after Rust
   examples updated for `core::error::Error` and `thiserror` 2.x, semver and stack-size trade-offs, and cross-language
   mappings.

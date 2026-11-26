@@ -18,6 +18,6 @@ Resolve code architecture and style decisions in this strict order:
 
 ## 2. Skill Router
 
-| Name        | Kind  | Activate When                                                                                                                                     |
-|-------------|-------|---------------------------------------------------------------------------------------------------------------------------------------------------|
-| `new::code` | Skill | Designing deletable modules or caller errors, chunking pipelines, `python3` structural analysis, post-refactor audits, tests, or untangling code. |
+| Name        | Kind  | Activate When                                                                                                                                                                                                            |
+|-------------|-------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `new::code` | Skill | ALWAYS whenever writing, editing, refactoring, debugging, or reviewing code in any language (covering architecture, error design, native doc comments, pipelines, tests, `python3` structural analysis, and untangling). |

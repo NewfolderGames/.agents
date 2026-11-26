@@ -5,11 +5,11 @@ chunked functional pipelines, documented dense code, and codebase untangling.
 
 ## Contents
 
-| Path              | Purpose                                                                                                                                                                                               |
-|-------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `plugin.json`     | Plugin manifest (`new-personal`)                                                                                                                                                                      |
-| `rules/AGENTS.md` | Core personal code-style philosophy, project precedence, and skill router                                                                                                                             |
-| `skills/code/`    | `new::code`: Deletable module design, caller-focused error design, functional pipeline chunking, documented dense code, `python3` structural analysis, co-change untangling, and post-refactor audits |
+| Path              | Purpose                                                                                                                                                                                                                             |
+|-------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `plugin.json`     | Plugin manifest (`new-personal`)                                                                                                                                                                                                    |
+| `rules/AGENTS.md` | Core personal code-style philosophy, project precedence, and skill router                                                                                                                                                           |
+| `skills/code/`    | `new::code`: Deletable module design, caller-focused error design, native language doc comments, functional pipeline chunking, documented dense code, `python3` structural analysis, co-change untangling, and post-refactor audits |
 
 ## Citations
 

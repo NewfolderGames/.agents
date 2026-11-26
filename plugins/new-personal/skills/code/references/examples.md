@@ -57,23 +57,29 @@ Do not expand a compact regex, macro, reflection dispatcher, or bitwise algorith
 ### Example A: Documented Regex Instead of a 180-Line Character Scanner
 
 ```ts
-// Frame Parser for Log Lines
-//
-// Why regex over manual scanner:
-// Upstream proxies emit RFC-5424-like lines with optional bracketed trace tags.
-// A single compiled regex parses 1M lines in ~45ms without allocating intermediate
-// token arrays, whereas a hand-rolled scanner took 190 lines of state branches.
-//
-// Format matched:
-//   2026-11-14T09:12:04Z [WARN] [trace=ab12cd] auth.session: token expired
-//   2026-11-14T09:12:05Z [ERROR] db.pool: connection reset
-//
-// Capture groups:
-//   1. isoTimestamp  - UTC ISO-8601 timestamp prefix (YYYY-MM-DDTHH:mm:ssZ)
-//   2. level         - Severity tag inside first brackets (INFO | WARN | ERROR)
-//   3. traceId       - Optional hex id from `[trace=<id>]` (undefined when absent)
-//   4. subsystem     - Dotted logger name before `: `
-//   5. message       - Remaining line payload
+/**
+ * Compiled parser for RFC-5424-like upstream proxy log lines produced by {@link parseLogFrame}.
+ *
+ * @remarks
+ * A single compiled regex parses 1M lines in ~45ms without allocating intermediate token arrays,
+ * whereas a hand-rolled character scanner took 190 lines of state branches.
+ *
+ * Capture groups:
+ * 1. `isoTimestamp` - UTC ISO-8601 timestamp prefix (`YYYY-MM-DDTHH:mm:ssZ`).
+ * 2. `level` - Severity tag inside the first brackets (`INFO | WARN | ERROR`).
+ * 3. `traceId` - Optional hex identifier from `[trace=<id>]` (`undefined` when absent).
+ * 4. `subsystem` - Dotted logger name before `: `.
+ * 5. `message` - Remaining line payload.
+ *
+ * @example
+ * Matched input lines:
+ * ```text
+ * 2026-11-14T09:12:04Z [WARN] [trace=ab12cd] auth.session: token expired
+ * 2026-11-14T09:12:05Z [ERROR] db.pool: connection reset
+ * ```
+ *
+ * @see {@link ParsedLogFrame}
+ */
 const LOG_FRAME_PATTERN =
   /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z) \[(INFO|WARN|ERROR)\](?: \[trace=([0-9a-f]+)\])? ([a-z0-9_.]+): (.*)$/;
 ```
@@ -81,19 +87,24 @@ const LOG_FRAME_PATTERN =
 ### Example B: Documented Macro / Reflection Boundary
 
 ```rust
-// Dispatch Macro for Wire Codecs
-//
-// Why a declarative macro here:
-// Every frame variant shares identical 4-byte length-prefix framing and CRC checks.
-// Trait dynamic dispatch adds heap boxing on the hot path, and manual impls repeated
-// 240 lines across 12 packet structs.
-//
-// Expansion sketch for `impl_framed_codec!(PingFrame, 0x01)`:
-//   impl FramedCodec for PingFrame {
-//       const OPCODE: u8 = 0x01;
-//       fn encode_framed(&self, buf: &mut BytesMut) { ... }
-//       fn decode_framed(payload: &[u8]) -> Result<Self, FrameError> { ... }
-//   }
+/// Implements [`FramedCodec`] with 4-byte length-prefix framing and CRC checks for a packet struct.
+///
+/// Every frame variant shares identical framing logic. Trait dynamic dispatch adds heap boxing on
+/// the hot path, and manual implementations repeated 240 lines across 12 packet structs.
+///
+/// # Expansion
+///
+/// Calling `impl_framed_codec!(PingFrame, 0x01)` generates:
+///
+/// ```ignore
+/// impl FramedCodec for PingFrame {
+///     const OPCODE: u8 = 0x01;
+///     fn encode_framed(&self, buf: &mut BytesMut) { /* ... */ }
+///     fn decode_framed(payload: &[u8]) -> Result<Self, FrameError> { /* ... */ }
+/// }
+/// ```
+///
+/// See [`FrameError`] for framing validation failures.
 macro_rules! impl_framed_codec {
     ($frame_ty:ty, $opcode:expr) => {
         // ... 18 lines of framing logic ...
@@ -101,7 +112,10 @@ macro_rules! impl_framed_codec {
 }
 ```
 
-### Example C: Comment Block for External Constraints and Failure Ordering
+### Example C: In-Function Rationale Block for External Constraints
+
+Use plain `//` comments inside a function body when explaining procedural failure ordering or external constraints that
+are not attached to a declaration:
 
 ```go
 // Idempotent Lock Acquisition
