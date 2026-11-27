@@ -1,7 +1,7 @@
 ---
 name: new::tools-intellij
 description: >-
-  Interact with the active IntelliJ IDE MCP server (`intellij` or `jetbrains_air_ide`)
+  Interact with the active IntelliJ IDE MCP server (`idea` or `jetbrains_air_ide`)
   while prioritizing built-in agent file and shell tools. Activate this skill when
   escalating to IDE PSI navigation, Call Hierarchy, Structural Search, safe rename,
   inspections, incremental builds, saved run configurations, coverage, changelists,
@@ -11,7 +11,7 @@ description: >-
 
 # Using the Active IntelliJ IDE MCP
 
-Use built-in agent tools first for plain file reads, edits, text search, and shell runs. Escalate to the `intellij` (or
+Use built-in agent tools first for plain file reads, edits, text search, and shell runs. Escalate to the `idea` (or
 `jetbrains_air_ide`) MCP server only when IDE semantic analysis, project indexes, code style, run configurations,
 databases, or live debuggers provide capabilities that default tools cannot match.
 

@@ -48,7 +48,7 @@ OpenCode).
 - `ripgrep` (`rg`) for fast text search
 - `python3` for batch scripts, structural analysis, and `plugins/new-worker/scripts/scout_prescan.py`
 - `pnpm` as the default Node.js package manager when a project lockfile does not specify one
-- Optional: JetBrains IDE with MCP server enabled (`intellij` or `jetbrains_air_ide`) when using `new::tools-intellij`
+- Optional: JetBrains IDE with MCP server enabled (`idea` or `jetbrains_air_ide`) when using `new::tools-intellij`
 
 ## Extra Plugin Recommendations
 

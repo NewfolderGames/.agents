@@ -7,7 +7,7 @@ workflows, Practical Software STE documentation, IntelliJ IDE MCP escalation, an
 
 - `ripgrep` (`rg`) for fast text search
 - `python3` for batch scripts and `scripts/scout_prescan.py`
-- Optional: JetBrains IDE with MCP server enabled (`intellij` or `jetbrains_air_ide`) when using `new::tools-intellij`
+- Optional: JetBrains IDE with MCP server enabled (`idea` or `jetbrains_air_ide`) when using `new::tools-intellij`
 
 ## Contents
 
