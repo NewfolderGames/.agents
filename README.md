@@ -5,12 +5,12 @@ each plugin can be enabled or installed independently.
 
 ## Plugins
 
-| Plugin                | Path                                                              | Scope                                                                                                                                        | Bundled Skills & Subagents                                                                                     |
-|-----------------------|-------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
-| **new-worker**        | [plugins/new-worker/](plugins/new-worker/README.md)               | Core safety gates, Mode 1 chat flow, SEP-1865 MCP App Web UI, multi-task session execution, documentation, IDE escalation, and repo scouting | `new::ask`, `new::task`, `new::docs`, `new::tools-intellij`, `new::project-scout`, `new::project-scout-worker` |
-| **new-personal**      | [plugins/new-personal/](plugins/new-personal/README.md)           | Personal code style, deletable architecture, caller-focused error design, functional pipelines, and untangling                               | `new::code`                                                                                                    |
-| **new-framework-web** | [plugins/new-framework-web/](plugins/new-framework-web/README.md) | Web frontend framework and stylesheet conventions                                                                                            | `new::rscss`                                                                                                   |
-| **new-learning**      | [plugins/new-learning/](plugins/new-learning/README.md)           | Self-learning DIY coaching (`guide` and `active` Socratic pair-coding modes)                                                                 | `new::learning-diy`                                                                                            |
+| Plugin                | Path                                                              | Scope                                                                                                                | Bundled Skills & Subagents                                                                        |
+|-----------------------|-------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
+| **new-worker**        | [plugins/new-worker/](plugins/new-worker/README.md)               | Core safety gates, Mode 1 chat flow, host-native artifact workflow, documentation, IDE escalation, and repo scouting | `new::ask`, `new::docs`, `new::tools-intellij`, `new::project-scout`, `new::project-scout-worker` |
+| **new-personal**      | [plugins/new-personal/](plugins/new-personal/README.md)           | Personal code style, deletable architecture, caller-focused error design, functional pipelines, and untangling       | `new::code`                                                                                       |
+| **new-framework-web** | [plugins/new-framework-web/](plugins/new-framework-web/README.md) | Web frontend framework and stylesheet conventions                                                                    | `new::rscss`                                                                                      |
+| **new-learning**      | [plugins/new-learning/](plugins/new-learning/README.md)           | Self-learning DIY coaching (`guide` and `active` Socratic pair-coding modes)                                         | `new::learning-diy`                                                                               |
 
 ## Installation
 
@@ -31,7 +31,13 @@ directory in `~/.gemini/config/plugins.json` using an absolute path:
 
 Alternatively, copy or symlink individual subdirectories from `plugins/*` directly into `~/.gemini/config/plugins/`.
 
-### Other Harnesses (JetBrains Junie, Claude Code, Generic)
+### JetBrains Junie
+
+This repository includes a Junie marketplace manifest at `.junie-extension/marketplace.json` and `extension.json`
+manifests under each plugin directory (`plugins/*`). Add `NewfolderGames/.agents` (or a local clone path) as a Junie
+marketplace and enable any combination of `new-worker`, `new-personal`, `new-framework-web`, and `new-learning`.
+
+### Other Harnesses (Claude Code, Generic)
 
 Read [plugins/new-worker/harnesses/README.md](plugins/new-worker/harnesses/README.md) for host detection, abstract
 capability mappings, and setup steps across JetBrains Junie, Claude Code, and generic `AGENTS.md` hosts (Codex, Cursor,
@@ -39,7 +45,6 @@ OpenCode).
 
 ## Prerequisites
 
-- `node` (`>= 22.13`) to run the `new-worker-ui` MCP server (`node:sqlite`)
 - `ripgrep` (`rg`) for fast text search
 - `python3` for batch scripts, structural analysis, and `plugins/new-worker/scripts/scout_prescan.py`
 - `pnpm` as the default Node.js package manager when a project lockfile does not specify one

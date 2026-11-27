@@ -74,15 +74,8 @@ in chat):
     - **Implementation choices**: Module placement, API or interface contracts, data flow, dependencies, test depth, and
       migration or extensibility trade-offs calibrated to the selected **Implementation Structure and Style Stance**.
 3. **Questioning mechanics**:
-    - When `new-worker-ui` is connected, call `ask_questions` with grouped `sections`, `questions` (`single_select`,
-      `multi_select`, `text`, `textarea`, `boolean`, `allowOther`, `hint`, `contextRefs`, plus optional per-question
-      `blockingMode`: `"immediate"` | `"before_step_finish"` | `"anytime"`), `sessionId`, and optional global `taskId`
-      plus `stepNumber`. Stop and wait when `"immediate"` questions are present; for `"before_step_finish"` or
-      `"anytime"`, continue allowed work and read submitted answers from chat messages or `query_workspace`
-      (`target: "questions"`).
-    - When `new-worker-ui` is unavailable, group 2 to 5 related questions per round using the host's structured user
-      prompt tool (putting a recommended option first with a 1-line rationale whenever feasible) alongside short open
-      questions in chat.
+    - Group 2 to 5 related questions per round using the host's structured user prompt tool (putting a recommended
+      option first with a 1-line rationale whenever feasible) alongside short open questions in chat.
     - Calibrate explanation depth strictly to the user's selected **Project Familiarity**.
     - Follow up in additional rounds whenever an answer uncovers a new fork, dependency, or trade-off.
     - Before leaving planning, summarize the locked calibration (`Cadence`, `Familiarity`, `Structure Stance`) and
@@ -107,10 +100,9 @@ Apply the locked **Execution-Phase Question Cadence** throughout implementation:
 
 ---
 
-## 5. Coordination with `new-worker` Skills
+## 5. Coordination with `new-worker` Skills and Host Artifacts
 
-- **With `new::task`**: Record confirmed answers in `NN-<slug>.plan.md` (`### Key Decisions` and
-  `### Open Questions & Assumptions`), keep `tasks.md` synced to live state when pausing for execution questions, and
-  list any remaining assumptions in `NN-<slug>.report.md`.
+- **With host planning artifacts**: Record confirmed calibration, key decisions, and remaining assumptions in the
+  active host's native plan or completion summary when applicable.
 - **With `new::project-scout`**: Run repository scouting before Round 2 planning questions when neither agent nor user
   has a fresh map of a large codebase.

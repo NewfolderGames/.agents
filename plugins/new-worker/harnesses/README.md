@@ -1,8 +1,8 @@
 # Harness Adapters
 
-Core rules, skills, templates, and agent instructions use abstract capability terms so they stay portable across coding
-agents. Load only the single adapter matching your active host before writing session or scratch files, invoking host
-MCP tools, prompting with structured UI, or launching subagents.
+Core rules, skills, and agent instructions use abstract capability terms so they stay portable across coding agents.
+Load only the single adapter matching your active host before writing scratch files, using host-native artifacts,
+invoking host MCP tools, prompting with structured UI, or launching subagents.
 
 ## 1. Host Detection and Adapter Index
 
@@ -15,33 +15,32 @@ MCP tools, prompting with structured UI, or launching subagents.
 
 ## 2. Abstract Capability Mapping
 
-| Capability                              | Antigravity                                                                             | JetBrains Junie                              | Claude Code                                      | Generic                                    |
-|-----------------------------------------|-----------------------------------------------------------------------------------------|----------------------------------------------|--------------------------------------------------|--------------------------------------------|
-| **File Reader / Editor / Writer**       | `read_file` / `edit_file` / `write_file`                                                | Native file tools                            | `Read` / `Edit` / `Write`                        | Host built-in file tools                   |
-| **Shell Runner**                        | `run_command` (+ `manage_task`)                                                         | Native terminal tool                         | `Bash`                                           | Host shell tool                            |
-| **Structured User Prompt**              | `ask_question`                                                                          | Native prompt or numbered chat options       | `AskUserQuestion`                                | Numbered chat options                      |
-| **Web Search**                          | `search_web`                                                                            | Native search or doc citations               | `WebSearch`                                      | Search tool or doc citations               |
-| **Subagent Launcher & Handoff**         | `invoke_subagent` (`Model: "flash"`), `send_message`, `manage_subagents`                | Native subagent or direct execution fallback | `Agent` (fast tier), final reply                 | Subagent tool or direct execution          |
-| **MCP Tool Invocation**                 | `mcp_<server>_<tool>` or `<appDataDir>/mcp/` + `call_mcp_tool`                          | Native MCP tools directly                    | Native MCP tools directly                        | Native MCP tools directly                  |
-| **`new-worker-ui` MCP App**             | `aux_pane` & `global` (`ui://new-worker/dashboard`) + inline `ui://new-worker/widget/*` | Structured MCP tools + `exportDir` Markdown  | Structured MCP tools or SEP-1865 UI host         | Structured MCP tools + Markdown fallback   |
-| **Session Directory (`<session-dir>`)** | `<Artifact Directory Path>` (`ArtifactMetadata`)                                        | `.junie/plans/<YYYYMMDD-HHMM>-<slug>/`       | `~/.claude/plans/<repo>/<YYYYMMDD-HHMM>-<slug>/` | `.agents/sessions/<YYYYMMDD-HHMM>-<slug>/` |
-| **Scratch Directory (`<scratch-dir>`)** | `<Artifact Directory Path>/scratch/` (no `ArtifactMetadata`)                            | External dir or `mktemp -d`                  | `~/.claude/plans/<repo>/scratch/` or `mktemp -d` | `mktemp -d` (`0700`)                       |
-| **Link Format**                         | Absolute `file:///...`                                                                  | Relative `./` sibling + repo path            | Relative `./` sibling + repo path                | Relative `./` sibling + repo path          |
-| **Approval UI**                         | Reply approval or `Proceed` button                                                      | Reply approval                               | Reply approval                                   | Reply approval                             |
+| Capability                              | Antigravity                                                              | JetBrains Junie                              | Claude Code                                      | Generic                             |
+|-----------------------------------------|--------------------------------------------------------------------------|----------------------------------------------|--------------------------------------------------|-------------------------------------|
+| **File Reader / Editor / Writer**       | `read_file` / `edit_file` / `write_file`                                 | Native file tools                            | `Read` / `Edit` / `Write`                        | Host built-in file tools            |
+| **Shell Runner**                        | `run_command` (+ `manage_task`)                                          | Native terminal tool                         | `Bash`                                           | Host shell tool                     |
+| **Structured User Prompt**              | `ask_question`                                                           | Native prompt or numbered chat options       | `AskUserQuestion`                                | Numbered chat options               |
+| **Web Search**                          | `search_web`                                                             | Native search or doc citations               | `WebSearch`                                      | Search tool or doc citations        |
+| **Subagent Launcher & Handoff**         | `invoke_subagent` (`Model: "flash"`), `send_message`, `manage_subagents` | Native subagent or direct execution fallback | `Agent` (fast tier), final reply                 | Subagent tool or direct execution   |
+| **MCP Tool Invocation**                 | `mcp_<server>_<tool>` or `<appDataDir>/mcp/` + `call_mcp_tool`           | Native MCP tools directly                    | Native MCP tools directly                        | Native MCP tools directly           |
+| **Native Artifacts & Plans**            | `<Artifact Directory Path>` (`ArtifactMetadata`)                         | Native Junie plans and `.junie/plans/`       | Native Plan Mode (`~/.claude/plans/`)            | Host native artifacts or plain chat |
+| **Scratch Directory (`<scratch-dir>`)** | `<Artifact Directory Path>/scratch/` (no `ArtifactMetadata`)             | External dir or `mktemp -d`                  | `~/.claude/plans/<repo>/scratch/` or `mktemp -d` | `mktemp -d` (`0700`)                |
+| **Link Format**                         | Absolute `file:///...`                                                   | Workspace-relative `path:line`               | Workspace-relative `path:line`                   | Workspace-relative `path:line`      |
+| **Approval UI**                         | Reply approval or `Proceed` button                                       | Reply approval                               | Reply approval                                   | Reply approval                      |
 
 ## 3. Runtime Metadata Boundary
 
-`plugin.json` and the YAML `tools:`, `subagent:`, and `mainAgent:` frontmatter keys in `agents/*.md` remain
-Antigravity-compatible runtime declarations. All Markdown prose inside `rules/`, `references/`, `skills/`, and `agents/`
-bodies stays harness-agnostic.
+`plugin.json`, `extension.json`, and the YAML `tools:`, `subagent:`, and `mainAgent:` frontmatter keys in `agents/*.md`
+remain host-compatible runtime declarations. All Markdown prose inside `rules/`, `guidelines/`, `skills/`, and
+`agents/` bodies stays harness-agnostic.
 
 ## 4. Multi-Harness Installation and Wiring
 
 - **Antigravity**: Clone this repository and register `<repo>/plugins` in `~/.gemini/config/plugins.json`, or copy
   `plugins/new-worker/` into `~/.gemini/config/plugins/new-worker/`. Antigravity auto-discovers `plugin.json`,
   `rules/AGENTS.md`, `skills/*/SKILL.md`, and `agents/*.md`.
-- **JetBrains Junie**: Clone this repository outside target workspaces, reference or symlink `rules/AGENTS.md` in your
-  Junie project or user guidelines, and point Junie's skill paths to `<plugin-root>/skills/` (see [junie.md](junie.md)).
+- **JetBrains Junie**: Add the repository as a Junie marketplace (`.junie-extension/marketplace.json`) or wire
+  `guidelines/AGENTS.md` (or `rules/AGENTS.md`) and `skills/` manually (see [junie.md](junie.md)).
 - **Claude Code**: Reference or symlink `rules/AGENTS.md` from `~/.claude/CLAUDE.md` (or a repository `CLAUDE.md`) and
   register `<plugin-root>/skills/` and `<plugin-root>/agents/` in your Claude Code configuration
   (see [claude-code.md](claude-code.md)).

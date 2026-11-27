@@ -1,0 +1,4 @@
+{
+  "name": "new-worker",
+  "description": "Harness-agnostic agent execution bundle covering operational safety gates, Mode 1 chat flow, host-native artifact workflows, bulk questioning (new::ask), Practical Software STE documentation (new::docs), IntelliJ IDE MCP escalation (new::tools-intellij), and repository scouting (new::project-scout)."
+}

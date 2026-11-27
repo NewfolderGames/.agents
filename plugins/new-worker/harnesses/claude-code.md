@@ -7,16 +7,16 @@ Use this adapter when running inside Claude Code (`Read`/`Edit`/`Write`/`Bash`/`
 - Reference or symlink `rules/AGENTS.md` from `~/.claude/CLAUDE.md` (or a repository `CLAUDE.md`).
 - Register `<plugin-root>/skills/` and `<plugin-root>/agents/` via Claude Code plugin paths or `~/.claude/` directories.
 
-## 2. Session and Scratch Directories
+## 2. Native Artifacts and Scratch Directory
 
-- **`<session-dir>`**: `~/.claude/plans/<repo-slug>/<YYYYMMDD-HHMM>-<session-slug>/` using plain Markdown files.
+- **Native artifacts**: Follow Claude Code's native Plan Mode (`~/.claude/plans/`) and built-in task tools.
 - **`<scratch-dir>`**: Use `~/.claude/plans/<repo-slug>/scratch/` or `mktemp -d "${TMPDIR:-/tmp}/project-scout-XXXXXX"`
   (mode `0700`), strictly outside the target repository tree.
 
 ## 3. Links and Tool Mapping
 
-- **Links**: Use relative `./NN-<slug>.<role>.md` links between sibling session files and workspace-relative `path:line`
-  citations for source code.
+- **Links**: Use workspace-relative `path:line` citations for source code and relative links when referencing local
+  documents.
 - **Tool mapping**:
     - File reader / editor / writer: `Read` / `Edit` / `Write`
     - Shell runner: `Bash`
@@ -24,10 +24,6 @@ Use this adapter when running inside Claude Code (`Read`/`Edit`/`Write`/`Bash`/`
     - Web search: `WebSearch`
     - Subagent launcher: `Agent`
     - MCP tools: Invoke advertised MCP server tools directly.
-    - Optional `new-worker-ui` stdio server: Register `node <plugin-root>/mcp-app/dist/server.mjs --data-dir=<path>`
-      (Node `>= 22.13`) in Claude Code's MCP config, and pass `exportDir` (plus optional `rootDir` / `groupId`) so
-      Markdown files stay synced alongside `<dataDir>/new-worker.sqlite`. When unconfigured, write Markdown session
-      files directly with `Write` and `Edit`.
 
 ## 4. Subagents (`new::project-scout`)
 

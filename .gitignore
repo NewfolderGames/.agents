@@ -4,5 +4,3 @@ __pycache__/
 *.pyc
 .agents/sessions/
 .junie/plans/
-plugins/new-worker/mcp-app/node_modules/
-plugins/new-worker/mcp-app/data/

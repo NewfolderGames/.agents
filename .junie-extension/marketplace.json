@@ -1,0 +1,84 @@
+{
+  "name": "my-agents",
+  "owner": {
+    "name": "NewfolderGames"
+  },
+  "metadata": {
+    "description": "Modular, harness-agnostic plugins for AI coding agents covering execution safety, code taste, web stylesheet conventions, and DIY learning.",
+    "version": "1.0.0",
+    "homepage": "https://github.com/NewfolderGames/.agents"
+  },
+  "extensions": [
+    {
+      "name": "new-worker",
+      "source": "./plugins/new-worker",
+      "description": "Harness-agnostic agent execution bundle covering operational safety gates, Mode 1 chat flow, host-native artifact workflows, bulk questioning (new::ask), Practical Software STE documentation (new::docs), IntelliJ IDE MCP escalation (new::tools-intellij), and repository scouting (new::project-scout).",
+      "version": "3.0.0",
+      "author": {
+        "name": "NewfolderGames"
+      },
+      "category": "workflow",
+      "homepage": "https://github.com/NewfolderGames/.agents/tree/main/plugins/new-worker",
+      "keywords": [
+        "workflow",
+        "safety",
+        "documentation",
+        "intellij",
+        "scout",
+        "agents"
+      ]
+    },
+    {
+      "name": "new-personal",
+      "source": "./plugins/new-personal",
+      "description": "Personal engineering taste and code style preferences for human-readable, removable code, caller-focused error design, readable functional pipelines, documented dense code, and codebase untangling.",
+      "version": "1.0.0",
+      "author": {
+        "name": "NewfolderGames"
+      },
+      "category": "engineering",
+      "homepage": "https://github.com/NewfolderGames/.agents/tree/main/plugins/new-personal",
+      "keywords": [
+        "code-style",
+        "architecture",
+        "error-handling",
+        "refactoring",
+        "documentation"
+      ]
+    },
+    {
+      "name": "new-framework-web",
+      "source": "./plugins/new-framework-web",
+      "description": "Web frontend framework and stylesheet guidelines, including RSCSS conventions for scalable CSS and SCSS architecture.",
+      "version": "1.0.1",
+      "author": {
+        "name": "NewfolderGames"
+      },
+      "category": "framework",
+      "homepage": "https://github.com/NewfolderGames/.agents/tree/main/plugins/new-framework-web",
+      "keywords": [
+        "css",
+        "scss",
+        "rscss",
+        "frontend"
+      ]
+    },
+    {
+      "name": "new-learning",
+      "source": "./plugins/new-learning",
+      "description": "Self-learning DIY coaching plugin with calibrated study blueprints (guide mode) and chunked Socratic pair coding with tiered hints and explain-back reviews (active mode).",
+      "version": "1.0.0",
+      "author": {
+        "name": "NewfolderGames"
+      },
+      "category": "learning",
+      "homepage": "https://github.com/NewfolderGames/.agents/tree/main/plugins/new-learning",
+      "keywords": [
+        "learning",
+        "diy",
+        "socratic",
+        "mentoring"
+      ]
+    }
+  ]
+}

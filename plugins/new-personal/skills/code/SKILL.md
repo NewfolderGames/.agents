@@ -148,8 +148,8 @@ When asked to untangle or clean up a messy subsystem:
 2. **Catalog coupling first**: List the hidden links, needless links, surplus wrappers, and special cases before editing
    files.
 3. **Group under structural fixes**: Map multiple symptoms to the single design change that eliminates them cleanly.
-4. **Scaffold and migrate incrementally**: When `new::task` (from `new-worker`) is active, follow its scaffold-first
-   workflow to validate new types and signatures first, migrate callers step by step, and delete dead layers.
+4. **Scaffold and migrate incrementally**: Validate new types and signatures first, migrate callers step by step, and
+   delete dead layers.
 5. **Verify behavior and audit**: Update tests last so existing tests catch regressions during migration, then audit
    with a fresh read-only subagent (Section 4.4) until zero dead code or special-case leftovers remain.
 

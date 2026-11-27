@@ -15,9 +15,9 @@ capabilities, and link formats (`<session-link>` and `<file-link>` below).
 
 After diagnostic intake resolves every prerequisite and architectural fork, create or update `tasks.md` with
 independently testable chunks (15 to 45 minutes of user effort each). Keep the top Overview Table synced
-matching [../../../references/session-contract.md](../../../references/session-contract.md) (and `new::task` when
-active) using labeled `Docs` links (`none`, `[diy-guide](...)`, or `[learning-log](...)` so mixed engineering and DIY
-sessions stay unambiguous) and keep future chunks brief (title plus 1-sentence outcome). Right before Chunk 1's brief,
+matching [../../../references/session-contract.md](../../../references/session-contract.md) using labeled `Docs` links
+(`none`, `[diy-guide](...)`, or `[learning-log](...)` so mixed engineering and DIY sessions stay unambiguous) and keep
+future chunks brief (title plus 1-sentence outcome). Right before Chunk 1's brief,
 share one short high-level mental model diagram (3 to 5 pipeline stages, zero code spoilers).
 
 ````markdown

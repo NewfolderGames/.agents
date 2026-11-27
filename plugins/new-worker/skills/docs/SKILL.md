@@ -3,10 +3,10 @@ name: new::docs
 description: >-
   Write unambiguous, substantive technical documentation, boundary API docblocks,
   dense-code rationale blocks, API specs, READMEs, runbooks, changelogs, commit bodies,
-  error messages, postmortems, substantial session plans or reports, and Korean
+  error messages, postmortems, substantial plans or reports, and Korean
   documentation while respecting project conventions first. Activate this skill when
-  drafting or editing substantive documentation. Routine tasks.md entries and short
-  inline comments follow rules/AGENTS.md Section 3 without loading this skill.
+  drafting or editing substantive documentation. Short inline comments and routine notes
+  follow rules/AGENTS.md Section 3 without loading this skill.
 ---
 
 # Practical Software Technical Writing (Mode 2)

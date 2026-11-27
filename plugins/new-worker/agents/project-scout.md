@@ -83,8 +83,7 @@ Run `scout_prescan.py` once to build the `Shared Repo Digest` and `Partition Pla
      python3 <plugin-root>/scripts/scout_prescan.py --repo "<target-root>" --scope "<target-area>"
      ```
    - For huge repositories where stdout might be large, pass `--out "<scratch-dir>/prescan-<repo>.md"` (strictly outside
-     `<target-root>`, resolved via [../references/session-contract.md](../references/session-contract.md)) and read that
-     file instead.
+     `<target-root>`, resolved via [../harnesses/README.md](../harnesses/README.md)) and read that file instead.
 3. **Portable Fallback (when `python3` or `scout_prescan.py` is unavailable)**:
    Run batched read-only shell commands (`git rev-parse --abbrev-ref HEAD`, `git rev-parse --short HEAD`,
    `git status --short --branch`, `git ls-files`, `git log -n 40 --no-merges --diff-filter=AMR --name-only`,
@@ -148,8 +147,7 @@ Combine facts from `Shared Repo Digest` and your sampled files or worker reports
 ### 4.1 Resolve Output Path
 
 Write the full Markdown guideline to the first matching path in the following list, applying the active host's scratch
-file-write rules from [../harnesses/README.md](../harnesses/README.md)
-and [../references/session-contract.md](../references/session-contract.md):
+file-write rules from [../harnesses/README.md](../harnesses/README.md):
 
 1. **Caller-specified `OutputPath`** *(preferred)*: When the caller provides an explicit `OutputPath` outside the target
    repository tree, write to that exact path. If a caller passes an in-repository path, fall back to item 2 or item 3
